@@ -2,9 +2,23 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
+
+// Serve static files from the build folder
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Fallback for SPA routing - must handle socket.io separately or before
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/socket.io')) return next();
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -113,7 +127,7 @@ io.on('connection', (socket) => {
     });
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
-    console.log(`Socket.io server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
