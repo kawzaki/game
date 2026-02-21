@@ -1,0 +1,34 @@
+[
+  {
+    "id": "1",
+    "category": "Math",
+    "value": 100,
+    "question": "What is 5 + 7?",
+    "answer": "12",
+    "isAnswered": false
+  },
+  {
+    "id": "2",
+    "category": "Math",
+    "value": 200,
+    "question": "Square root of 144?",
+    "answer": "12",
+    "isAnswered": false
+  },
+  {
+    "id": "3",
+    "category": "Arabic",
+    "value": 100,
+    "question": "ما هو الحرف الأول في الأبجدية؟",
+    "answer": "أ",
+    "isAnswered": false
+  },
+  {
+    "id": "4",
+    "category": "Arabic",
+    "value": 200,
+    "question": "من هو شاعر الرسول؟",
+    "answer": "حسان بن ثابت",
+    "isAnswered": false
+  }
+]
