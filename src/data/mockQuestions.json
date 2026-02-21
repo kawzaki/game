@@ -1,34 +1,562 @@
 [
   {
-    "id": "1",
-    "category": "Math",
+    "id": "g1",
+    "category": "الجغرافيا",
     "value": 100,
-    "question": "What is 5 + 7?",
-    "answer": "12",
+    "question": "ما هو أطول نهر في العالم؟",
+    "answer": "نهر النيل",
     "isAnswered": false
   },
   {
-    "id": "2",
-    "category": "Math",
+    "id": "g2",
+    "category": "الجغرافيا",
     "value": 200,
-    "question": "Square root of 144?",
-    "answer": "12",
+    "question": "في أي مدينة يقع برج إيفل؟",
+    "answer": "باريس",
     "isAnswered": false
   },
   {
-    "id": "3",
-    "category": "Arabic",
+    "id": "g3",
+    "category": "الجغرافيا",
+    "value": 300,
+    "question": "ما هي أكبر دولة في العالم من حيث المساحة؟",
+    "answer": "روسيا",
+    "isAnswered": false
+  },
+  {
+    "id": "g4",
+    "category": "الجغرافيا",
+    "value": 400,
+    "question": "ما هو المضيق الذي يصل بين البحر المتوسط والمحيط الأطلسي؟",
+    "answer": "جبل طارق",
+    "isAnswered": false
+  },
+  {
+    "id": "g5",
+    "category": "الجغرافيا",
+    "value": 500,
+    "question": "ما هي الدولة التي تُلقب بـ \"أرض الشمس المشرقة\"؟",
+    "answer": "اليابان",
+    "isAnswered": false
+  },
+  {
+    "id": "g6",
+    "category": "الجغرافيا",
+    "value": 600,
+    "question": "ما هي عاصمة المغرب؟",
+    "answer": "الرباط",
+    "isAnswered": false
+  },
+  {
+    "id": "g7",
+    "category": "الجغرافيا",
+    "value": 700,
+    "question": "أي قارة تقع فيها الصحراء الكبرى؟",
+    "answer": "أفريقيا",
+    "isAnswered": false
+  },
+  {
+    "id": "g8",
+    "category": "الجغرافيا",
+    "value": 800,
+    "question": "ما هي أصغر دولة في العالم؟",
+    "answer": "الفاتيكان",
+    "isAnswered": false
+  },
+  {
+    "id": "g9",
+    "category": "الجغرافيا",
+    "value": 900,
+    "question": "في أي دولة تقع جبال الانديز؟",
+    "answer": "أمريكا الجنوبية",
+    "isAnswered": false
+  },
+  {
+    "id": "g10",
+    "category": "الجغرافيا",
+    "value": 1000,
+    "question": "ما هو البحر الذي يفصل بين قارتي أفريقيا وآسيا؟",
+    "answer": "البحر الأحمر",
+    "isAnswered": false
+  },
+  {
+    "id": "h1",
+    "category": "التاريخ",
     "value": 100,
-    "question": "ما هو الحرف الأول في الأبجدية؟",
-    "answer": "أ",
+    "question": "من هو القائد المسلم الذي فتح الأندلس؟",
+    "answer": "طارق بن زياد",
     "isAnswered": false
   },
   {
-    "id": "4",
-    "category": "Arabic",
+    "id": "h2",
+    "category": "التاريخ",
     "value": 200,
-    "question": "من هو شاعر الرسول؟",
-    "answer": "حسان بن ثابت",
+    "question": "في أي عام انتهت الحرب العالمية الثانية؟",
+    "answer": "1945",
+    "isAnswered": false
+  },
+  {
+    "id": "h3",
+    "category": "التاريخ",
+    "value": 300,
+    "question": "ما هي الحضارة التي بنى أصحابها الأهرامات؟",
+    "answer": "الحضارة الفرعونية",
+    "isAnswered": false
+  },
+  {
+    "id": "h4",
+    "category": "التاريخ",
+    "value": 400,
+    "question": "من هو أول إنسان هبط على سطح القمر؟",
+    "answer": "نيل آرمسترونغ",
+    "isAnswered": false
+  },
+  {
+    "id": "h5",
+    "category": "التاريخ",
+    "value": 500,
+    "question": "من هو مؤسس الدولة الأموية؟",
+    "answer": "معاوية بن أبي سفيان",
+    "isAnswered": false
+  },
+  {
+    "id": "h6",
+    "category": "التاريخ",
+    "value": 600,
+    "question": "ما هي المدينة التي كانت عاصمة للدولة العثمانية؟",
+    "answer": "القسطنطينية/إسطنبول",
+    "isAnswered": false
+  },
+  {
+    "id": "h7",
+    "category": "التاريخ",
+    "value": 700,
+    "question": "في أي عام وقعت الثورة الفرنسية؟",
+    "answer": "1789",
+    "isAnswered": false
+  },
+  {
+    "id": "h8",
+    "category": "التاريخ",
+    "value": 800,
+    "question": "من هو الملك الذي وحد المملكة العربية السعودية؟",
+    "answer": "الملك عبدالعزيز آل سعود",
+    "isAnswered": false
+  },
+  {
+    "id": "h9",
+    "category": "التاريخ",
+    "value": 900,
+    "question": "ما هو الاسم القديم لمدينة \"طوكيو\"؟",
+    "answer": "إيدو",
+    "isAnswered": false
+  },
+  {
+    "id": "h10",
+    "category": "التاريخ",
+    "value": 1000,
+    "question": "من هو مخترع الطباعة؟",
+    "answer": "يوهان غوتنبرغ",
+    "isAnswered": false
+  },
+  {
+    "id": "s1",
+    "category": "العلوم",
+    "value": 100,
+    "question": "ما هو الكوكب الذي يسمى \"الكوكب الأحمر\"؟",
+    "answer": "المريخ",
+    "isAnswered": false
+  },
+  {
+    "id": "s2",
+    "category": "العلوم",
+    "value": 200,
+    "question": "ما هو أقوى عضو عضلي في جسم الإنسان (بالنسبة لحجمه)؟",
+    "answer": "اللسان",
+    "isAnswered": false
+  },
+  {
+    "id": "s3",
+    "category": "العلوم",
+    "value": 300,
+    "question": "ما هي المادة التي تشكل حوالي 71% من سطح الأرض؟",
+    "answer": "الماء",
+    "isAnswered": false
+  },
+  {
+    "id": "s4",
+    "category": "العلوم",
+    "value": 400,
+    "question": "ما هو الغاز الذي تمتصه النباتات وتطلق الأكسجين؟",
+    "answer": "ثاني أكسيد الكربون",
+    "isAnswered": false
+  },
+  {
+    "id": "s5",
+    "category": "العلوم",
+    "value": 500,
+    "question": "ما هو أقرب كوكب إلى الشمس؟",
+    "answer": "عطارد",
+    "isAnswered": false
+  },
+  {
+    "id": "s6",
+    "category": "العلوم",
+    "value": 600,
+    "question": "ما هو الرمز الكيميائي للماء؟",
+    "answer": "H2O",
+    "isAnswered": false
+  },
+  {
+    "id": "s7",
+    "category": "العلوم",
+    "value": 700,
+    "question": "من هو العالم الذي وضع قانون الجاذبية؟",
+    "answer": "إسحاق نيوتن",
+    "isAnswered": false
+  },
+  {
+    "id": "s8",
+    "category": "العلوم",
+    "value": 800,
+    "question": "ما هو أكبر كوكب في المجموعة الشمسية؟",
+    "answer": "المشتري",
+    "isAnswered": false
+  },
+  {
+    "id": "s9",
+    "category": "العلوم",
+    "value": 900,
+    "question": "كم عدد عظام جسم الإنسان البالغ؟",
+    "answer": "206 عظمة",
+    "isAnswered": false
+  },
+  {
+    "id": "s10",
+    "category": "العلوم",
+    "value": 1000,
+    "question": "ما هو المعدن الوحيد الذي يكون في حالة سائلة عند درجة حرارة الغرفة؟",
+    "answer": "الزئبق",
+    "isAnswered": false
+  },
+  {
+    "id": "r1",
+    "category": "الدين",
+    "value": 100,
+    "question": "كم عدد سور القرآن الكريم؟",
+    "answer": "114 سورة",
+    "isAnswered": false
+  },
+  {
+    "id": "r2",
+    "category": "الدين",
+    "value": 200,
+    "question": "من هو أول من أذن في الإسلام؟",
+    "answer": "بلال بن رباح",
+    "isAnswered": false
+  },
+  {
+    "id": "r3",
+    "category": "الدين",
+    "value": 300,
+    "question": "ما هي أطول سورة في القرآن الكريم؟",
+    "answer": "سورة البقرة",
+    "isAnswered": false
+  },
+  {
+    "id": "r4",
+    "category": "الدين",
+    "value": 400,
+    "question": "في أي شهر نزل القرآن الكريم؟",
+    "answer": "شهر رمضان",
+    "isAnswered": false
+  },
+  {
+    "id": "r5",
+    "category": "الدين",
+    "value": 500,
+    "question": "من هو النبي الذي لُقب بـ \"ذبيح الله\"؟",
+    "answer": "إسماعيل عليه السلام",
+    "isAnswered": false
+  },
+  {
+    "id": "r6",
+    "category": "الدين",
+    "value": 600,
+    "question": "كم عدد أركان الإسلام؟",
+    "answer": "خمسة",
+    "isAnswered": false
+  },
+  {
+    "id": "r7",
+    "category": "الدين",
+    "value": 700,
+    "question": "ما هي القبلة الأولى للمسلمين؟",
+    "answer": "المسجد الأقصى",
+    "isAnswered": false
+  },
+  {
+    "id": "r8",
+    "category": "الدين",
+    "value": 800,
+    "question": "من هو \"سيف الله المسلول\"؟",
+    "answer": "خالد بن الوليد",
+    "isAnswered": false
+  },
+  {
+    "id": "r9",
+    "category": "الدين",
+    "value": 900,
+    "question": "ما هي السورة التي تسمى \"عروس القرآن\"؟",
+    "answer": "سورة الرحمن",
+    "isAnswered": false
+  },
+  {
+    "id": "r10",
+    "category": "الدين",
+    "value": 1000,
+    "question": "في أي عام هجري كانت غزوة بدر الكبرى؟",
+    "answer": "العام الثاني للهجرة",
+    "isAnswered": false
+  },
+  {
+    "id": "gk1",
+    "category": "معلومات عامة",
+    "value": 100,
+    "question": "ما هو الشيء الذي له أسنان ولا يعض؟",
+    "answer": "المشط",
+    "isAnswered": false
+  },
+  {
+    "id": "gk2",
+    "category": "معلومات عامة",
+    "value": 200,
+    "question": "ما هو أسرع حيوان بري في العالم؟",
+    "answer": "الفهد",
+    "isAnswered": false
+  },
+  {
+    "id": "gk3",
+    "category": "معلومات عامة",
+    "value": 300,
+    "question": "كم عدد ألوان قوس قزح؟",
+    "answer": "7 ألوان",
+    "isAnswered": false
+  },
+  {
+    "id": "gk4",
+    "category": "معلومات عامة",
+    "value": 400,
+    "question": "ما هو الطائر الذي يضع أكبر بيضة في العالم؟",
+    "answer": "النعامة",
+    "isAnswered": false
+  },
+  {
+    "id": "gk5",
+    "category": "معلومات عامة",
+    "value": 500,
+    "question": "ما هي عاصمة اللغة العربية (التي يُقال أنها نزل فيها القرآن)؟",
+    "answer": "مكة المكرمة",
+    "isAnswered": false
+  },
+  {
+    "id": "gk6",
+    "category": "معلومات عامة",
+    "value": 600,
+    "question": "ما هو الشيء الذي يكسر بمجرد نطق اسمه؟",
+    "answer": "الصمت",
+    "isAnswered": false
+  },
+  {
+    "id": "gk7",
+    "category": "معلومات عامة",
+    "value": 700,
+    "question": "كم عدد أرجل العنكبوت؟",
+    "answer": "8 أرجل",
+    "isAnswered": false
+  },
+  {
+    "id": "gk8",
+    "category": "معلومات عامة",
+    "value": 800,
+    "question": "ما هو أكبر حيوان في العالم (يعيش في المحيط)؟",
+    "answer": "الحوت الأزرق",
+    "isAnswered": false
+  },
+  {
+    "id": "gk9",
+    "category": "معلومات عامة",
+    "value": 900,
+    "question": "ما هي عملة اليابان؟",
+    "answer": "الين",
+    "isAnswered": false
+  },
+  {
+    "id": "gk10",
+    "category": "معلومات عامة",
+    "value": 1000,
+    "question": "من هو الرسام الذي رسم لوحة \"الموناليزا\"؟",
+    "answer": "ليوناردو دا فينشي",
+    "isAnswered": false
+  },
+  {
+    "id": "sp1",
+    "category": "الرياضة",
+    "value": 100,
+    "question": "كم عدد لاعبي فريق كرة القدم داخل الملعب؟",
+    "answer": "11 لاعباً",
+    "isAnswered": false
+  },
+  {
+    "id": "sp2",
+    "category": "الرياضة",
+    "value": 200,
+    "question": "أي دولة فازت بكأس العالم لكرة القدم 2022؟",
+    "answer": "الأرجنتين",
+    "isAnswered": false
+  },
+  {
+    "id": "sp3",
+    "category": "الرياضة",
+    "value": 300,
+    "question": "ما هي الرياضة التي تُلقب بـ \"لعبة الملوك\"؟",
+    "answer": "التنس أو الشطرنج أحياناً",
+    "isAnswered": false
+  },
+  {
+    "id": "sp4",
+    "category": "الرياضة",
+    "value": 400,
+    "question": "كم مدة شوط المباراة الواحد في كرة القدم؟",
+    "answer": "45 دقيقة",
+    "isAnswered": false
+  },
+  {
+    "id": "sp5",
+    "category": "الرياضة",
+    "value": 500,
+    "question": "في أي مدينة أقيمت أول دورة ألعاب أولمبية حديثة عام 1896؟",
+    "answer": "أثينا",
+    "isAnswered": false
+  },
+  {
+    "id": "sp6",
+    "category": "الرياضة",
+    "value": 600,
+    "question": "من هو اللاعب الملقب بـ \"البرغوث\"؟",
+    "answer": "ليونيل ميسي",
+    "isAnswered": false
+  },
+  {
+    "id": "sp7",
+    "category": "الرياضة",
+    "value": 700,
+    "question": "ما هي الدولة الأكثر فوزاً بكأس العالم (5 مرات)؟",
+    "answer": "البرازيل",
+    "isAnswered": false
+  },
+  {
+    "id": "sp8",
+    "category": "الرياضة",
+    "value": 800,
+    "question": "في أي رياضة يستخدم مصطلح \"الضربة القاضية\"؟",
+    "answer": "الملاكمة",
+    "isAnswered": false
+  },
+  {
+    "id": "sp9",
+    "category": "الرياضة",
+    "value": 900,
+    "question": "كم عدد الحلقات في شعار الألعاب الأولمبية؟",
+    "answer": "5 حلقات",
+    "isAnswered": false
+  },
+  {
+    "id": "sp10",
+    "category": "الرياضة",
+    "value": 1000,
+    "question": "ما هو طول الماراثون بالكيلومترات (تقريباً)؟",
+    "answer": "42 كيلومتر",
+    "isAnswered": false
+  },
+  {
+    "id": "p1",
+    "category": "شخصيات",
+    "value": 100,
+    "question": "شاعر عربي لقب بـ \"أمير الشعراء\"؟",
+    "answer": "أحمد شوقي",
+    "isAnswered": false
+  },
+  {
+    "id": "p2",
+    "category": "شخصيات",
+    "value": 200,
+    "question": "من هو صاحب لقب \"الشيخ الرئيس\" في الطب؟",
+    "answer": "ابن سينا",
+    "isAnswered": false
+  },
+  {
+    "id": "p3",
+    "category": "شخصيات",
+    "value": 300,
+    "question": "ملاكم عالمي اشتهر بلقب \"أعظم ملاكم في التاريخ\"؟",
+    "answer": "محمد علي كلاي",
+    "isAnswered": false
+  },
+  {
+    "id": "p4",
+    "category": "شخصيات",
+    "value": 400,
+    "question": "رحالة عربي شهير طاف العالم وكتب \"تحفة النظار\"؟",
+    "answer": "ابن بطوطة",
+    "isAnswered": false
+  },
+  {
+    "id": "p5",
+    "category": "شخصيات",
+    "value": 500,
+    "question": "مخترع المصباح الكهربائي؟",
+    "answer": "توماس إديسون",
+    "isAnswered": false
+  },
+  {
+    "id": "p6",
+    "category": "شخصيات",
+    "value": 600,
+    "question": "ملكة مصرية قديمة اشتهرت بجمالها وقوة حكمها؟",
+    "answer": "كليوباترا أو نفرتيتي",
+    "isAnswered": false
+  },
+  {
+    "id": "p7",
+    "category": "شخصيات",
+    "value": 700,
+    "question": "عالم فيزيائي صاحب نظرية النسبية؟",
+    "answer": "ألبرت أينشتاين",
+    "isAnswered": false
+  },
+  {
+    "id": "p8",
+    "category": "شخصيات",
+    "value": 800,
+    "question": "أديب مصري حصل على جائزة نوبل في الأدب؟",
+    "answer": "نجيب محفوظ",
+    "isAnswered": false
+  },
+  {
+    "id": "p9",
+    "category": "شخصيات",
+    "value": 900,
+    "question": "من هو \"مؤسس علم الاجتماع\"؟",
+    "answer": "ابن خلدون",
+    "isAnswered": false
+  },
+  {
+    "id": "p10",
+    "category": "شخصيات",
+    "value": 1000,
+    "question": "مؤسس شركة مايكروسوفت؟",
+    "answer": "بيل غيتس",
     "isAnswered": false
   }
 ]
