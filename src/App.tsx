@@ -103,26 +103,25 @@ const App: React.FC = () => {
         )}
 
         {gameStatus === 'playing' && (
-          <div className="flex flex-row overflow-x-auto pb-8 gap-3 snap-x no-scrollbar">
+          <div className="flex flex-row overflow-x-auto pb-6 gap-2 snap-x no-scrollbar">
             {Object.entries(categories).map(([catName, qList], catIdx) => (
-              <div key={catName} className="flex-none w-[160px] md:w-[200px] snap-start flex flex-col gap-3">
+              <div key={catName} className="flex-none w-[130px] snap-start flex flex-col gap-2">
                 <div className="category-header">
                   <div className="cat-label">CAT {catIdx + 1}</div>
                   <div className="cat-name">{catName}</div>
                 </div>
 
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2">
                   {qList.map(q => (
                     <motion.div
                       key={q.id}
-                      whileHover={!q.isAnswered ? { scale: 1.05 } : {}}
                       className={`tile-premium ${q.isAnswered ? 'tile-answered' : ''}`}
                       onClick={() => !q.isAnswered && selectQuestion(q.id)}
                     >
                       {q.isAnswered ? (
-                        <CheckCircle2 size={24} className="text-slate-300" />
+                        <CheckCircle2 size={18} className="text-slate-200" />
                       ) : (
-                        <span className="text-xl font-black gold-text">${q.value}</span>
+                        <span className="gold-text">${q.value}</span>
                       )}
                     </motion.div>
                   ))}
