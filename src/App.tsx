@@ -3,9 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useGameStore } from './store/useGameStore';
 import mockQuestions from './data/mockQuestions.json';
 import {
-  Globe,
-  HelpCircle,
-  CheckCircle2,
   Timer as TimerIcon,
   LayoutGrid,
   Users,
@@ -23,11 +20,13 @@ const App: React.FC = () => {
     activeQuestion,
     timer,
     startGame,
-    selectQuestion,
+    pickCategory,
+    pickValue,
     answerQuestion,
     tickTimer,
     addPlayer,
-    currentPlayerIndex
+    currentPlayerIndex,
+    selectedCategory
   } = useGameStore();
 
   useEffect(() => {
@@ -51,8 +50,8 @@ const App: React.FC = () => {
   };
 
   const categories = useMemo(() => {
-    const cats: Record<string, typeof questions> = {};
-    questions.forEach(q => {
+    const cats: Record<string, any[]> = {};
+    questions.forEach((q: any) => {
       if (!cats[q.category]) cats[q.category] = [];
       cats[q.category].push(q);
     });
@@ -99,30 +98,44 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {gameStatus === 'playing' && (
-          <div className="board-container no-scrollbar">
-            {Object.entries(categories).map(([catName, qList], catIdx) => (
-              <div key={catName} className="category-column">
-                <div className="category-header">
-                  <div className="cat-label">CAT {catIdx + 1}</div>
-                  <div className="cat-name">{catName}</div>
-                </div>
-
-                {qList.map(q => (
-                  <div
-                    key={q.id}
-                    className={`tile-premium ${q.isAnswered ? 'tile-answered' : ''}`}
-                    onClick={() => !q.isAnswered && selectQuestion(q.id)}
-                  >
-                    {q.isAnswered ? (
-                      <CheckCircle2 size={16} style={{ opacity: 0.3 }} />
-                    ) : (
-                      <span className="gold-text">${q.value}</span>
-                    )}
-                  </div>
-                ))}
+        {gameStatus === 'selecting_category' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+            {Object.keys(categories).map((cat) => (
+              <div
+                key={cat}
+                className="tile-premium"
+                onClick={() => pickCategory(cat)}
+                style={{ height: '80px', textAlign: 'center' }}
+              >
+                <span style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)' }}>{cat}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {gameStatus === 'selecting_value' && (
+          <div>
+            <h3 style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--royal-blue)', fontWeight: '900' }}>{selectedCategory}</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '10px' }}>
+              {[100, 200, 300, 400, 500].map((val) => {
+                const isAnswered = categories[selectedCategory || '']?.find(q => q.value === val)?.isAnswered;
+                return (
+                  <div
+                    key={val}
+                    className={`tile-premium ${isAnswered ? 'tile-answered' : ''}`}
+                    onClick={() => !isAnswered && pickValue(val)}
+                  >
+                    <span className="gold-text">${val}</span>
+                  </div>
+                );
+              })}
+              <button
+                onClick={() => useGameStore.setState({ gameStatus: 'selecting_category', selectedCategory: null })}
+                style={{ marginTop: '10px', background: 'none', border: '1px solid #ddd', padding: '10px', borderRadius: '8px', fontSize: '12px', fontWeight: '700' }}
+              >
+                BACK
+              </button>
+            </div>
           </div>
         )}
       </main>

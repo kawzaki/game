@@ -21,23 +21,26 @@ interface GameState {
     currentPlayerIndex: number;
     questions: Question[];
     activeQuestion: Question | null;
-    gameStatus: 'lobby' | 'playing' | 'question' | 'ended';
+    selectedCategory: string | null;
+    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'question' | 'ended';
     timer: number;
 
     // Actions
     addPlayer: (name: string, team?: 'A' | 'B') => void;
     startGame: () => void;
-    selectQuestion: (questionId: string) => void;
+    pickCategory: (category: string) => void;
+    pickValue: (value: number) => void;
     answerQuestion: (isCorrect: boolean) => void;
     tickTimer: () => void;
     resetTimer: (seconds: number) => void;
 }
 
-export const useGameStore = create<GameState>((set, get) => ({
+export const useGameStore = create<GameState>((set) => ({
     players: [],
     currentPlayerIndex: 0,
-    questions: [], // Will be populated from a mock or API
+    questions: [],
     activeQuestion: null,
+    selectedCategory: null,
     gameStatus: 'lobby',
     timer: 30,
 
@@ -45,11 +48,20 @@ export const useGameStore = create<GameState>((set, get) => ({
         players: [...state.players, { id: Math.random().toString(36).substr(2, 9), name, score: 0, team }]
     })),
 
-    startGame: () => set({ gameStatus: 'playing' }),
+    startGame: () => set({ gameStatus: 'selecting_category' }),
 
-    selectQuestion: (questionId) => set((state) => {
-        const question = state.questions.find(q => q.id === questionId);
-        if (!question || question.isAnswered) return state;
+    pickCategory: (category) => set({
+        selectedCategory: category,
+        gameStatus: 'selecting_value'
+    }),
+
+    pickValue: (value) => set((state) => {
+        const question = state.questions.find(q =>
+            q.category === state.selectedCategory &&
+            q.value === value &&
+            !q.isAnswered
+        );
+        if (!question) return state;
         return {
             activeQuestion: question,
             gameStatus: 'question',
@@ -65,8 +77,6 @@ export const useGameStore = create<GameState>((set, get) => ({
 
         if (isCorrect) {
             currentPlayer.score += state.activeQuestion.value;
-        } else {
-            // Logic for passing to others could go here
         }
 
         const updatedQuestions = state.questions.map(q =>
@@ -77,8 +87,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             players: updatedPlayers,
             questions: updatedQuestions,
             activeQuestion: null,
-            gameStatus: 'playing',
-            // Switch turn (simple sequential for now, can be optimized)
+            selectedCategory: null,
+            gameStatus: 'selecting_category',
             currentPlayerIndex: (state.currentPlayerIndex + 1) % state.players.length
         };
     }),
