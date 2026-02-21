@@ -1,4 +1,7 @@
 import { create } from 'zustand';
+import { io, Socket } from 'socket.io-client';
+
+const socket: Socket = io('http://localhost:3001');
 
 interface Player {
     id: string;
@@ -17,6 +20,7 @@ interface Question {
 }
 
 interface GameState {
+    roomId: string | null;
     players: Player[];
     currentPlayerIndex: number;
     questions: Question[];
@@ -26,76 +30,72 @@ interface GameState {
     timer: number;
 
     // Actions
-    addPlayer: (name: string, team?: 'A' | 'B') => void;
-    startGame: () => void;
-    pickCategory: (category: string) => void;
-    pickValue: (value: number) => void;
-    answerQuestion: (isCorrect: boolean) => void;
+    setRoomId: (id: string) => void;
+    addPlayer: (name: string, roomId: string) => void;
+    startGame: (roomId: string) => void;
+    pickCategory: (roomId: string, category: string) => void;
+    pickValue: (roomId: string, value: number) => void;
+    answerQuestion: (roomId: string, isCorrect: boolean) => void;
     tickTimer: () => void;
     resetTimer: (seconds: number) => void;
+    syncQuestions: (roomId: string, questions: Question[]) => void;
 }
 
-export const useGameStore = create<GameState>((set) => ({
-    players: [],
-    currentPlayerIndex: 0,
-    questions: [],
-    activeQuestion: null,
-    selectedCategory: null,
-    gameStatus: 'lobby',
-    timer: 30,
+export const useGameStore = create<GameState>((set) => {
+    // Listen for room updates
+    socket.on('room_data', (data) => {
+        set({
+            players: data.players,
+            gameStatus: data.gameStatus,
+            questions: data.questions,
+            activeQuestion: data.activeQuestion,
+            selectedCategory: data.selectedCategory,
+            currentPlayerIndex: data.currentPlayerIndex,
+            timer: data.timer
+        });
+    });
 
-    addPlayer: (name, team) => set((state) => ({
-        players: [...state.players, { id: Math.random().toString(36).substr(2, 9), name, score: 0, team }]
-    })),
+    return {
+        roomId: null,
+        players: [],
+        currentPlayerIndex: 0,
+        questions: [],
+        activeQuestion: null,
+        selectedCategory: null,
+        gameStatus: 'lobby',
+        timer: 30,
 
-    startGame: () => set({ gameStatus: 'selecting_category' }),
+        setRoomId: (id) => set({ roomId: id }),
 
-    pickCategory: (category) => set({
-        selectedCategory: category,
-        gameStatus: 'selecting_value'
-    }),
+        addPlayer: (name, roomId) => {
+            socket.emit('join_room', { roomId, playerName: name });
+            set({ roomId });
+        },
 
-    pickValue: (value) => set((state) => {
-        const question = state.questions.find(q =>
-            q.category === state.selectedCategory &&
-            q.value === value &&
-            !q.isAnswered
-        );
-        if (!question) return state;
-        return {
-            activeQuestion: question,
-            gameStatus: 'question',
-            timer: 30
-        };
-    }),
+        startGame: (roomId) => {
+            socket.emit('start_game', roomId);
+        },
 
-    answerQuestion: (isCorrect) => set((state) => {
-        if (!state.activeQuestion) return state;
+        pickCategory: (roomId, category) => {
+            socket.emit('pick_category', { roomId, category });
+        },
 
-        const updatedPlayers = [...state.players];
-        const currentPlayer = updatedPlayers[state.currentPlayerIndex];
+        pickValue: (roomId, value) => {
+            socket.emit('pick_value', { roomId, value });
+        },
 
-        if (isCorrect) {
-            currentPlayer.score += state.activeQuestion.value;
-        }
+        answerQuestion: (roomId, isCorrect) => {
+            socket.emit('answer_question', { roomId, isCorrect });
+        },
 
-        const updatedQuestions = state.questions.map(q =>
-            q.id === state.activeQuestion?.id ? { ...q, isAnswered: true } : q
-        );
+        syncQuestions: (roomId, questions) => {
+            socket.emit('sync_questions', { roomId, questions });
+        },
 
-        return {
-            players: updatedPlayers,
-            questions: updatedQuestions,
-            activeQuestion: null,
-            selectedCategory: null,
-            gameStatus: 'selecting_category',
-            currentPlayerIndex: (state.currentPlayerIndex + 1) % state.players.length
-        };
-    }),
+        tickTimer: () => set((state) => ({
+            timer: state.timer > 0 ? state.timer - 1 : 0
+        })),
 
-    tickTimer: () => set((state) => ({
-        timer: state.timer > 0 ? state.timer - 1 : 0
-    })),
-
-    resetTimer: (seconds) => set({ timer: seconds }),
-}));
+        resetTimer: (seconds) => set({ timer: seconds }),
+    };
+});

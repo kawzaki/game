@@ -11,6 +11,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
   const {
+    roomId,
+    setRoomId,
     gameStatus,
     players,
     questions,
@@ -23,8 +25,14 @@ const App: React.FC = () => {
     tickTimer,
     addPlayer,
     currentPlayerIndex,
-    selectedCategory
+    selectedCategory,
+    syncQuestions
   } = useGameStore();
+
+  useEffect(() => {
+    // Default Room ID if not set
+    if (!roomId) setRoomId('1234');
+  }, [roomId]);
 
   useEffect(() => {
     useGameStore.setState({ questions: mockQuestions as any });
@@ -35,10 +43,10 @@ const App: React.FC = () => {
     if (gameStatus === 'question' && timer > 0) {
       interval = setInterval(() => tickTimer(), 1000);
     } else if (timer === 0 && gameStatus === 'question') {
-      answerQuestion(false);
+      if (roomId) answerQuestion(roomId, false);
     }
     return () => clearInterval(interval);
-  }, [gameStatus, timer]);
+  }, [gameStatus, timer, roomId]);
 
   const toggleLanguage = () => {
     const nextLng = i18n.language === 'ar' ? 'en' : 'ar';
@@ -65,7 +73,7 @@ const App: React.FC = () => {
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #eee', background: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Trophy size={18} style={{ color: 'var(--accent-gold)' }} />
-          <span style={{ fontSize: '12px', fontWeight: '900', color: 'var(--royal-blue)' }}>ROOM #1234</span>
+          <span style={{ fontSize: '12px', fontWeight: '900', color: 'var(--royal-blue)' }}>ROOM #{roomId}</span>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={toggleLanguage} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8' }}>
@@ -90,14 +98,14 @@ const App: React.FC = () => {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       const val = (e.target as HTMLInputElement).value;
-                      if (val.trim()) { addPlayer(val); (e.target as HTMLInputElement).value = ''; }
+                      if (val.trim() && roomId) { addPlayer(val, roomId); (e.target as HTMLInputElement).value = ''; }
                     }
                   }}
                 />
                 <button
                   onClick={() => {
                     const input = document.getElementById('player-name-input') as HTMLInputElement;
-                    if (input.value.trim()) { addPlayer(input.value); input.value = ''; }
+                    if (input.value.trim() && roomId) { addPlayer(input.value, roomId); input.value = ''; }
                   }}
                   className="btn-rules"
                   style={{ padding: '0 20px', height: '48px', fontSize: '14px' }}
@@ -109,7 +117,16 @@ const App: React.FC = () => {
                 {players.map(p => <span key={p.id} style={{ background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>{p.name}</span>)}
               </div>
               {players.length > 0 && (
-                <button onClick={startGame} className="btn-start" style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'linear-gradient(135deg, var(--accent-gold), var(--accent-gold-bright))', color: 'white', border: 'none', fontWeight: '900', cursor: 'pointer' }}>
+                <button
+                  onClick={() => {
+                    if (roomId) {
+                      syncQuestions(roomId, mockQuestions as any);
+                      startGame(roomId);
+                    }
+                  }}
+                  className="btn-start"
+                  style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'linear-gradient(135deg, var(--accent-gold), var(--accent-gold-bright))', color: 'white', border: 'none', fontWeight: '900', cursor: 'pointer' }}
+                >
                   {t('start_game')}
                 </button>
               )}
@@ -123,7 +140,7 @@ const App: React.FC = () => {
               <div
                 key={cat}
                 className="tile-premium"
-                onClick={() => pickCategory(cat)}
+                onClick={() => roomId && pickCategory(roomId, cat)}
                 style={{ height: '80px', textAlign: 'center' }}
               >
                 <span style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)' }}>{cat}</span>
@@ -142,14 +159,16 @@ const App: React.FC = () => {
                   <div
                     key={val}
                     className={`tile-premium ${isAnswered ? 'tile-answered' : ''}`}
-                    onClick={() => !isAnswered && pickValue(val)}
+                    onClick={() => !isAnswered && roomId && pickValue(roomId, val)}
                   >
                     <span className="gold-text">${val}</span>
                   </div>
                 );
               })}
               <button
-                onClick={() => useGameStore.setState({ gameStatus: 'selecting_category', selectedCategory: null })}
+                onClick={() => {
+                  if (roomId) useGameStore.setState({ gameStatus: 'selecting_category', selectedCategory: null });
+                }}
                 style={{ marginTop: '10px', background: 'none', border: '1px solid #ddd', padding: '10px', borderRadius: '8px', fontSize: '12px', fontWeight: '700' }}
               >
                 BACK
@@ -172,8 +191,8 @@ const App: React.FC = () => {
               <h3 className="gold-text" style={{ fontSize: '32px', marginBottom: '16px' }}>${activeQuestion.value}</h3>
               <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '24px', lineHeight: '1.4' }}>{activeQuestion.question}</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <button onClick={() => answerQuestion(true)} style={{ padding: '12px', background: '#ecfdf5', color: '#059669', border: '1px solid #d1fae5', borderRadius: '12px', fontWeight: '900' }}>CORRECT</button>
-                <button onClick={() => answerQuestion(false)} style={{ padding: '12px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', borderRadius: '12px', fontWeight: '900' }}>WRONG</button>
+                <button onClick={() => roomId && answerQuestion(roomId, true)} style={{ padding: '12px', background: '#ecfdf5', color: '#059669', border: '1px solid #d1fae5', borderRadius: '12px', fontWeight: '900' }}>CORRECT</button>
+                <button onClick={() => roomId && answerQuestion(roomId, false)} style={{ padding: '12px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', borderRadius: '12px', fontWeight: '900' }}>WRONG</button>
               </div>
             </motion.div>
           </div>
