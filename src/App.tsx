@@ -80,9 +80,31 @@ const App: React.FC = () => {
           <div className="lobby-card">
             <h2 style={{ fontSize: '24px', fontWeight: '900', marginBottom: '20px', color: 'var(--royal-blue)' }}>{t('welcome')}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <input type="text" placeholder="Your Name" className="input-premium" onKeyDown={(e) => {
-                if (e.key === 'Enter') { addPlayer((e.target as HTMLInputElement).value); (e.target as HTMLInputElement).value = ''; }
-              }} />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  id="player-name-input"
+                  placeholder="Your Name"
+                  className="input-premium"
+                  style={{ flex: 1 }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = (e.target as HTMLInputElement).value;
+                      if (val.trim()) { addPlayer(val); (e.target as HTMLInputElement).value = ''; }
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    const input = document.getElementById('player-name-input') as HTMLInputElement;
+                    if (input.value.trim()) { addPlayer(input.value); input.value = ''; }
+                  }}
+                  className="btn-rules"
+                  style={{ padding: '0 20px', height: '48px', fontSize: '14px' }}
+                >
+                  JOIN
+                </button>
+              </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'center' }}>
                 {players.map(p => <span key={p.id} style={{ background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>{p.name}</span>)}
               </div>
