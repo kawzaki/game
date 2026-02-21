@@ -1,7 +1,11 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
 
-const socket: Socket = io('http://localhost:3001');
+const socketUrl = window.location.hostname === 'localhost'
+    ? 'http://localhost:3001'
+    : `http://${window.location.hostname}:3001`;
+
+const socket: Socket = io(socketUrl);
 
 interface Player {
     id: string;
