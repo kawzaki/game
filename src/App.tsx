@@ -1,8 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from './store/useGameStore';
 import mockQuestions from './data/mockQuestions.json';
-import { Globe, Trophy, Timer as TimerIcon } from 'lucide-react';
+import {
+  Globe,
+  HelpCircle,
+  CheckCircle2,
+  Timer as TimerIcon,
+  LayoutGrid,
+  Users,
+  MessageSquare,
+  Trophy
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
@@ -21,18 +30,15 @@ const App: React.FC = () => {
     currentPlayerIndex
   } = useGameStore();
 
-  // Initialize questions
   useEffect(() => {
     useGameStore.setState({ questions: mockQuestions as any });
   }, []);
 
-  // Timer logic
   useEffect(() => {
     let interval: any;
     if (gameStatus === 'question' && timer > 0) {
       interval = setInterval(() => tickTimer(), 1000);
     } else if (timer === 0 && gameStatus === 'question') {
-      // Auto-fail or pass turn logic
       answerQuestion(false);
     }
     return () => clearInterval(interval);
@@ -44,33 +50,57 @@ const App: React.FC = () => {
     document.documentElement.dir = nextLng === 'ar' ? 'rtl' : 'ltr';
   };
 
-  const currentPlayer = players[currentPlayerIndex];
+  const categories = useMemo(() => {
+    const cats: Record<string, typeof questions> = {};
+    questions.forEach(q => {
+      if (!cats[q.category]) cats[q.category] = [];
+      cats[q.category].push(q);
+    });
+    Object.keys(cats).forEach(k => {
+      cats[k].sort((a, b) => a.value - b.value);
+    });
+    return cats;
+  }, [questions]);
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
+    <div className="min-h-screen pb-48">
+
       {/* Header */}
-      <header className="flex justify-between items-center mb-12">
-        <h1 className="text-3xl font-bold gold-gradient-text uppercase tracking-wider">
-          {t('welcome')}
-        </h1>
+      <header className="px-8 py-6 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-br from-gold to-gold-bright p-2 rounded-lg shadow-gold">
+            <Trophy className="text-white h-6 w-6" />
+          </div>
+          <h1 className="text-xl font-black tracking-tight text-royal-blue uppercase">
+            Game Room #1234
+          </h1>
+        </div>
         <div className="flex gap-4">
-          <button onClick={toggleLanguage} className="btn-primary flex items-center gap-2">
-            <Globe size={18} />
+          <button onClick={toggleLanguage} className="text-slate-400 hover:text-royal-blue flex items-center gap-2 text-xs uppercase font-black transition-colors">
+            <Globe size={14} />
             {i18n.language === 'ar' ? 'English' : 'العربية'}
+          </button>
+          <button className="btn-rules">
+            <HelpCircle size={18} />
+            {t('rules', 'Rules')}
           </button>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto">
+      <main className="max-w-7xl mx-auto p-4 md:p-8">
         {gameStatus === 'lobby' && (
-          <div className="premium-card p-12 text-center max-w-md mx-auto">
-            <Trophy className="mx-auto mb-6 text-yellow-500" size={64} />
-            <h2 className="text-2xl mb-8">{t('start_game')}</h2>
-            <div className="space-y-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="lobby-card"
+          >
+            <h2 className="text-3xl font-black mb-2 text-royal-blue">{t('welcome')}</h2>
+            <p className="text-slate-400 mb-10 font-medium">Join the competition</p>
+            <div className="space-y-6">
               <input
                 type="text"
-                placeholder="Enter Name"
-                className="w-full p-3 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="Enter Your Name"
+                className="input-premium"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     addPlayer((e.target as HTMLInputElement).value);
@@ -78,88 +108,96 @@ const App: React.FC = () => {
                   }
                 }}
               />
-              <div className="flex flex-wrap gap-2 justify-center">
+              <div className="flex flex-wrap gap-2 justify-center mb-8">
                 {players.map(p => (
-                  <span key={p.id} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                  <span key={p.id} className="bg-slate-100 border border-slate-200 text-slate-700 px-5 py-2 rounded-full text-sm font-bold shadow-sm">
                     {p.name}
                   </span>
                 ))}
               </div>
               {players.length > 0 && (
-                <button onClick={startGame} className="btn-primary w-full mt-4">
+                <button
+                  onClick={startGame}
+                  className="w-full py-5 bg-gradient-to-r from-gold to-gold-bright text-white rounded-2xl font-black uppercase tracking-widest shadow-gold hover:scale-[1.02] transition-transform active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, var(--accent-gold), var(--accent-gold-bright))' }}
+                >
                   {t('start_game')}
                 </button>
               )}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {gameStatus === 'playing' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {questions.map((q) => (
-              <motion.div
-                key={q.id}
-                whileHover={!q.isAnswered ? { scale: 1.05 } : {}}
-                className={`premium-card p-8 text-center cursor-pointer transition-all ${q.isAnswered ? 'opacity-30 grayscale cursor-not-allowed' : 'hover:border-gold'
-                  }`}
-                onClick={() => !q.isAnswered && selectQuestion(q.id)}
-              >
-                <div className="text-sm text-muted mb-2">{t('category')}: {q.category}</div>
-                <div className="text-3xl font-bold gold-gradient-text">${q.value}</div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-
-        {/* HUD for Scores during game */}
-        {gameStatus !== 'lobby' && (
-          <div className="fixed bottom-8 left-8 right-8 flex justify-between items-center premium-card px-8 py-4">
-            <div className="flex gap-4">
-              {players.map((p, idx) => (
-                <div key={p.id} className={`p-2 rounded ${idx === currentPlayerIndex ? 'border-2 border-gold font-bold' : ''}`}>
-                  {p.name}: <span className="text-green-600">${p.score}</span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+            {Object.entries(categories).map(([catName, qList], catIdx) => (
+              <div key={catName} className="flex flex-col gap-6">
+                <div className="category-header">
+                  <div className="cat-label">CAT {catIdx + 1}</div>
+                  <div className="cat-name">{catName}</div>
                 </div>
-              ))}
-            </div>
-            <div className="text-muted italic">{t('wait_turn')}: {currentPlayer?.name}</div>
+
+                <div className="space-y-6">
+                  {qList.map(q => (
+                    <motion.div
+                      key={q.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: catIdx * 0.1 + (q.value / 1000) }}
+                      whileHover={!q.isAnswered ? { scale: 1.05 } : {}}
+                      className={`tile-premium ${q.isAnswered ? 'tile-answered' : ''}`}
+                      onClick={() => !q.isAnswered && selectQuestion(q.id)}
+                    >
+                      {q.isAnswered ? (
+                        <CheckCircle2 size={32} className="text-slate-300" />
+                      ) : (
+                        <span className="text-3xl font-black gold-text">${q.value}</span>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </main>
 
-      {/* Question Modal */}
+      {/* QUESTION MODAL */}
       <AnimatePresence>
         {gameStatus === 'question' && activeQuestion && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50"
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="premium-card bg-white p-8 md:p-12 max-w-2xl w-full text-center relative"
+              initial={{ scale: 0.8, y: 50, rotateX: 20 }}
+              animate={{ scale: 1, y: 0, rotateX: 0 }}
+              className="modal-content p-12 max-w-2xl w-full text-center relative"
             >
-              <div className="absolute top-4 right-4 flex items-center gap-2 text-xl font-bold text-blue-900">
-                <TimerIcon />
+              <div className="absolute top-8 right-8 flex items-center gap-2 text-2xl font-black text-royal-blue">
+                <TimerIcon size={28} className="text-gold" style={{ color: 'var(--accent-gold)' }} />
                 <span>{timer}s</span>
               </div>
 
-              <h3 className="text-lg text-muted mb-4 uppercase tracking-widest">{activeQuestion.category} - ${activeQuestion.value}</h3>
-              <p className="text-3xl font-bold mb-12 min-h-[100px] flex items-center justify-center">
+              <div className="cat-label text-sm mb-4">{activeQuestion.category}</div>
+              <h3 className="text-5xl font-black gold-text mb-12">${activeQuestion.value}</h3>
+
+              <p className="text-3xl font-bold leading-tight text-royal-blue mb-16 px-4">
                 {activeQuestion.question}
               </p>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6 w-full">
                 <button
                   onClick={() => answerQuestion(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-xl font-bold"
+                  className="py-5 bg-emerald-50 text-emerald-600 border-2 border-emerald-100 rounded-2xl font-black uppercase tracking-wider hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm"
                 >
                   {t('correct')}
                 </button>
                 <button
                   onClick={() => answerQuestion(false)}
-                  className="bg-red-600 hover:bg-red-700 text-white p-4 rounded-xl font-bold"
+                  className="py-5 bg-rose-50 text-rose-600 border-2 border-rose-100 rounded-2xl font-black uppercase tracking-wider hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all shadow-sm"
                 >
                   {t('incorrect')}
                 </button>
@@ -168,6 +206,43 @@ const App: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* FOOTER */}
+      {gameStatus !== 'lobby' && (
+        <>
+          <div className="hud-container">
+            {players.map((p, idx) => (
+              <motion.div
+                key={p.id}
+                layout
+                className={`score-card ${idx === currentPlayerIndex ? 'active' : ''}`}
+              >
+                <div className="label">
+                  {p.team ? `TEAM ${p.team}` : `PLAYER ${idx + 1}`}
+                </div>
+                <div className="value">
+                  {p.score < 0 ? '-' : ''}${Math.abs(p.score).toLocaleString()}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <nav className="bottom-nav">
+            <div className="nav-item active">
+              <LayoutGrid size={24} />
+              <span>Board</span>
+            </div>
+            <div className="nav-item">
+              <Users size={24} />
+              <span>Players</span>
+            </div>
+            <div className="nav-item">
+              <MessageSquare size={24} />
+              <span>Chat</span>
+            </div>
+          </nav>
+        </>
+      )}
     </div>
   );
 };
