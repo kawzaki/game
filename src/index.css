@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&family=Inter:wght@400;700;900&display=swap');
+
 :root {
   /* Bright Gold Premium Palette */
   --bg-main: #fcfcfc;
@@ -26,7 +28,7 @@
 }
 
 body {
-  font-family: 'Inter', 'Noto Sans Arabic', sans-serif;
+  font-family: 'Inter', 'Cairo', sans-serif;
   background-color: var(--bg-main);
   background-image:
     radial-gradient(at 0% 0%, hsla(41, 49%, 88%, 0.2) 0, transparent 40%),
@@ -36,7 +38,11 @@ body {
   overflow-x: hidden;
 }
 
-[dir="rtl"] {
+[dir="rtl"],
+[dir="rtl"] body,
+[dir="rtl"] button,
+[dir="rtl"] input {
+  font-family: 'Cairo', 'Inter', sans-serif;
   text-align: right;
 }
 
