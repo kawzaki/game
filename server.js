@@ -31,6 +31,29 @@ const io = new Server(httpServer, {
 // In-memory room storage
 const rooms = new Map();
 
+// Helper for smart answer checking
+function isCorrectAnswer(userInput, actualAnswer) {
+    if (!userInput || !actualAnswer) return false;
+
+    // 1. Normalize both strings: lowercase, trim, remove non-alphanumeric (keep Arabic/English)
+    const normalize = (str) => str.toLowerCase().trim().replace(/[^\p{L}\p{N}]/gu, '');
+    const normUser = normalize(userInput);
+    const normActual = normalize(actualAnswer);
+
+    if (normUser === normActual) return true;
+
+    // 2. Numerical check: if both contain numbers and those numbers match
+    const extractNumbers = (str) => (str.match(/\d+/g) || []).join('');
+    const userNum = extractNumbers(userInput);
+    const actualNum = extractNumbers(actualAnswer);
+    if (userNum && actualNum && userNum === actualNum) return true;
+
+    // 3. Substring check: if one is a significant part of the other (min 2 chars unless it's a number)
+    if (normUser.length >= 2 && (normActual.includes(normUser) || normUser.includes(normActual))) return true;
+
+    return false;
+}
+
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
@@ -110,7 +133,7 @@ io.on('connection', (socket) => {
         const room = rooms.get(roomId);
         if (room && room.activeQuestion && room.buzzedPlayerId === socket.id) {
             const player = room.players.find(p => p.id === socket.id);
-            const isCorrect = answer.trim().toLowerCase() === room.activeQuestion.answer.toLowerCase().trim();
+            const isCorrect = isCorrectAnswer(answer, room.activeQuestion.answer);
 
             if (isCorrect) {
                 if (player) player.score += room.activeQuestion.value;
