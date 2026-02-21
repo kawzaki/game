@@ -15,7 +15,7 @@
   /* Layout Constants - COMPACT */
   --radius-lg: 16px;
   --radius-md: 8px;
-  --shadow-premium: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-premium: 0 4px 12px rgba(0, 0, 0, 0.08);
   --transition-fast: 0.1s ease-out;
 }
 
@@ -44,11 +44,12 @@ body {
 .gold-text {
   background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-bright));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 800;
 }
 
-/* --- BOARD LAYOUT --- */
+/* BOARD LAYOUT */
 .board-container {
   display: flex !important;
   flex-direction: row !important;
@@ -61,18 +62,17 @@ body {
 
 .category-column {
   flex: 0 0 140px;
-  /* Force 140px width per category */
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* --- TILES --- */
+/* TILES */
 .tile-premium {
   background-color: var(--bg-card);
   border: 1px solid rgba(197, 160, 89, 0.2);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-premium);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -98,7 +98,7 @@ body {
   box-shadow: none;
 }
 
-/* --- HEADERS --- */
+/* HEADERS */
 .category-header {
   text-align: center;
   margin-bottom: 4px;
@@ -116,7 +116,7 @@ body {
   color: var(--royal-blue);
   padding: 8px 4px;
   border-radius: 6px;
-  box-shadow: var(--shadow-premium);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
   font-weight: 800;
   font-size: 0.8rem;
   border-bottom: 2px solid var(--accent-gold);
@@ -125,75 +125,81 @@ body {
   text-overflow: ellipsis;
 }
 
-/* --- HUD & NAVIGATION --- */
-.hud-container {
-  position: fixed;
-  bottom: 70px;
-  left: 0;
-  right: 0;
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  justify-content: center;
-  padding: 0 10px;
-  z-index: 100;
-}
-
-.score-card {
-  background-color: var(--bg-card);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  padding: 8px 12px;
-  border-radius: 12px;
-  min-width: 100px;
-  text-align: center;
-  box-shadow: var(--shadow-premium);
-}
-
-.score-card.active {
-  background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-bright));
-  color: white;
-}
-
-.score-card .value {
-  font-size: 1.1rem;
-  font-weight: 900;
-}
-
-.bottom-nav {
+/* NEW COMPACT SCORE HUD */
+.bottom-hud {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  height: 80px;
   background-color: white;
   display: flex;
-  justify-content: space-around;
   align-items: center;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  z-index: 101;
+  justify-content: space-between;
+  padding: 0 16px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  z-index: 1000;
 }
 
-.nav-item {
+.hud-player-slot {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  color: var(--text-muted);
-  font-size: 0.6rem;
-  font-weight: 700;
+  justify-content: center;
 }
 
-.nav-item.active {
+.hud-player-slot.active {
+  background: linear-gradient(135deg, rgba(197, 160, 89, 0.1), transparent);
+  border-radius: var(--radius-md);
+  padding: 8px;
+}
+
+.hud-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.hud-name {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: var(--royal-blue);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-score {
+  font-size: 1.4rem;
+  font-weight: 900;
   color: var(--accent-gold);
 }
 
-/* --- UTILS --- */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+.hud-vs {
+  font-weight: 900;
+  color: #ddd;
+  padding: 0 12px;
+  font-size: 0.8rem;
 }
 
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+/* MODALS & LOBBY */
+.lobby-card {
+  background: white;
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-premium);
+  text-align: center;
+}
+
+.input-premium {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: var(--radius-md);
+  width: 100%;
+  font-size: 1rem;
 }
 
 .modal-overlay {
@@ -204,7 +210,16 @@ body {
 .modal-content {
   background: white;
   border-radius: 20px;
-  width: 85%;
+  width: 90%;
   max-width: 450px;
   padding: 1.5rem;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

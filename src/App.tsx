@@ -4,9 +4,6 @@ import { useGameStore } from './store/useGameStore';
 import mockQuestions from './data/mockQuestions.json';
 import {
   Timer as TimerIcon,
-  LayoutGrid,
-  Users,
-  MessageSquare,
   Trophy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -161,23 +158,33 @@ const App: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* FOOTER */}
-      {gameStatus !== 'lobby' && (
-        <>
-          <div className="hud-container no-scrollbar">
-            {players.map((p, idx) => (
-              <div key={p.id} className={`score-card ${idx === currentPlayerIndex ? 'active' : ''}`}>
-                <div className="label" style={{ fontSize: '10px' }}>PLAYER {idx + 1}</div>
-                <div className="value">${p.score.toLocaleString()}</div>
-              </div>
-            ))}
+      {/* NEW FOOTER HUD */}
+      {gameStatus !== 'lobby' && players.length > 0 && (
+        <div className="bottom-hud">
+          {/* Active Player Slot */}
+          <div className="hud-player-slot active">
+            <div className="hud-label">TURN: {players[currentPlayerIndex]?.team ? `TEAM ${players[currentPlayerIndex].team}` : 'PLAYER'}</div>
+            <div className="hud-name">{players[currentPlayerIndex]?.name}</div>
+            <div className="hud-score">${players[currentPlayerIndex]?.score.toLocaleString()}</div>
           </div>
-          <nav className="bottom-nav">
-            <div className="nav-item active"><LayoutGrid size={18} /><span>Board</span></div>
-            <div className="nav-item"><Users size={18} /><span>Players</span></div>
-            <div className="nav-item"><MessageSquare size={18} /><span>Chat</span></div>
-          </nav>
-        </>
+
+          <div className="hud-vs">VS</div>
+
+          {/* Opponent Slot - Shows the highest scoring opponent */}
+          {(() => {
+            const opponent = [...players]
+              .filter((_, idx) => idx !== currentPlayerIndex)
+              .sort((a, b) => b.score - a.score)[0] || players[0];
+
+            return (
+              <div className="hud-player-slot" style={{ textAlign: 'right' }}>
+                <div className="hud-label">OPPONENT</div>
+                <div className="hud-name">{opponent?.name || '---'}</div>
+                <div className="hud-score">${opponent?.score.toLocaleString() || '0'}</div>
+              </div>
+            );
+          })()}
+        </div>
       )}
     </div>
   );
