@@ -92,9 +92,43 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('buzz', (roomId) => {
+        const room = rooms.get(roomId);
+        if (room && room.gameStatus === 'question' && !room.buzzedPlayerId) {
+            room.buzzedPlayerId = socket.id;
+            io.to(roomId).emit('room_data', room);
+            console.log(`Player ${socket.id} buzzed in room ${roomId}`);
+        }
+    });
+
+    socket.on('submit_answer', ({ roomId, answer }) => {
+        const room = rooms.get(roomId);
+        if (room && room.activeQuestion && room.buzzedPlayerId === socket.id) {
+            const player = room.players.find(p => p.id === socket.id);
+            const isCorrect = answer.trim().toLowerCase() === room.activeQuestion.answer.toLowerCase().trim();
+
+            if (isCorrect) {
+                if (player) player.score += room.activeQuestion.value;
+                room.questions = room.questions.map(q =>
+                    q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
+                );
+                room.activeQuestion = null;
+                room.buzzedPlayerId = null;
+                room.gameStatus = 'selecting_category';
+                // Turn passes to the winner if you want, or just let picking continue
+            } else {
+                if (player) player.score -= room.activeQuestion.value;
+                room.buzzedPlayerId = null; // Reset buzzer so others can try
+            }
+
+            io.to(roomId).emit('room_data', room);
+        }
+    });
+
     socket.on('answer_question', ({ roomId, isCorrect }) => {
         const room = rooms.get(roomId);
         if (room && room.activeQuestion) {
+            // Manual overrides or timeout
             const currentPlayer = room.players[room.currentPlayerIndex];
             if (isCorrect) {
                 currentPlayer.score += room.activeQuestion.value;
@@ -106,6 +140,7 @@ io.on('connection', (socket) => {
 
             room.activeQuestion = null;
             room.selectedCategory = null;
+            room.buzzedPlayerId = null;
             room.gameStatus = 'selecting_category';
             room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
 

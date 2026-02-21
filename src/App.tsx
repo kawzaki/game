@@ -12,15 +12,19 @@ const App: React.FC = () => {
   const { t, i18n } = useTranslation();
   const {
     roomId,
+    myId,
     setRoomId,
     gameStatus,
     players,
     questions,
     activeQuestion,
+    buzzedPlayerId,
     timer,
     startGame,
     pickCategory,
     pickValue,
+    buzz,
+    submitAnswer,
     answerQuestion,
     tickTimer,
     addPlayer,
@@ -28,6 +32,13 @@ const App: React.FC = () => {
     selectedCategory,
     syncQuestions
   } = useGameStore();
+
+  const [localAnswer, setLocalAnswer] = React.useState('');
+
+  useEffect(() => {
+    // Reset local answer when question or buzzer status changes
+    setLocalAnswer('');
+  }, [activeQuestion, buzzedPlayerId]);
 
   useEffect(() => {
     // Default Room ID if not set
@@ -190,9 +201,42 @@ const App: React.FC = () => {
               <div className="cat-label" style={{ marginBottom: '8px' }}>{activeQuestion.category}</div>
               <h3 className="gold-text" style={{ fontSize: '32px', marginBottom: '16px' }}>${activeQuestion.value}</h3>
               <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '24px', lineHeight: '1.4' }}>{activeQuestion.question}</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <button onClick={() => roomId && answerQuestion(roomId, true)} style={{ padding: '12px', background: '#ecfdf5', color: '#059669', border: '1px solid #d1fae5', borderRadius: '12px', fontWeight: '900' }}>CORRECT</button>
-                <button onClick={() => roomId && answerQuestion(roomId, false)} style={{ padding: '12px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fee2e2', borderRadius: '12px', fontWeight: '900' }}>WRONG</button>
+
+              <div style={{ marginTop: '20px' }}>
+                {!buzzedPlayerId ? (
+                  <button
+                    onClick={() => roomId && buzz(roomId)}
+                    style={{ width: '100%', padding: '20px', background: 'var(--accent-gold)', color: 'white', borderRadius: '16px', fontSize: '24px', fontWeight: '900', border: 'none', boxShadow: '0 8px 0 #a3844a' }}
+                  >
+                    BUZZ!
+                  </button>
+                ) : buzzedPlayerId === myId ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Type your answer..."
+                      className="input-premium"
+                      value={localAnswer}
+                      onChange={(e) => setLocalAnswer(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && roomId) submitAnswer(roomId, localAnswer);
+                      }}
+                    />
+                    <button
+                      onClick={() => roomId && submitAnswer(roomId, localAnswer)}
+                      style={{ padding: '14px', background: 'var(--royal-blue)', color: 'white', borderRadius: '12px', fontWeight: '900', border: 'none' }}
+                    >
+                      SUBMIT ANSWER
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #cbd5e1' }}>
+                    <span style={{ color: '#64748b', fontWeight: 'bold' }}>
+                      {players.find(p => p.id === buzzedPlayerId)?.name} is answering...
+                    </span>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>

@@ -26,6 +26,8 @@ interface GameState {
     questions: Question[];
     activeQuestion: Question | null;
     selectedCategory: string | null;
+    buzzedPlayerId: string | null;
+    myId: string | null;
     gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'question' | 'ended';
     timer: number;
 
@@ -35,6 +37,8 @@ interface GameState {
     startGame: (roomId: string) => void;
     pickCategory: (roomId: string, category: string) => void;
     pickValue: (roomId: string, value: number) => void;
+    buzz: (roomId: string) => void;
+    submitAnswer: (roomId: string, answer: string) => void;
     answerQuestion: (roomId: string, isCorrect: boolean) => void;
     tickTimer: () => void;
     resetTimer: (seconds: number) => void;
@@ -50,8 +54,10 @@ export const useGameStore = create<GameState>((set) => {
             questions: data.questions,
             activeQuestion: data.activeQuestion,
             selectedCategory: data.selectedCategory,
+            buzzedPlayerId: data.buzzedPlayerId,
             currentPlayerIndex: data.currentPlayerIndex,
-            timer: data.timer
+            timer: data.timer,
+            myId: socket.id || null
         });
     });
 
@@ -62,6 +68,8 @@ export const useGameStore = create<GameState>((set) => {
         questions: [],
         activeQuestion: null,
         selectedCategory: null,
+        buzzedPlayerId: null,
+        myId: null,
         gameStatus: 'lobby',
         timer: 30,
 
@@ -82,6 +90,14 @@ export const useGameStore = create<GameState>((set) => {
 
         pickValue: (roomId, value) => {
             socket.emit('pick_value', { roomId, value });
+        },
+
+        buzz: (roomId) => {
+            socket.emit('buzz', roomId);
+        },
+
+        submitAnswer: (roomId, answer) => {
+            socket.emit('submit_answer', { roomId, answer });
         },
 
         answerQuestion: (roomId, isCorrect) => {
