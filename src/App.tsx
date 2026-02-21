@@ -129,9 +129,9 @@ const App: React.FC = () => {
         )}
 
         {gameStatus === 'playing' && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+          <div className="flex overflow-x-auto pb-12 gap-6 snap-x">
             {Object.entries(categories).map(([catName, qList], catIdx) => (
-              <div key={catName} className="flex flex-col gap-6">
+              <div key={catName} className="flex-none w-64 md:w-72 snap-center flex flex-col gap-6">
                 <div className="category-header">
                   <div className="cat-label">CAT {catIdx + 1}</div>
                   <div className="cat-name">{catName}</div>
@@ -143,7 +143,7 @@ const App: React.FC = () => {
                       key={q.id}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: catIdx * 0.1 + (q.value / 1000) }}
+                      transition={{ delay: catIdx * 0.05 + (q.value / 2000) }}
                       whileHover={!q.isAnswered ? { scale: 1.05 } : {}}
                       className={`tile-premium ${q.isAnswered ? 'tile-answered' : ''}`}
                       onClick={() => !q.isAnswered && selectQuestion(q.id)}
