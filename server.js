@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Fallback for SPA routing - must handle socket.io separately or before
-app.get('*', (req, res, next) => {
+app.get('/*', (req, res, next) => {
     if (req.path.startsWith('/socket.io')) return next();
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
