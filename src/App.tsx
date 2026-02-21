@@ -129,9 +129,9 @@ const App: React.FC = () => {
         )}
 
         {gameStatus === 'playing' && (
-          <div className="flex overflow-x-auto pb-12 gap-6 snap-x">
+          <div className="flex flex-nowrap overflow-x-auto pb-12 gap-6 snap-x scroll-smooth">
             {Object.entries(categories).map(([catName, qList], catIdx) => (
-              <div key={catName} className="flex-none w-64 md:w-72 snap-center flex flex-col gap-6">
+              <div key={catName} className="flex-none w-[280px] md:w-[320px] snap-center flex flex-col gap-6">
                 <div className="category-header">
                   <div className="cat-label">CAT {catIdx + 1}</div>
                   <div className="cat-name">{catName}</div>
