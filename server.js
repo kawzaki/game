@@ -86,7 +86,9 @@ io.on('connection', (socket) => {
             if (question) {
                 room.activeQuestion = question;
                 room.gameStatus = 'question';
-                room.timer = 30;
+                room.timer = 15; // Set to 15 seconds for more competitive play
+                room.attempts = []; // Keep track of socket IDs that tried
+                room.feedback = null;
                 io.to(roomId).emit('room_data', room);
             }
         }
@@ -95,6 +97,9 @@ io.on('connection', (socket) => {
     socket.on('buzz', (roomId) => {
         const room = rooms.get(roomId);
         if (room && room.gameStatus === 'question' && !room.buzzedPlayerId) {
+            // Check if this socket already tried
+            if (room.attempts && room.attempts.includes(socket.id)) return;
+
             room.buzzedPlayerId = socket.id;
             io.to(roomId).emit('room_data', room);
             console.log(`Player ${socket.id} buzzed in room ${roomId}`);
@@ -109,18 +114,46 @@ io.on('connection', (socket) => {
 
             if (isCorrect) {
                 if (player) player.score += room.activeQuestion.value;
+                room.feedback = { type: 'correct', message: `CORRECT! ${player?.name} gets $${room.activeQuestion.value}.`, answer: room.activeQuestion.answer };
                 room.questions = room.questions.map(q =>
                     q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
                 );
-                room.activeQuestion = null;
-                room.buzzedPlayerId = null;
-                room.gameStatus = 'selecting_category';
-                // Turn passes to the winner if you want, or just let picking continue
             } else {
                 if (player) player.score -= room.activeQuestion.value;
-                room.buzzedPlayerId = null; // Reset buzzer so others can try
+                if (!room.attempts) room.attempts = [];
+                room.attempts.push(socket.id);
+                room.buzzedPlayerId = null;
+
+                // Check if everyone has tried
+                if (room.attempts.length >= room.players.length) {
+                    room.feedback = {
+                        type: 'all_wrong',
+                        message: `Sorry, both answers are incorrect.`,
+                        answer: room.activeQuestion.answer
+                    };
+                    room.questions = room.questions.map(q =>
+                        q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
+                    );
+                } else {
+                    room.feedback = { type: 'wrong', message: `Wrong! ${player?.name} lost points. Other team's turn!` };
+                    // Reset timer for the next buzz? Or keep it going? 
+                    // Lets keep it simple: reset timer to 10s for the next person
+                    room.timer = 10;
+                }
             }
 
+            io.to(roomId).emit('room_data', room);
+        }
+    });
+
+    socket.on('close_feedback', (roomId) => {
+        const room = rooms.get(roomId);
+        if (room && room.feedback) {
+            room.feedback = null;
+            room.activeQuestion = null;
+            room.buzzedPlayerId = null;
+            room.gameStatus = 'selecting_category';
+            room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
             io.to(roomId).emit('room_data', room);
         }
     });

@@ -28,6 +28,7 @@ interface GameState {
     selectedCategory: string | null;
     buzzedPlayerId: string | null;
     myId: string | null;
+    feedback: { type: 'correct' | 'wrong' | 'all_wrong'; message: string; answer?: string } | null;
     gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'question' | 'ended';
     timer: number;
 
@@ -39,6 +40,7 @@ interface GameState {
     pickValue: (roomId: string, value: number) => void;
     buzz: (roomId: string) => void;
     submitAnswer: (roomId: string, answer: string) => void;
+    closeFeedback: (roomId: string) => void;
     answerQuestion: (roomId: string, isCorrect: boolean) => void;
     tickTimer: () => void;
     resetTimer: (seconds: number) => void;
@@ -55,6 +57,7 @@ export const useGameStore = create<GameState>((set) => {
             activeQuestion: data.activeQuestion,
             selectedCategory: data.selectedCategory,
             buzzedPlayerId: data.buzzedPlayerId,
+            feedback: data.feedback,
             currentPlayerIndex: data.currentPlayerIndex,
             timer: data.timer,
             myId: socket.id || null
@@ -70,6 +73,7 @@ export const useGameStore = create<GameState>((set) => {
         selectedCategory: null,
         buzzedPlayerId: null,
         myId: null,
+        feedback: null,
         gameStatus: 'lobby',
         timer: 30,
 
@@ -98,6 +102,10 @@ export const useGameStore = create<GameState>((set) => {
 
         submitAnswer: (roomId, answer) => {
             socket.emit('submit_answer', { roomId, answer });
+        },
+
+        closeFeedback: (roomId) => {
+            socket.emit('close_feedback', roomId);
         },
 
         answerQuestion: (roomId, isCorrect) => {

@@ -25,11 +25,13 @@ const App: React.FC = () => {
     pickValue,
     buzz,
     submitAnswer,
+    closeFeedback,
     answerQuestion,
     tickTimer,
     addPlayer,
     currentPlayerIndex,
     selectedCategory,
+    feedback,
     syncQuestions
   } = useGameStore();
 
@@ -203,7 +205,24 @@ const App: React.FC = () => {
               <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '24px', lineHeight: '1.4' }}>{activeQuestion.question}</p>
 
               <div style={{ marginTop: '20px' }}>
-                {!buzzedPlayerId ? (
+                {feedback ? (
+                  <div style={{ padding: '24px', borderRadius: '16px', background: feedback.type === 'correct' ? '#ecfdf5' : '#fef2f2', border: `2px solid ${feedback.type === 'correct' ? '#10b981' : '#ef4444'}` }}>
+                    <div style={{ fontSize: '24px', fontWeight: '900', marginBottom: '12px', color: feedback.type === 'correct' ? '#065f46' : '#991b1b' }}>
+                      {feedback.message}
+                    </div>
+                    {feedback.answer && (
+                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#64748b', marginBottom: '16px' }}>
+                        ANSWER: {feedback.answer}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => roomId && closeFeedback(roomId)}
+                      style={{ padding: '12px 32px', background: feedback.type === 'correct' ? '#10b981' : '#ef4444', color: 'white', borderRadius: '12px', fontWeight: '900', border: 'none', cursor: 'pointer' }}
+                    >
+                      OKAY
+                    </button>
+                  </div>
+                ) : !buzzedPlayerId ? (
                   <button
                     onClick={() => roomId && buzz(roomId)}
                     style={{ width: '100%', padding: '20px', background: 'var(--accent-gold)', color: 'white', borderRadius: '16px', fontSize: '24px', fontWeight: '900', border: 'none', boxShadow: '0 8px 0 #a3844a' }}
@@ -212,6 +231,7 @@ const App: React.FC = () => {
                   </button>
                 ) : buzzedPlayerId === myId ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)', marginBottom: '4px' }}>YOUR TURN TO ANSWER!</div>
                     <input
                       autoFocus
                       type="text"
