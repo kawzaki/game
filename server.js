@@ -149,7 +149,20 @@ io.on('connection', (socket) => {
     socket.on('close_feedback', (roomId) => {
         const room = rooms.get(roomId);
         if (room && room.feedback) {
-            room.feedback = null;
+            const type = room.feedback.type;
+            const attemptsCount = room.attempts ? room.attempts.length : 0;
+            const totalPlayers = room.players.length;
+
+            room.feedback = null; // Always clear the feedback
+
+            // If it was just a wrong answer (not everyone failed yet), STAY in the question
+            if (type === 'wrong' && attemptsCount < totalPlayers) {
+                // Do nothing else, UI will go back to the BUZZ! button
+                io.to(roomId).emit('room_data', room);
+                return;
+            }
+
+            // Otherwise (Correct or Everyone Failed), close the question
             room.activeQuestion = null;
             room.buzzedPlayerId = null;
             room.gameStatus = 'selecting_category';
