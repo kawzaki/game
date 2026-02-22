@@ -368,11 +368,11 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="game-wrapper" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', paddingBottom: '140px' }}>
+    <div className="game-wrapper" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', paddingBottom: '200px' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #eee', background: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Trophy size={18} style={{ color: 'var(--accent-gold)' }} />
-          <span className="gold-text" style={{ fontSize: '14px' }}>ROOM #{roomId}</span>
+          <span className="gold-text" style={{ fontSize: '14px' }}>غرفة #{roomId}</span>
           <div
             style={{
               width: '8px',
@@ -387,7 +387,7 @@ const App: React.FC = () => {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8' }}>AR</span>
-          <button className="rules-btn">Rules</button>
+          <button className="rules-btn">قوانين اللعبة</button>
           {gameStatus !== ('lobby' as any) && gameStatus !== 'game_over' && (
             <button className="btn-forfeit" onClick={forfeit}>إنهاء اللعبة</button>
           )}

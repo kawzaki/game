@@ -410,6 +410,8 @@ body {
 
 .game-wrapper {
   background-color: var(--bg-light-pearl);
+  padding-bottom: 180px;
+  /* Increased to avoid HUD overlap */
 }
 
 .tile-premium {
@@ -508,32 +510,37 @@ body {
   background-color: var(--bg-light-card);
   border-top: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-  padding: 16px 20px 30px;
+  padding: 12px 16px 20px;
+  /* Reduced vertical padding */
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
+  /* Reduced gap */
   z-index: 1000;
 }
 
 .hud-row-turn {
   background: var(--bg-light-muted);
-  padding: 10px;
-  border-radius: 14px;
+  padding: 6px;
+  /* Reduced padding */
+  border-radius: 12px;
   text-align: center;
   border: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .hud-turn-label {
-  font-size: 12px;
+  font-size: 10px;
+  /* Smaller font */
   font-weight: 800;
   color: var(--text-tertiary);
-  margin-bottom: 2px;
+  margin-bottom: 0px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .hud-turn-name {
-  font-size: 16px;
+  font-size: 14px;
+  /* Smaller font */
   font-weight: 900;
   color: var(--royal-blue);
 }
@@ -542,9 +549,11 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
+  /* Reduced gap */
   overflow-x: auto;
-  padding: 10px 0;
+  padding: 4px 0;
+  /* Reduced padding */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -586,13 +595,15 @@ body {
 }
 
 .hud-player-name {
-  font-size: 13px;
+  font-size: 12px;
+  /* Smaller font */
   font-weight: 800;
   color: var(--text-secondary);
 }
 
 .hud-player-score {
-  font-size: 20px;
+  font-size: 16px;
+  /* Smaller font */
   font-weight: 900;
   color: var(--accent-gold);
 }
