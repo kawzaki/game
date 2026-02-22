@@ -142,6 +142,7 @@ body {
   color: var(--text-primary);
   font-weight: 600;
   outline: none;
+  text-align: inherit;
 }
 
 .join-submit-btn {
