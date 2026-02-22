@@ -4,7 +4,15 @@ import { useGameStore } from './store/useGameStore';
 import {
   Timer as TimerIcon,
   Trophy,
-  Zap
+  Zap,
+  Settings,
+  Plus,
+  Home,
+  Clock,
+  User,
+  Layout,
+  BookOpen,
+  ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -36,7 +44,6 @@ const App: React.FC = () => {
   } = useGameStore();
 
   const [playerName, setPlayerName] = React.useState('');
-  const [showJoinInput, setShowJoinInput] = React.useState(false);
   const [joinCode, setJoinCode] = React.useState('');
 
   useEffect(() => {
@@ -45,7 +52,6 @@ const App: React.FC = () => {
     const urlRoom = urlParams.get('room');
     if (urlRoom && !roomId) {
       setRoomId(urlRoom);
-      setShowJoinInput(true);
     }
   }, [roomId, setRoomId]);
 
@@ -73,7 +79,6 @@ const App: React.FC = () => {
   const handleCreateRoom = () => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     setRoomId(code);
-    setShowJoinInput(true);
   };
 
   const generateInviteLink = () => {
@@ -100,112 +105,139 @@ const App: React.FC = () => {
 
   if (gameStatus === 'lobby') {
     return (
-      <div className="game-container">
-        <header className="header-premium">
-          <div className="logo">
-            <span className="logo-sparkle">✨</span> JEOPARDY <span className="logo-sparkle">✨</span>
+      <div className="home-container" dir="rtl">
+        {/* Header */}
+        <header className="home-header">
+          <Settings size={24} color="var(--text-secondary)" />
+          <div className="live-indicator">
+            <span className="live-dot"></span>
+            <span className="live-text">1.2 ألف مباشر</span>
           </div>
-          <div className="room-id">
-            ROOM: {roomId || '---'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontWeight: 900, fontSize: '18px' }}>تحدي المعلومات</span>
+            <Zap size={20} fill="var(--brand-yellow)" color="var(--brand-yellow)" />
           </div>
         </header>
 
-        <main style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '32px', textAlign: 'center' }}>
-          {!roomId ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '40px' }}>
-              <h1 style={{ color: 'var(--accent-gold)', fontSize: '32px', fontWeight: '900' }}>WELCOME!</h1>
-              <p style={{ color: '#94a3b8' }}>Create a new game or join a friend's room</p>
+        {/* Hero Section */}
+        <div className="hero-card">
+          <div className="hero-card-inner">
+            <Trophy size={60} color="#000" strokeWidth={3} />
+          </div>
+          <div className="floating-settings">
+            <Layout size={20} color="var(--brand-yellow)" />
+          </div>
+        </div>
 
-              <button
-                onClick={handleCreateRoom}
-                className="btn-gold"
-                style={{ padding: '20px', fontSize: '20px' }}
-              >
-                CREATE NEW GAME
-              </button>
+        <h1 className="hero-title">هل أنت مستعد<span style={{ color: 'var(--brand-yellow)' }}> للمعركة؟</span></h1>
+        <p className="hero-subtitle">تحد أصدقاءك أو انضم إلى الساحات العالمية لإثبات معرفتك.</p>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{ flex: 1, height: '1px', background: '#334155' }}></div>
-                <span style={{ color: '#475569', fontSize: '14px', fontWeight: 'bold' }}>OR</span>
-                <div style={{ flex: 1, height: '1px', background: '#334155' }}></div>
+        {/* Join Section */}
+        <div className="join-section">
+          <span className="join-label">انضم إلى مباراة</span>
+          <div className="join-input-wrapper">
+            <button
+              onClick={() => joinCode && setRoomId(joinCode)}
+              className="join-submit-btn"
+            >
+              انضم
+            </button>
+            <input
+              type="text"
+              placeholder="أدخل رمز الغرفة (مثال: 99-TRV)"
+              className="join-input"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+            />
+          </div>
+          <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-tertiary)', fontSize: '11px' }}>
+            <div style={{ width: '14px', height: '14px', borderRadius: '50%', border: '1px solid currentColor', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>i</div>
+            رابط الدعوة يعمل أيضاً! فقط اضغط وادخل.
+          </div>
+        </div>
+
+        {/* Start Button */}
+        <button className="btn-primary-battle" onClick={handleCreateRoom}>
+          <Plus size={24} strokeWidth={3} />
+          ابدأ معركة جديدة
+        </button>
+
+        {/* Grid Options */}
+        <div className="action-grid">
+          <div className="grid-item">
+            <BookOpen size={24} color="var(--brand-yellow)" />
+            <span className="grid-label">كيفية اللعب</span>
+          </div>
+          <div className="grid-item">
+            <Layout size={24} color="var(--brand-yellow)" />
+            <span className="grid-label">الدوريات</span>
+          </div>
+        </div>
+
+        {/* Leaderboard */}
+        <div className="section-title">
+          <h3>أفضل اللاعبين</h3>
+          <a href="#" className="btn-view-all">عرض الكل</a>
+        </div>
+
+        <div className="leaderboard-list">
+          {[
+            { name: 'Alex Storm', rate: '98%', rank: 1, avatar: 'https://i.pravatar.cc/150?u=alex' },
+            { name: 'Sarah Logic', rate: '94%', rank: 2, avatar: 'https://i.pravatar.cc/150?u=sarah' },
+            { name: 'Dev_Mind', rate: '91%', rank: 3, avatar: 'https://i.pravatar.cc/150?u=dev' }
+          ].map(player => (
+            <div key={player.rank} className="player-card">
+              <span className="rank">{player.rank}</span>
+              <img src={player.avatar} alt={player.name} className="avatar" />
+              <div className="player-info">
+                <div className="player-name">{player.name}</div>
+                <div className="player-stats">معدل الذكاء: {player.rate}</div>
               </div>
-
-              {showJoinInput ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <input
-                    type="text"
-                    placeholder="ENTER ROOM CODE"
-                    className="input-premium"
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                    style={{ textAlign: 'center', fontSize: '20px', letterSpacing: '4px' }}
-                  />
-                  <button
-                    onClick={() => {
-                      if (joinCode) setRoomId(joinCode);
-                    }}
-                    className="btn-primary"
-                  >
-                    SELECT ROOM
-                  </button>
-                  <button
-                    onClick={() => setShowJoinInput(false)}
-                    style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '14px', cursor: 'pointer' }}
-                  >
-                    ← BACK
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowJoinInput(true)}
-                  style={{ background: 'transparent', border: '1px solid #334155', color: '#94a3b8', padding: '16px', borderRadius: '12px', fontWeight: 'bold' }}
-                >
-                  JOIN WITH CODE
-                </button>
-              )}
+              <ArrowRight size={20} color="var(--text-tertiary)" />
             </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div className="card-premium" style={{ border: '2px solid var(--accent-gold)' }}>
-                <h2 style={{ color: 'var(--accent-gold)', marginBottom: '8px' }}>ROOM READY!</h2>
-                <div style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '4px', color: 'white', marginBottom: '16px' }}>
-                  {roomId}
-                </div>
-                <button
-                  onClick={copyInviteLink}
-                  style={{ padding: '8px 16px', background: '#1e293b', border: '1px solid var(--accent-gold)', color: 'var(--accent-gold)', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}
-                >
-                  🔗 COPY INVITE LINK
-                </button>
-              </div>
+          ))}
+        </div>
 
-              <div style={{ textAlign: 'right' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)', marginBottom: '8px' }}>
-                  اسمك المستعار / YOUR NAME:
-                </label>
+        {/* Room Ready State (if roomId is set) */}
+        {roomId && (
+          <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div className="modal-content" style={{ width: '100%', maxWidth: '400px', textAlign: 'center' }}>
+              <div style={{ background: 'var(--brand-yellow)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                <Zap size={30} color="#000" fill="#000" />
+              </div>
+              <h2 style={{ marginBottom: '8px' }}>الغرفة جاهزة!</h2>
+              <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '4px', margin: '12px 0' }}>{roomId}</div>
+
+              <div style={{ marginBottom: '24px' }}>
                 <input
                   type="text"
-                  placeholder="Enter your name..."
-                  className="input-premium"
+                  placeholder="أدخل اسمك المستعار..."
+                  className="join-input"
+                  style={{ background: '#23262b', borderRadius: '12px', width: '100%', marginBottom: '12px' }}
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
                 />
+                <button
+                  disabled={!playerName}
+                  onClick={() => addPlayer(playerName, roomId)}
+                  className="btn-primary-battle"
+                  style={{ opacity: !playerName ? 0.5 : 1 }}
+                >
+                  انضم إلى المنافسة!
+                </button>
+                <button
+                  onClick={copyInviteLink}
+                  style={{ background: 'transparent', border: '1px solid var(--text-tertiary)', color: 'var(--text-secondary)', padding: '12px', borderRadius: '12px', width: '100%' }}
+                >
+                  🔗 نسخ رابط الدعوة
+                </button>
               </div>
 
-              <button
-                disabled={!playerName || !roomId}
-                onClick={() => roomId && addPlayer(playerName, roomId)}
-                className="btn-gold"
-                style={{ opacity: (!playerName || !roomId) ? 0.5 : 1 }}
-              >
-                JOIN THE COMPETITION!
-              </button>
-
               <div className="player-list">
-                <h3>PLAYERS ({players.length})</h3>
-                <div className="players-grid">
+                <h4 style={{ marginBottom: '12px' }}>اللاعبون ({players.length})</h4>
+                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
                   {players.map((p, i) => (
-                    <div key={i} className="player-badge">
+                    <div key={i} style={{ background: '#23262b', padding: '8px 16px', borderRadius: '20px', whiteSpace: 'nowrap', fontSize: '13px' }}>
                       {p.name}
                     </div>
                   ))}
@@ -214,16 +246,51 @@ const App: React.FC = () => {
 
               {players.length > 0 && (
                 <button
-                  onClick={() => roomId && startGame(roomId)}
-                  className="btn-primary"
-                  style={{ marginTop: '20px', padding: '18px' }}
+                  onClick={() => startGame(roomId)}
+                  className="btn-primary-battle"
+                  style={{ marginTop: '24px' }}
                 >
-                  START GAME NOW! 🚀
+                  ابدأ اللعب الآن! 🚀
                 </button>
               )}
+
+              <button
+                onClick={() => setRoomId('')}
+                style={{ marginTop: '12px', background: 'none', border: 'none', color: 'var(--text-tertiary)' }}
+              >
+                إلغاء
+              </button>
             </div>
-          )}
-        </main>
+          </div>
+        )}
+
+        {/* Version */}
+        <footer className="version-footer">
+          b
+        </footer>
+
+        {/* Bottom Nav */}
+        <nav className="bottom-nav">
+          <div className="nav-item active">
+            <Home size={24} />
+            <span>الرئيسية</span>
+          </div>
+          <div className="nav-item">
+            <Trophy size={24} />
+            <span>الدوريات</span>
+          </div>
+          <div className="nav-plus">
+            <Plus size={32} strokeWidth={3} />
+          </div>
+          <div className="nav-item">
+            <Clock size={24} />
+            <span>السجل</span>
+          </div>
+          <div className="nav-item">
+            <User size={24} />
+            <span>الملف الشخصي</span>
+          </div>
+        </nav>
       </div>
     );
   }
@@ -381,7 +448,7 @@ const App: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {gameStatus !== 'lobby' && players.length > 0 && (
+      {players.length > 0 && (
         <div className="bottom-hud">
           <div className="hud-player-slot active">
             <div className="hud-label">TURN: {players[currentPlayerIndex]?.name || '---'}</div>
