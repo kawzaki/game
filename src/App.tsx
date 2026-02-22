@@ -273,7 +273,7 @@ const App: React.FC = () => {
           </div>
           <div className="nav-item">
             <Trophy size={24} />
-            <span>الدوريات</span>
+            <span>البطولات</span>
           </div>
           <div className="nav-plus">
             <Plus size={32} strokeWidth={3} />
