@@ -45,6 +45,7 @@ body {
 [dir="rtl"] button,
 [dir="rtl"] input {
   font-family: 'Cairo', 'Inter', sans-serif;
+  text-align: right;
 }
 
 /* --- HOME SCREEN SPECIALS --- */
@@ -486,6 +487,10 @@ body {
   text-align: start;
 }
 
+[dir="rtl"] .modal-content {
+  text-align: right;
+}
+
 .modal-timer {
   position: absolute;
   top: 12px;
@@ -509,12 +514,20 @@ body {
   text-align: start;
 }
 
+[dir="rtl"] .cat-label {
+  text-align: right;
+}
+
 .question-text {
   font-size: 20px;
   font-weight: 800;
   line-height: 1.5;
   margin-bottom: 30px;
   text-align: start;
+}
+
+[dir="rtl"] .question-text {
+  text-align: right;
 }
 
 .btn-gold {
