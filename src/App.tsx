@@ -378,7 +378,7 @@ const App: React.FC = () => {
                   if (roomId) useGameStore.setState({ gameStatus: 'selecting_category', selectedCategory: null });
                 }}
               >
-                BACK
+                رجوع
               </button>
             </div>
           </div>
