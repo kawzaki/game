@@ -213,7 +213,7 @@ const App: React.FC = () => {
                   type="text"
                   placeholder="أدخل اسمك المستعار..."
                   className="join-input"
-                  style={{ background: '#23262b', borderRadius: '12px', width: '100%', marginBottom: '12px' }}
+                  style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', width: '100%', marginBottom: '12px' }}
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
                 />
@@ -237,7 +237,7 @@ const App: React.FC = () => {
                 <h4 style={{ marginBottom: '12px' }}>اللاعبون ({players.length})</h4>
                 <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
                   {players.map((p, i) => (
-                    <div key={i} style={{ background: '#23262b', padding: '8px 16px', borderRadius: '20px', whiteSpace: 'nowrap', fontSize: '13px' }}>
+                    <div key={i} style={{ background: '#f1f5f9', color: 'var(--text-secondary)', border: '1px solid rgba(0,0,0,0.05)', padding: '8px 16px', borderRadius: '20px', whiteSpace: 'nowrap', fontSize: '13px' }}>
                       {p.name}
                     </div>
                   ))}
