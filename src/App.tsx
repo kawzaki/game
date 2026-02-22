@@ -402,7 +402,7 @@ const App: React.FC = () => {
                 <span>{timer}s</span>
               </div>
               <div className="cat-label">{activeQuestion.category}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', width: '100%' }}>
                 <Coins size={28} style={{ color: 'var(--accent-gold)' }} />
                 <h3 className="gold-text" style={{ fontSize: '28px', margin: 0 }}>{activeQuestion.value}</h3>
               </div>

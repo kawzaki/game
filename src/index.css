@@ -549,8 +549,10 @@ body {
   text-align: start;
 }
 
-[dir="rtl"] .modal-content {
+[dir="rtl"] .modal-content,
+.modal-content[dir="rtl"] {
   text-align: right !important;
+  align-items: stretch !important;
 }
 
 .modal-timer {
@@ -577,7 +579,8 @@ body {
   text-align: start;
 }
 
-[dir="rtl"] .cat-label {
+[dir="rtl"] .cat-label,
+.cat-label[dir="rtl"] {
   align-self: flex-start !important;
   text-align: right !important;
 }
@@ -591,7 +594,8 @@ body {
   width: 100%;
 }
 
-[dir="rtl"] .question-text {
+[dir="rtl"] .question-text,
+.question-text[dir="rtl"] {
   text-align: right !important;
 }
 
