@@ -195,7 +195,7 @@ const App: React.FC = () => {
                   <div className="player-name">{player.name}</div>
                   <div className="player-stats">معدل الذكاء: {player.rate}</div>
                 </div>
-                <ArrowRight size={20} color="var(--text-tertiary)" />
+                <ArrowRight size={20} color="var(--text-tertiary)" className="flip-rtl" />
               </div>
             ))}
           </div>
@@ -306,7 +306,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="game-wrapper" style={{ minHeight: '100vh', paddingBottom: '140px' }}>
+    <div className="game-wrapper" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', paddingBottom: '140px' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #eee', background: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Trophy size={18} style={{ color: 'var(--accent-gold)' }} />
