@@ -391,12 +391,17 @@ const App: React.FC = () => {
       <AnimatePresence>
         {gameStatus === 'question' && activeQuestion && (
           <div className="fixed modal-overlay" style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="modal-content">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="modal-content"
+              dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
+            >
               <div className="modal-timer">
                 <TimerIcon size={18} style={{ color: 'var(--accent-gold)' }} />
                 <span>{timer}s</span>
               </div>
-              <div className="cat-label">{activeQuestion.category}</div>
+              <div className="cat-label" style={{ textAlign: 'inherit' }}>{activeQuestion.category}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                 <Coins size={28} style={{ color: 'var(--accent-gold)' }} />
                 <h3 className="gold-text" style={{ fontSize: '28px', margin: 0 }}>{activeQuestion.value}</h3>

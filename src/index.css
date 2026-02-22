@@ -547,7 +547,7 @@ body {
 }
 
 [dir="rtl"] .modal-content {
-  text-align: right;
+  text-align: right !important;
 }
 
 .modal-timer {
@@ -574,7 +574,7 @@ body {
 }
 
 [dir="rtl"] .cat-label {
-  text-align: right;
+  text-align: right !important;
 }
 
 .question-text {
@@ -586,7 +586,7 @@ body {
 }
 
 [dir="rtl"] .question-text {
-  text-align: right;
+  text-align: right !important;
 }
 
 .btn-gold {
