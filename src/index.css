@@ -545,12 +545,12 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   text-align: start;
 }
 
 [dir="rtl"] .modal-content {
   text-align: right !important;
-  align-items: flex-start !important;
 }
 
 .modal-timer {
@@ -566,6 +566,7 @@ body {
 
 .cat-label {
   display: inline-block;
+  align-self: flex-start;
   background: var(--bg-light-muted);
   color: var(--text-tertiary);
   padding: 4px 12px;
@@ -577,6 +578,7 @@ body {
 }
 
 [dir="rtl"] .cat-label {
+  align-self: flex-start !important;
   text-align: right !important;
 }
 
@@ -586,6 +588,7 @@ body {
   line-height: 1.5;
   margin-bottom: 30px;
   text-align: start;
+  width: 100%;
 }
 
 [dir="rtl"] .question-text {
