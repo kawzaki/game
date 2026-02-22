@@ -164,7 +164,7 @@ io.on('connection', (socket) => {
 
             if (isCorrect) {
                 if (player) player.score += room.activeQuestion.value;
-                room.feedback = { type: 'correct', message: `إجابة صحيحة! ${player?.name} حصل على $${room.activeQuestion.value}.`, answer: room.activeQuestion.answer };
+                room.feedback = { type: 'correct', message: `إجابة صحيحة! ${player?.name} حصل على ${room.activeQuestion.value} عملة.`, answer: room.activeQuestion.answer };
                 room.questions = room.questions.map(q =>
                     q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
                 );
