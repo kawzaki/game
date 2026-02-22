@@ -36,13 +36,6 @@ const App: React.FC = () => {
     syncQuestions
   } = useGameStore();
 
-  const [localAnswer, setLocalAnswer] = React.useState('');
-
-  useEffect(() => {
-    // Reset local answer when question or buzzer status changes
-    setLocalAnswer('');
-  }, [activeQuestion, buzzedPlayerId]);
-
   useEffect(() => {
     // Default Room ID if not set
     if (!roomId) setRoomId('1234');
@@ -233,25 +226,41 @@ const App: React.FC = () => {
                     BUZZ!
                   </button>
                 ) : buzzedPlayerId === myId ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)', marginBottom: '4px' }}>YOUR TURN TO ANSWER!</div>
-                    <input
-                      autoFocus
-                      type="text"
-                      placeholder="Type your answer..."
-                      className="input-premium"
-                      value={localAnswer}
-                      onChange={(e) => setLocalAnswer(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && roomId) submitAnswer(roomId, localAnswer);
-                      }}
-                    />
-                    <button
-                      onClick={() => roomId && submitAnswer(roomId, localAnswer)}
-                      style={{ padding: '14px', background: 'var(--royal-blue)', color: 'white', borderRadius: '12px', fontWeight: '900', border: 'none' }}
-                    >
-                      SUBMIT ANSWER
-                    </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)', marginBottom: '4px' }}>CHOOSE THE CORRECT OPTION:</div>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '12px'
+                    }}>
+                      {activeQuestion.options.map((option, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => roomId && submitAnswer(roomId, option)}
+                          style={{
+                            padding: '16px',
+                            background: '#f8fafc',
+                            border: '2px solid #e2e8f0',
+                            borderRadius: '12px',
+                            fontWeight: 'bold',
+                            fontSize: '16px',
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--accent-gold)';
+                            e.currentTarget.style.background = '#fffbeb';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.borderColor = '#e2e8f0';
+                            e.currentTarget.style.background = '#f8fafc';
+                          }}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #cbd5e1' }}>

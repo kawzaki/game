@@ -16,6 +16,7 @@ interface Question {
     value: number;
     question: string;
     answer: string;
+    options: string[];
     isAnswered: boolean;
 }
 
