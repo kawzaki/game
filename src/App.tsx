@@ -84,6 +84,20 @@ const App: React.FC = () => {
     audio.play().catch(e => console.error("Audio play failed:", e));
   };
 
+  const handleCreateRoom = () => {
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setRoomId(code);
+  };
+
+  const generateInviteLink = () => {
+    return `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+  };
+
+  const copyInviteLink = () => {
+    navigator.clipboard.writeText(generateInviteLink());
+    alert('Invite link copied!');
+  };
+
   useEffect(() => {
     if (gameStatus === 'game_over' && winner) {
       confetti({
