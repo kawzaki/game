@@ -56,6 +56,11 @@ const App: React.FC = () => {
   }, [roomId, setRoomId]);
 
   useEffect(() => {
+    // Sync document direction with language
+    document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+  }, [i18n.language]);
+
+  useEffect(() => {
     let interval: any;
     if (gameStatus === 'question' && timer > 0) {
       interval = setInterval(() => tickTimer(), 1000);
