@@ -6,7 +6,6 @@ import {
   Timer as TimerIcon,
   Trophy,
   Zap,
-  Settings,
   Plus,
   Home,
   Clock,
@@ -130,8 +129,7 @@ const App: React.FC = () => {
       <div className="home-container">
         {/* Header */}
         <header className="home-header">
-          <Settings size={24} color="var(--text-secondary)" />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', justifyContent: 'center' }}>
             <span style={{ fontWeight: 900, fontSize: '18px' }}>تحدي المعلومات</span>
             <Zap size={20} fill="var(--brand-yellow)" color="var(--brand-yellow)" />
           </div>
