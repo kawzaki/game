@@ -19,6 +19,7 @@ const App: React.FC = () => {
     questions,
     activeQuestion,
     buzzedPlayerId,
+    attempts,
     timer,
     startGame,
     pickCategory,
@@ -46,10 +47,6 @@ const App: React.FC = () => {
     // Default Room ID if not set
     if (!roomId) setRoomId('1234');
   }, [roomId]);
-
-  useEffect(() => {
-    useGameStore.setState({ questions: mockQuestions as any });
-  }, []);
 
   useEffect(() => {
     let interval: any;
@@ -221,6 +218,12 @@ const App: React.FC = () => {
                     >
                       OKAY
                     </button>
+                  </div>
+                ) : attempts.includes(myId || '') ? (
+                  <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #cbd5e1' }}>
+                    <span style={{ color: '#64748b', fontWeight: 'bold' }}>
+                      You already tried! Waiting for others...
+                    </span>
                   </div>
                 ) : !buzzedPlayerId ? (
                   <button

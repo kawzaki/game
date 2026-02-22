@@ -27,6 +27,7 @@ interface GameState {
     activeQuestion: Question | null;
     selectedCategory: string | null;
     buzzedPlayerId: string | null;
+    attempts: string[];
     myId: string | null;
     feedback: { type: 'correct' | 'wrong' | 'all_wrong'; message: string; answer?: string } | null;
     gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'question' | 'ended';
@@ -57,6 +58,7 @@ export const useGameStore = create<GameState>((set) => {
             activeQuestion: data.activeQuestion,
             selectedCategory: data.selectedCategory,
             buzzedPlayerId: data.buzzedPlayerId,
+            attempts: data.attempts || [],
             feedback: data.feedback,
             currentPlayerIndex: data.currentPlayerIndex,
             timer: data.timer,
@@ -72,6 +74,7 @@ export const useGameStore = create<GameState>((set) => {
         activeQuestion: null,
         selectedCategory: null,
         buzzedPlayerId: null,
+        attempts: [],
         myId: null,
         feedback: null,
         gameStatus: 'lobby',

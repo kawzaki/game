@@ -227,7 +227,23 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
-        // Cleanup room players if needed
+
+        // Remove player from all rooms they were in
+        rooms.forEach((room, roomId) => {
+            const playerIndex = room.players.findIndex(p => p.id === socket.id);
+            if (playerIndex !== -1) {
+                const playerName = room.players[playerIndex].name;
+                room.players.splice(playerIndex, 1);
+                console.log(`${playerName} removed from room ${roomId}`);
+
+                // If room is empty, maybe delete it or just sync
+                if (room.players.length === 0) {
+                    // Optionally: rooms.delete(roomId);
+                } else {
+                    io.to(roomId).emit('room_data', room);
+                }
+            }
+        });
     });
 });
 
