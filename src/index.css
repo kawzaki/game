@@ -116,6 +116,11 @@ body {
   border: 1px solid rgba(0, 0, 0, 0.04);
   margin-bottom: 24px;
   box-shadow: var(--shadow-premium);
+  text-align: start;
+}
+
+[dir="rtl"] .join-section {
+  text-align: right !important;
 }
 
 .join-label {
@@ -144,6 +149,10 @@ body {
   font-weight: 600;
   outline: none;
   text-align: inherit;
+}
+
+[dir="rtl"] .join-input {
+  text-align: right !important;
 }
 
 .join-submit-btn {
