@@ -143,7 +143,7 @@ io.on('connection', (socket) => {
 
             if (isCorrect) {
                 if (player) player.score += room.activeQuestion.value;
-                room.feedback = { type: 'correct', message: `CORRECT! ${player?.name} gets $${room.activeQuestion.value}.`, answer: room.activeQuestion.answer };
+                room.feedback = { type: 'correct', message: `إجابة صحيحة! ${player?.name} حصل على $${room.activeQuestion.value}.`, answer: room.activeQuestion.answer };
                 room.questions = room.questions.map(q =>
                     q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
                 );
@@ -157,14 +157,14 @@ io.on('connection', (socket) => {
                 if (room.attempts.length >= room.players.length) {
                     room.feedback = {
                         type: 'all_wrong',
-                        message: `Sorry, both answers are incorrect.`,
+                        message: `عذراً، المحاولات انتهت والإجابات خاطئة.`,
                         answer: room.activeQuestion.answer
                     };
                     room.questions = room.questions.map(q =>
                         q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
                     );
                 } else {
-                    room.feedback = { type: 'wrong', message: `Wrong! ${player?.name} lost points. Other team's turn!` };
+                    room.feedback = { type: 'wrong', message: `خطأ! ${player?.name} فقد نقاطاً. بإمكان الآخرين المحاولة الآن!` };
                     // Reset timer for the next buzz? Or keep it going? 
                     // Lets keep it simple: reset timer to 10s for the next person
                     room.timer = 10;
