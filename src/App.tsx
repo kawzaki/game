@@ -525,31 +525,20 @@ const App: React.FC = () => {
             <div className="hud-turn-name">{players[currentPlayerIndex]?.name || '---'}</div>
           </div>
 
-          {/* Row 2: Opponents Horizontally Aligned */}
+          {/* Row 2: Dynamic Player List */}
           <div className="hud-row-players">
-            {players.length >= 1 ? (
-              <>
-                <div className="hud-player-unit left">
-                  <div className="hud-player-name">{players[0]?.name}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Coins size={14} style={{ color: 'var(--accent-gold)' }} />
-                    <div className="hud-player-score">{players[0]?.score.toLocaleString()}</div>
-                  </div>
+            {players.map((player, index) => (
+              <div
+                key={player.id}
+                className={`hud-player-unit ${index === currentPlayerIndex ? 'active' : ''}`}
+              >
+                <div className="hud-player-name">{player.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Coins size={14} style={{ color: 'var(--accent-gold)' }} />
+                  <div className="hud-player-score">{player.score.toLocaleString()}</div>
                 </div>
-
-                <div className="hud-vs-badge">VS</div>
-
-                <div className="hud-player-unit right">
-                  <div className="hud-player-name">{players[1]?.name || '---'}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Coins size={14} style={{ color: 'var(--accent-gold)' }} />
-                    <div className="hud-player-score">{players[1]?.score.toLocaleString() || '0'}</div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div style={{ textAlign: 'center', width: '100%', color: 'var(--text-tertiary)' }}>انتظار الخصوم...</div>
-            )}
+              </div>
+            ))}
           </div>
         </div>
       )}
