@@ -232,7 +232,7 @@ const App: React.FC = () => {
               <div style={{ marginBottom: '24px' }}>
                 <input
                   type="text"
-                  placeholder="أدخل اسمك المستعار..."
+                  placeholder="أدخل اسمك ..."
                   className="join-input"
                   style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', width: '100%', marginBottom: '12px' }}
                   value={playerName}

@@ -27,6 +27,7 @@ interface GameState {
     gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'question' | 'game_over';
     timer: number;
     winner: { name: string; score: number; isForfeit?: boolean } | null;
+    playerName: string | null;
 
     // Actions
     setRoomId: (id: string) => void;
@@ -66,6 +67,15 @@ export const useGameStore = create<GameState>((set) => {
         });
     });
 
+    // Handle reconnections
+    socket.on('connect', () => {
+        const state = useGameStore.getState();
+        if (state.roomId && state.playerName) {
+            socket.emit('rejoin_room', { roomId: state.roomId, playerName: state.playerName });
+        }
+        set({ myId: socket.id || null });
+    });
+
     return {
         roomId: urlRoomId || null,
         players: [],
@@ -80,12 +90,13 @@ export const useGameStore = create<GameState>((set) => {
         gameStatus: 'lobby',
         timer: 30,
         winner: null,
+        playerName: null,
 
         setRoomId: (id) => set({ roomId: id }),
 
         addPlayer: (name, roomId) => {
             socket.emit('join_room', { roomId, playerName: name });
-            set({ roomId });
+            set({ roomId, playerName: name });
         },
 
         startGame: (roomId) => {

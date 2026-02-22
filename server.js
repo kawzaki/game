@@ -101,11 +101,30 @@ io.on('connection', (socket) => {
         }
 
         const room = rooms.get(roomId);
-        const player = { id: socket.id, name: playerName, score: 0 };
-        room.players.push(player);
+        const existingPlayer = room.players.find(p => p.name === playerName);
+
+        if (existingPlayer) {
+            existingPlayer.id = socket.id;
+        } else {
+            const player = { id: socket.id, name: playerName, score: 0 };
+            room.players.push(player);
+        }
 
         io.to(roomId).emit('room_data', room);
         console.log(`${playerName} joined room ${roomId}`);
+    });
+
+    socket.on('rejoin_room', ({ roomId, playerName }) => {
+        socket.join(roomId);
+        const room = rooms.get(roomId);
+        if (room) {
+            const player = room.players.find(p => p.name === playerName);
+            if (player) {
+                player.id = socket.id;
+                console.log(`Player ${playerName} re-joined room ${roomId} with new ID ${socket.id}`);
+            }
+            io.to(roomId).emit('room_data', room);
+        }
     });
 
     socket.on('start_game', (roomId) => {

@@ -31,12 +31,20 @@
   padding: 0;
 }
 
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: 'Inter', 'Cairo', sans-serif;
   background-color: var(--bg-light-pearl);
   color: var(--text-primary);
   min-height: 100vh;
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   direction: rtl;
 }
@@ -56,6 +64,9 @@ body {
   padding: 24px 20px 120px;
   max-width: 500px;
   margin: 0 auto;
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
 }
 
 
