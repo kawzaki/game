@@ -367,15 +367,15 @@ const App: React.FC = () => {
 
       <AnimatePresence>
         {gameStatus === 'question' && activeQuestion && (
-          <div className="fixed modal-overlay" style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="modal-content text-center">
-              <div style={{ position: 'absolute', top: '16px', insetInlineEnd: '16px', fontSize: '18px', fontWeight: '900' }}>
-                <TimerIcon size={18} style={{ color: 'var(--accent-gold)', marginInlineEnd: '4px' }} />
+          <div className="fixed modal-overlay" style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="modal-content">
+              <div className="modal-timer">
+                <TimerIcon size={18} style={{ color: 'var(--accent-gold)' }} />
                 <span>{timer}s</span>
               </div>
-              <div className="cat-label" style={{ marginBottom: '8px' }}>{activeQuestion.category}</div>
-              <h3 className="gold-text" style={{ fontSize: '32px', marginBottom: '16px' }}>${activeQuestion.value}</h3>
-              <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '24px', lineHeight: '1.4' }}>{activeQuestion.question}</p>
+              <div className="cat-label">{activeQuestion.category}</div>
+              <h3 className="gold-text" style={{ fontSize: '28px', marginBottom: '16px', textAlign: 'start' }}>${activeQuestion.value}</h3>
+              <p className="question-text">{activeQuestion.question}</p>
 
               <div style={{ marginTop: '20px' }}>
                 {feedback ? (

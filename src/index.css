@@ -467,11 +467,54 @@ body {
   box-shadow: 0 4px 10px var(--brand-yellow-glow);
 }
 
+.modal-overlay {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 3000;
+}
+
 .modal-content {
   background: var(--bg-light-card);
   color: var(--text-primary);
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+  padding: 40px 24px;
+  border-radius: var(--radius-xl);
+  width: 90%;
+  max-width: 450px;
+  position: relative;
+  text-align: start;
+}
+
+.modal-timer {
+  position: absolute;
+  top: 12px;
+  inset-inline-end: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.cat-label {
+  display: inline-block;
+  background: var(--bg-light-muted);
+  color: var(--text-tertiary);
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  text-align: start;
+}
+
+.question-text {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.5;
+  margin-bottom: 30px;
+  text-align: start;
 }
 
 .btn-gold {
