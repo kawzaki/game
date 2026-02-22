@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
 
-const socket: Socket = io();
+export const socket: Socket = io();
 
 interface Question {
     id: string;
@@ -24,8 +24,9 @@ interface GameState {
     attempts: string[];
     myId: string | null;
     feedback: { type: 'correct' | 'wrong' | 'all_wrong'; message: string; answer?: string } | null;
-    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'question' | 'ended';
+    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'question' | 'game_over';
     timer: number;
+    winner: { name: string; score: number } | null;
 
     // Actions
     setRoomId: (id: string) => void;
@@ -39,6 +40,7 @@ interface GameState {
     answerQuestion: (roomId: string, isCorrect: boolean) => void;
     tickTimer: () => void;
     resetTimer: (seconds: number) => void;
+    resetRoom: () => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
@@ -59,6 +61,7 @@ export const useGameStore = create<GameState>((set) => {
             feedback: data.feedback,
             currentPlayerIndex: data.currentPlayerIndex,
             timer: data.timer,
+            winner: data.winner,
             myId: socket.id || null
         });
     });
@@ -76,6 +79,7 @@ export const useGameStore = create<GameState>((set) => {
         feedback: null,
         gameStatus: 'lobby',
         timer: 30,
+        winner: null,
 
         setRoomId: (id) => set({ roomId: id }),
 
@@ -117,5 +121,19 @@ export const useGameStore = create<GameState>((set) => {
         })),
 
         resetTimer: (seconds) => set({ timer: seconds }),
+
+        resetRoom: () => set({
+            roomId: null,
+            players: [],
+            currentPlayerIndex: 0,
+            questions: [],
+            activeQuestion: null,
+            selectedCategory: null,
+            buzzedPlayerId: null,
+            attempts: [],
+            feedback: null,
+            gameStatus: 'lobby',
+            winner: null
+        })
     };
 });

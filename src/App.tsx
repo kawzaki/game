@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useGameStore } from './store/useGameStore';
+import { useGameStore, socket } from './store/useGameStore';
+import confetti from 'canvas-confetti';
 import {
   Timer as TimerIcon,
   Trophy,
@@ -41,10 +42,18 @@ const App: React.FC = () => {
     currentPlayerIndex,
     selectedCategory,
     feedback,
+    winner,
+    resetRoom
   } = useGameStore();
 
   const [playerName, setPlayerName] = React.useState('');
   const [joinCode, setJoinCode] = React.useState('');
+
+  const forfeit = () => {
+    if (confirm('هل أنت متأكد من إنهاء اللعبة مبكراً؟')) {
+      socket.emit('forfeit_game', roomId);
+    }
+  };
 
   useEffect(() => {
     // If room is in URL, set it automatically
@@ -81,6 +90,19 @@ const App: React.FC = () => {
     document.documentElement.dir = nextLng === 'ar' ? 'rtl' : 'ltr';
   };
 
+  const [showRules, setShowRules] = React.useState(false);
+
+  useEffect(() => {
+    if (gameStatus === 'game_over' && winner) {
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#a3844a', '#D4AF37', '#FFD700']
+      });
+    }
+  }, [gameStatus, winner]);
+
   const handleCreateRoom = () => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     setRoomId(code);
@@ -92,7 +114,7 @@ const App: React.FC = () => {
 
   const copyInviteLink = () => {
     navigator.clipboard.writeText(generateInviteLink());
-    alert('Invite link copied to clipboard!');
+    // Removed alert for cleaner UX, could add a toast notification instead
   };
 
   const categories = useMemo(() => {
@@ -132,7 +154,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <h1 className="hero-title">هل أنت مستعد<span style={{ color: 'var(--brand-yellow)' }}> للمعركة؟</span></h1>
+        <h1 className="hero-title">هل أنت مستعد <span style={{ color: 'var(--brand-yellow)' }}>للمنافسة؟</span></h1>
         <p className="hero-subtitle">تحد أصدقاءك أو انضم إلى الساحات العالمية لإثبات معرفتك.</p>
 
         {/* Join Section */}
@@ -315,13 +337,14 @@ const App: React.FC = () => {
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #eee', background: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Trophy size={18} style={{ color: 'var(--accent-gold)' }} />
-          <span style={{ fontSize: '12px', fontWeight: '900', color: 'var(--royal-blue)' }}>ROOM #{roomId}</span>
+          <span className="gold-text" style={{ fontSize: '14px' }}>ROOM #{roomId}</span>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={toggleLanguage} style={{ background: 'none', border: 'none', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8' }}>
-            {i18n.language === 'ar' ? 'EN' : 'AR'}
-          </button>
-          <button className="btn-rules" style={{ padding: '4px 10px', fontSize: '10px' }}>Rules</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8' }}>AR</span>
+          <button className="rules-btn">Rules</button>
+          {gameStatus !== ('lobby' as any) && gameStatus !== 'game_over' && (
+            <button className="btn-forfeit" onClick={forfeit}>إنهاء اللعبة</button>
+          )}
         </div>
       </header>
 
@@ -459,6 +482,29 @@ const App: React.FC = () => {
                 )}
               </div>
             </motion.div>
+          </div>
+        )}
+        {gameStatus === 'game_over' && winner && (
+          <div className="game-over-container">
+            <motion.div
+              initial={{ scale: 0, rotate: -10 }}
+              animate={{ scale: 1, rotate: 0 }}
+              className="winner-card"
+            >
+              <Trophy size={80} color="var(--accent-gold)" style={{ marginBottom: '16px' }} />
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-tertiary)' }}>الفائز هو:</div>
+              <div className="winner-name">{winner.name}</div>
+              <div className="winner-score">${winner.score.toLocaleString()}</div>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--accent-gold)' }}>ألف مبروك! 🎉</div>
+            </motion.div>
+
+            <button
+              className="btn-gold"
+              style={{ padding: '16px 40px', fontSize: '18px', width: 'auto' }}
+              onClick={() => resetRoom()}
+            >
+              العودة للرئيسية
+            </button>
           </div>
         )}
       </AnimatePresence>

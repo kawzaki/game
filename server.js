@@ -36,26 +36,28 @@ const io = new Server(httpServer, {
 const rooms = new Map();
 
 // Helper for smart answer checking
-function isCorrectAnswer(userInput, actualAnswer) {
-    if (!userInput || !actualAnswer) return false;
+function isCorrectAnswer(input, correct) {
+    if (!input || !correct) return false;
+    return input.trim().toLowerCase() === correct.trim().toLowerCase();
+}
 
-    // 1. Normalize both strings: lowercase, trim, remove non-alphanumeric (keep Arabic/English)
-    const normalize = (str) => str.toLowerCase().trim().replace(/[^\p{L}\p{N}]/gu, '');
-    const normUser = normalize(userInput);
-    const normActual = normalize(actualAnswer);
+function endGame(room, io, roomId) {
+    const players = room.players;
+    if (players.length === 0) return;
 
-    if (normUser === normActual) return true;
+    // Highest score wins
+    const sorted = [...players].sort((a, b) => b.score - a.score);
+    const winner = sorted[0];
 
-    // 2. Numerical check: if both contain numbers and those numbers match
-    const extractNumbers = (str) => (str.match(/\d+/g) || []).join('');
-    const userNum = extractNumbers(userInput);
-    const actualNum = extractNumbers(actualAnswer);
-    if (userNum && actualNum && userNum === actualNum) return true;
+    room.gameStatus = 'game_over';
+    room.winner = {
+        name: winner.name,
+        score: winner.score
+    };
+    room.activeQuestion = null;
+    room.feedback = null;
 
-    // 3. Substring check: if one is a significant part of the other (min 2 chars unless it's a number)
-    if (normUser.length >= 2 && (normActual.includes(normUser) || normUser.includes(normActual))) return true;
-
-    return false;
+    io.to(roomId).emit('room_data', room);
 }
 
 io.on('connection', (socket) => {
@@ -73,9 +75,10 @@ io.on('connection', (socket) => {
                 activeQuestion: null,
                 selectedCategory: null,
                 currentPlayerIndex: 0,
-                timer: 30,
+                timer: 0,
                 attempts: [],
-                feedback: null
+                feedback: null,
+                winner: null // Store winner info here
             });
         }
 
@@ -178,25 +181,27 @@ io.on('connection', (socket) => {
     socket.on('close_feedback', (roomId) => {
         const room = rooms.get(roomId);
         if (room && room.feedback) {
-            const type = room.feedback.type;
-            const attemptsCount = room.attempts ? room.attempts.length : 0;
-            const totalPlayers = room.players.length;
-
-            room.feedback = null; // Always clear the feedback
-
-            // If it was just a wrong answer (not everyone failed yet), STAY in the question
-            if (type === 'wrong' && attemptsCount < totalPlayers) {
-                // Do nothing else, UI will go back to the BUZZ! button
-                io.to(roomId).emit('room_data', room);
-                return;
-            }
-
-            // Otherwise (Correct or Everyone Failed), close the question
+            room.feedback = null;
             room.activeQuestion = null;
+            room.selectedCategory = null;
             room.buzzedPlayerId = null;
             room.gameStatus = 'selecting_category';
             room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
-            io.to(roomId).emit('room_data', room);
+
+            // Check if all questions are answered
+            const allAnswered = room.questions.every(q => q.isAnswered);
+            if (allAnswered) {
+                endGame(room, io, roomId);
+            } else {
+                io.to(roomId).emit('room_data', room);
+            }
+        }
+    });
+
+    socket.on('forfeit_game', (roomId) => {
+        const room = rooms.get(roomId);
+        if (room && room.gameStatus !== 'game_over') {
+            endGame(room, io, roomId);
         }
     });
 
@@ -219,7 +224,13 @@ io.on('connection', (socket) => {
             room.gameStatus = 'selecting_category';
             room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
 
-            io.to(roomId).emit('room_data', room);
+            // Check if all questions are answered
+            const allAnswered = room.questions.every(q => q.isAnswered);
+            if (allAnswered) {
+                endGame(room, io, roomId);
+            } else {
+                io.to(roomId).emit('room_data', room);
+            }
         }
     });
 
