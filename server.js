@@ -4,9 +4,13 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Pre-load questions for all rooms
+const questionsData = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
 
 const app = express();
 app.use(cors());
@@ -65,11 +69,13 @@ io.on('connection', (socket) => {
                 id: roomId,
                 players: [],
                 gameStatus: 'lobby',
-                questions: [],
+                questions: questionsData.map(q => ({ ...q })), // Deep copy for each room
                 activeQuestion: null,
                 selectedCategory: null,
                 currentPlayerIndex: 0,
-                timer: 30
+                timer: 30,
+                attempts: [],
+                feedback: null
             });
         }
 
@@ -213,14 +219,6 @@ io.on('connection', (socket) => {
             room.gameStatus = 'selecting_category';
             room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
 
-            io.to(roomId).emit('room_data', room);
-        }
-    });
-
-    socket.on('sync_questions', ({ roomId, questions }) => {
-        const room = rooms.get(roomId);
-        if (room && room.questions.length === 0) {
-            room.questions = questions;
             io.to(roomId).emit('room_data', room);
         }
     });

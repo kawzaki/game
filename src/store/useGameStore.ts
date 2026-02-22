@@ -3,13 +3,6 @@ import { io, Socket } from 'socket.io-client';
 
 const socket: Socket = io();
 
-interface Player {
-    id: string;
-    name: string;
-    score: number;
-    team?: 'A' | 'B';
-}
-
 interface Question {
     id: string;
     category: string;
@@ -22,7 +15,7 @@ interface Question {
 
 interface GameState {
     roomId: string | null;
-    players: Player[];
+    players: any[];
     currentPlayerIndex: number;
     questions: Question[];
     activeQuestion: Question | null;
@@ -46,10 +39,13 @@ interface GameState {
     answerQuestion: (roomId: string, isCorrect: boolean) => void;
     tickTimer: () => void;
     resetTimer: (seconds: number) => void;
-    syncQuestions: (roomId: string, questions: Question[]) => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
+    // Detect room from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlRoomId = urlParams.get('room');
+
     // Listen for room updates
     socket.on('room_data', (data) => {
         set({
@@ -68,7 +64,7 @@ export const useGameStore = create<GameState>((set) => {
     });
 
     return {
-        roomId: null,
+        roomId: urlRoomId || null,
         players: [],
         currentPlayerIndex: 0,
         questions: [],
@@ -114,10 +110,6 @@ export const useGameStore = create<GameState>((set) => {
 
         answerQuestion: (roomId, isCorrect) => {
             socket.emit('answer_question', { roomId, isCorrect });
-        },
-
-        syncQuestions: (roomId, questions) => {
-            socket.emit('sync_questions', { roomId, questions });
         },
 
         tickTimer: () => set((state) => ({

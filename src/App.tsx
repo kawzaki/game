@@ -1,7 +1,7 @@
+```
 import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from './store/useGameStore';
-import mockQuestions from './data/mockQuestions.json';
 import {
   Timer as TimerIcon,
   Trophy
@@ -33,7 +33,6 @@ const App: React.FC = () => {
     currentPlayerIndex,
     selectedCategory,
     feedback,
-    syncQuestions
   } = useGameStore();
 
   useEffect(() => {
@@ -123,7 +122,7 @@ const App: React.FC = () => {
                 <button
                   onClick={() => {
                     if (roomId) {
-                      syncQuestions(roomId, mockQuestions as any);
+                      // Questions are now handled server-side on join
                       startGame(roomId);
                     }
                   }}
@@ -161,7 +160,7 @@ const App: React.FC = () => {
                 return (
                   <div
                     key={val}
-                    className={`tile-premium ${isAnswered ? 'tile-answered' : ''}`}
+                    className={`tile - premium ${ isAnswered ? 'tile-answered' : '' } `}
                     onClick={() => !isAnswered && roomId && pickValue(roomId, val)}
                   >
                     <span className="gold-text">${val}</span>
@@ -196,7 +195,7 @@ const App: React.FC = () => {
 
               <div style={{ marginTop: '20px' }}>
                 {feedback ? (
-                  <div style={{ padding: '24px', borderRadius: '16px', background: feedback.type === 'correct' ? '#ecfdf5' : '#fef2f2', border: `2px solid ${feedback.type === 'correct' ? '#10b981' : '#ef4444'}` }}>
+                  <div style={{ padding: '24px', borderRadius: '16px', background: feedback.type === 'correct' ? '#ecfdf5' : '#fef2f2', border: `2px solid ${ feedback.type === 'correct' ? '#10b981' : '#ef4444' } ` }}>
                     <div style={{ fontSize: '24px', fontWeight: '900', marginBottom: '12px', color: feedback.type === 'correct' ? '#065f46' : '#991b1b' }}>
                       {feedback.message}
                     </div>
@@ -280,7 +279,7 @@ const App: React.FC = () => {
         <div className="bottom-hud">
           {/* Active Player Slot */}
           <div className="hud-player-slot active">
-            <div className="hud-label">TURN: {players[currentPlayerIndex]?.team ? `TEAM ${players[currentPlayerIndex].team}` : 'PLAYER'}</div>
+            <div className="hud-label">TURN: {players[currentPlayerIndex]?.team ? `TEAM ${ players[currentPlayerIndex].team } ` : 'PLAYER'}</div>
             <div className="hud-name">{players[currentPlayerIndex]?.name}</div>
             <div className="hud-score">${players[currentPlayerIndex]?.score.toLocaleString()}</div>
           </div>
