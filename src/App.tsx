@@ -385,20 +385,20 @@ const App: React.FC = () => {
                     </div>
                     {feedback.answer && (
                       <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#64748b', marginBottom: '16px' }}>
-                        ANSWER: {feedback.answer}
+                        الإجابة: {feedback.answer}
                       </div>
                     )}
                     <button
                       onClick={() => roomId && closeFeedback(roomId)}
                       style={{ padding: '12px 32px', background: feedback.type === 'correct' ? '#10b981' : '#ef4444', color: 'white', borderRadius: '12px', fontWeight: '900', border: 'none', cursor: 'pointer' }}
                     >
-                      OKAY
+                      حسناً
                     </button>
                   </div>
                 ) : attempts.includes(myId || '') ? (
                   <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #cbd5e1' }}>
                     <span style={{ color: '#64748b', fontWeight: 'bold' }}>
-                      You already tried! Waiting for others...
+                      لقد حاولت بالفعل! بانتظار البقية...
                     </span>
                   </div>
                 ) : !buzzedPlayerId ? (
@@ -426,11 +426,11 @@ const App: React.FC = () => {
                     }}
                   >
                     <Zap size={32} fill="white" />
-                    BUZZ!
+                    إجابة!
                   </button>
                 ) : buzzedPlayerId === myId ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)', marginBottom: '4px' }}>CHOOSE THE CORRECT OPTION:</div>
+                    <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)', marginBottom: '4px' }}>اختر الإجابة الصحيحة:</div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                       {activeQuestion.options.map((option, idx) => (
                         <button
@@ -448,7 +448,7 @@ const App: React.FC = () => {
                 ) : (
                   <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #cbd5e1' }}>
                     <span style={{ color: '#64748b', fontWeight: 'bold' }}>
-                      {players.find(p => p.id === buzzedPlayerId)?.name} is answering...
+                      {players.find(p => p.id === buzzedPlayerId)?.name} يجيب الآن...
                     </span>
                   </div>
                 )}
