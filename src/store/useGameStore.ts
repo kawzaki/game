@@ -23,6 +23,7 @@ interface GameState {
     buzzedPlayerId: string | null;
     attempts: string[];
     myId: string | null;
+    isConnected: boolean;
     feedback: { type: 'correct' | 'wrong' | 'all_wrong' | 'luck'; message: string; answer?: string; reward?: any } | null;
     gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'question' | 'game_over';
     timer: number;
@@ -63,7 +64,8 @@ export const useGameStore = create<GameState>((set) => {
             currentPlayerIndex: data.currentPlayerIndex,
             timer: data.timer,
             winner: data.winner,
-            myId: socket.id || null
+            myId: socket.id || null,
+            isConnected: true
         });
     });
 
@@ -73,7 +75,11 @@ export const useGameStore = create<GameState>((set) => {
         if (state.roomId && state.playerName) {
             socket.emit('rejoin_room', { roomId: state.roomId, playerName: state.playerName });
         }
-        set({ myId: socket.id || null });
+        set({ myId: socket.id || null, isConnected: true });
+    });
+
+    socket.on('disconnect', () => {
+        set({ isConnected: false });
     });
 
     return {
@@ -86,6 +92,7 @@ export const useGameStore = create<GameState>((set) => {
         buzzedPlayerId: null,
         attempts: [],
         myId: null,
+        isConnected: socket.connected,
         feedback: null,
         gameStatus: 'lobby',
         timer: 30,

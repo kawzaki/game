@@ -417,6 +417,32 @@ body {
   border-color: rgba(0, 0, 0, 0.06);
   color: var(--text-primary);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tile-premium:active {
+  transform: scale(0.95);
+  background-color: var(--bg-light-muted);
+}
+
+.tile-premium.selecting {
+  animation: selection-pulse 0.6s infinite alternate;
+  border: 2px solid var(--brand-yellow);
+  pointer-events: none;
+}
+
+@keyframes selection-pulse {
+  from {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 rgba(255, 207, 0, 0);
+  }
+
+  to {
+    transform: scale(0.98);
+    box-shadow: 0 0 20px var(--brand-yellow-glow);
+  }
 }
 
 .tile-answered {
@@ -434,13 +460,21 @@ body {
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
   text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .value-button:active {
-  transform: scale(0.98);
+  transform: scale(0.95);
+  background-color: #f1f5f9;
+}
+
+.value-button.selecting {
+  animation: selection-pulse 0.6s infinite alternate;
+  border: 2px solid var(--brand-yellow);
+  pointer-events: none;
 }
 
 .value-button .gold-text {

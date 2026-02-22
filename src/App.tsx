@@ -43,7 +43,8 @@ const App: React.FC = () => {
     selectedCategory,
     feedback,
     winner,
-    resetRoom
+    resetRoom,
+    isConnected
   } = useGameStore();
 
   const isMyTurn = players[currentPlayerIndex]?.id === myId;
@@ -52,11 +53,37 @@ const App: React.FC = () => {
   const [playerName, setPlayerName] = React.useState('');
   const [joinCode, setJoinCode] = React.useState('');
   const [qCount, setQCount] = React.useState(5);
+  const [localSelecting, setLocalSelecting] = React.useState<string | number | null>(null);
+
+  // Reset local selection when game state changes
+  useEffect(() => {
+    setLocalSelecting(null);
+  }, [gameStatus, selectedCategory, activeQuestion]);
 
   const forfeit = () => {
     if (confirm('هل أنت متأكد من إنهاء اللعبة مبكراً؟')) {
       socket.emit('forfeit_game', roomId);
     }
+  };
+
+  const handlePickCategory = (cat: string) => {
+    if (!isMyTurn || !roomId) {
+      console.log(`[Selection] Blocked: isMyTurn=${isMyTurn}, roomId=${!!roomId}`);
+      return;
+    }
+    console.log(`[Selection] Picking category: ${cat}`);
+    setLocalSelecting(cat);
+    pickCategory(roomId, cat);
+  };
+
+  const handlePickValue = (val: number) => {
+    if (!isMyTurn || !roomId) {
+      console.log(`[Selection] Blocked: isMyTurn=${isMyTurn}, roomId=${!!roomId}`);
+      return;
+    }
+    console.log(`[Selection] Picking value: ${val}`);
+    setLocalSelecting(val);
+    pickValue(roomId, val);
   };
 
   useEffect(() => {
@@ -342,6 +369,17 @@ const App: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Trophy size={18} style={{ color: 'var(--accent-gold)' }} />
           <span className="gold-text" style={{ fontSize: '14px' }}>ROOM #{roomId}</span>
+          <div
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: isConnected ? '#10b981' : '#ef4444',
+              marginLeft: '8px',
+              boxShadow: isConnected ? '0 0 8px #10b981' : '0 0 8px #ef4444'
+            }}
+            title={isConnected ? 'Connected' : 'Disconnected'}
+          />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8' }}>AR</span>
@@ -367,8 +405,8 @@ const App: React.FC = () => {
               {Object.keys(categories).map((cat) => (
                 <div
                   key={cat}
-                  className={`tile-premium ${!isMyTurn ? 'tile-disabled' : ''}`}
-                  onClick={() => isMyTurn && roomId && pickCategory(roomId, cat)}
+                  className={`tile-premium ${!isMyTurn ? 'tile-disabled' : ''} ${localSelecting === cat ? 'selecting' : ''}`}
+                  onClick={() => handlePickCategory(cat)}
                   style={{ height: '80px', textAlign: 'center', opacity: isMyTurn ? 1 : 0.6, cursor: isMyTurn ? 'pointer' : 'not-allowed' }}
                 >
                   <span style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)' }}>{cat}</span>
@@ -395,8 +433,8 @@ const App: React.FC = () => {
                 return (
                   <div
                     key={val}
-                    className={`value-button ${isAnswered ? 'tile-answered' : ''} ${!isMyTurn ? 'tile-disabled' : ''}`}
-                    onClick={() => isMyTurn && !isAnswered && roomId && pickValue(roomId, val)}
+                    className={`value-button ${isAnswered ? 'tile-answered' : ''} ${!isMyTurn ? 'tile-disabled' : ''} ${localSelecting === val ? 'selecting' : ''}`}
+                    onClick={() => !isAnswered && handlePickValue(val)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',

@@ -159,6 +159,7 @@ io.on('connection', (socket) => {
             room.selectedCategory = category;
             room.gameStatus = 'selecting_value';
             io.to(roomId).emit('room_data', room);
+            console.log(`[Selection] Player ${socket.id} picked category: ${category} in room ${roomId}`);
         }
     });
 
@@ -227,7 +228,10 @@ io.on('connection', (socket) => {
                     room.attempts = [];
                     room.feedback = null;
                     io.to(roomId).emit('room_data', room);
+                    console.log(`[Selection] Player ${socket.id} picked value: ${value} in room ${roomId}`);
                 }
+            } else {
+                console.log(`[Selection] Question not found or already answered: cat=${room.selectedCategory}, val=${value}`);
             }
         }
     });
