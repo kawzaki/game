@@ -345,9 +345,83 @@ body {
 }
 
 .bottom-hud {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background-color: var(--bg-light-card);
-  border-top-color: rgba(0, 0, 0, 0.05);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+  padding: 16px 20px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 1000;
+}
+
+.hud-row-turn {
+  background: var(--bg-light-muted);
+  padding: 10px;
+  border-radius: 14px;
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.hud-turn-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-tertiary);
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.hud-turn-name {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--royal-blue);
+}
+
+.hud-row-players {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hud-player-unit {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hud-player-unit.left {
+  text-align: left;
+}
+
+.hud-player-unit.right {
+  text-align: right;
+}
+
+.hud-player-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.hud-player-score {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--accent-gold);
+}
+
+.hud-vs-badge {
+  background: var(--accent-gold);
+  color: white;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px var(--brand-yellow-glow);
 }
 
 .modal-content {

@@ -460,23 +460,32 @@ const App: React.FC = () => {
 
       {players.length > 0 && (
         <div className="bottom-hud">
-          <div className="hud-player-slot active">
-            <div className="hud-label">TURN: {players[currentPlayerIndex]?.name || '---'}</div>
-            <div className="hud-score">${players[currentPlayerIndex]?.score.toLocaleString()}</div>
+          {/* Row 1: Current Turn */}
+          <div className="hud-row-turn">
+            <div className="hud-turn-label">دور اللاعب الآن:</div>
+            <div className="hud-turn-name">{players[currentPlayerIndex]?.name || '---'}</div>
           </div>
-          <div className="hud-vs">VS</div>
-          {(() => {
-            const opponent = [...players]
-              .filter((_, idx) => idx !== currentPlayerIndex)
-              .sort((a, b) => b.score - a.score)[0] || players[0];
-            return (
-              <div className="hud-player-slot" style={{ textAlign: 'right' }}>
-                <div className="hud-label">OPPONENT</div>
-                <div className="hud-name">{opponent?.name || '---'}</div>
-                <div className="hud-score">${opponent?.score.toLocaleString() || '0'}</div>
-              </div>
-            );
-          })()}
+
+          {/* Row 2: Opponents Horizontally Aligned */}
+          <div className="hud-row-players">
+            {players.length >= 1 ? (
+              <>
+                <div className="hud-player-unit left">
+                  <div className="hud-player-name">{players[0]?.name}</div>
+                  <div className="hud-player-score">${players[0]?.score.toLocaleString()}</div>
+                </div>
+
+                <div className="hud-vs-badge">VS</div>
+
+                <div className="hud-player-unit right">
+                  <div className="hud-player-name">{players[1]?.name || '---'}</div>
+                  <div className="hud-player-score">${players[1]?.score.toLocaleString() || '0'}</div>
+                </div>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', width: '100%', color: 'var(--text-tertiary)' }}>انتظار الخصوم...</div>
+            )}
+          </div>
         </div>
       )}
     </div>
