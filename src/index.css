@@ -367,3 +367,20 @@ body {
   color: var(--accent-gold);
   font-weight: 900;
 }
+
+.dimmed-section {
+  opacity: 0.4;
+  pointer-events: none;
+  filter: grayscale(0.5);
+  position: relative;
+}
+
+.coming-soon-badge {
+  background: var(--accent-gold);
+  color: white;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+}
