@@ -401,7 +401,7 @@ const App: React.FC = () => {
                 <TimerIcon size={18} style={{ color: 'var(--accent-gold)' }} />
                 <span>{timer}s</span>
               </div>
-              <div className="cat-label" style={{ textAlign: 'inherit' }}>{activeQuestion.category}</div>
+              <div className="cat-label">{activeQuestion.category}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                 <Coins size={28} style={{ color: 'var(--accent-gold)' }} />
                 <h3 className="gold-text" style={{ fontSize: '28px', margin: 0 }}>{activeQuestion.value}</h3>

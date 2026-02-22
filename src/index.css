@@ -543,11 +543,14 @@ body {
   width: 90%;
   max-width: 450px;
   position: relative;
+  display: flex;
+  flex-direction: column;
   text-align: start;
 }
 
 [dir="rtl"] .modal-content {
   text-align: right !important;
+  align-items: flex-start !important;
 }
 
 .modal-timer {
