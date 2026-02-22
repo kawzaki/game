@@ -109,10 +109,6 @@ const App: React.FC = () => {
         {/* Header */}
         <header className="home-header">
           <Settings size={24} color="var(--text-secondary)" />
-          <div className="live-indicator">
-            <span className="live-dot"></span>
-            <span className="live-text">1.2 ألف مباشر</span>
-          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontWeight: 900, fontSize: '18px' }}>تحدي المعلومات</span>
             <Zap size={20} fill="var(--brand-yellow)" color="var(--brand-yellow)" />

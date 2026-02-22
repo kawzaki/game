@@ -55,37 +55,6 @@ body {
   margin: 0 auto;
 }
 
-/* Header */
-.home-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-}
-
-.live-indicator {
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 20px;
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.live-dot {
-  width: 6px;
-  height: 6px;
-  background: var(--brand-yellow);
-  border-radius: 50%;
-  box-shadow: 0 0 10px var(--brand-yellow);
-}
-
-.live-text {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
 
 /* Hero Card */
 .hero-card {
