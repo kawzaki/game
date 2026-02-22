@@ -138,6 +138,13 @@ io.on('connection', (socket) => {
     socket.on('pick_category', ({ roomId, category }) => {
         const room = rooms.get(roomId);
         if (room) {
+            // Check if it's the player's turn
+            const activePlayer = room.players[room.currentPlayerIndex];
+            if (activePlayer && activePlayer.id !== socket.id) {
+                console.log(`Action blocked: ${socket.id} tried to pick category out of turn.`);
+                return;
+            }
+
             room.selectedCategory = category;
             room.gameStatus = 'selecting_value';
             io.to(roomId).emit('room_data', room);
@@ -147,6 +154,13 @@ io.on('connection', (socket) => {
     socket.on('pick_value', ({ roomId, value }) => {
         const room = rooms.get(roomId);
         if (room) {
+            // Check if it's the player's turn
+            const activePlayer = room.players[room.currentPlayerIndex];
+            if (activePlayer && activePlayer.id !== socket.id) {
+                console.log(`Action blocked: ${socket.id} tried to pick value out of turn.`);
+                return;
+            }
+
             const question = room.questions.find(q =>
                 q.category === room.selectedCategory &&
                 q.value === value &&

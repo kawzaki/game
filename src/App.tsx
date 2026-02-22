@@ -46,6 +46,9 @@ const App: React.FC = () => {
     resetRoom
   } = useGameStore();
 
+  const isMyTurn = players[currentPlayerIndex]?.id === myId;
+  const activePlayerName = players[currentPlayerIndex]?.name || '...';
+
   const [playerName, setPlayerName] = React.useState('');
   const [joinCode, setJoinCode] = React.useState('');
 
@@ -341,22 +344,40 @@ const App: React.FC = () => {
 
       <main style={{ padding: '16px' }}>
         {gameStatus === 'selecting_category' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-            {Object.keys(categories).map((cat) => (
-              <div
-                key={cat}
-                className="tile-premium"
-                onClick={() => roomId && pickCategory(roomId, cat)}
-                style={{ height: '80px', textAlign: 'center' }}
-              >
-                <span style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)' }}>{cat}</span>
+          <div>
+            <div className={`turn-banner ${isMyTurn ? 'my-turn' : 'their-turn'}`} style={{ marginBottom: '16px', padding: '12px', borderRadius: '12px', textAlign: 'center', transition: 'all 0.3s ease' }}>
+              <div style={{ fontSize: '12px', fontWeight: '800', opacity: 0.7, marginBottom: '2px' }}>
+                {isMyTurn ? 'دورك الآن' : 'بانتظار المنافس'}
               </div>
-            ))}
+              <div style={{ fontSize: '18px', fontWeight: '900' }}>
+                {isMyTurn ? 'اختر الفئة' : `يقوم ${activePlayerName} بالاختيار...`}
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              {Object.keys(categories).map((cat) => (
+                <div
+                  key={cat}
+                  className={`tile-premium ${!isMyTurn ? 'tile-disabled' : ''}`}
+                  onClick={() => isMyTurn && roomId && pickCategory(roomId, cat)}
+                  style={{ height: '80px', textAlign: 'center', opacity: isMyTurn ? 1 : 0.6, cursor: isMyTurn ? 'pointer' : 'not-allowed' }}
+                >
+                  <span style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)' }}>{cat}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {gameStatus === 'selecting_value' && (
           <div>
+            <div className={`turn-banner ${isMyTurn ? 'my-turn' : 'their-turn'}`} style={{ marginBottom: '16px', padding: '12px', borderRadius: '12px', textAlign: 'center', transition: 'all 0.3s ease' }}>
+              <div style={{ fontSize: '12px', fontWeight: '800', opacity: 0.7, marginBottom: '2px' }}>
+                {isMyTurn ? 'دورك الآن' : 'بانتظار المنافس'}
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '900' }}>
+                {isMyTurn ? 'اختر القيمة' : `يقوم ${activePlayerName} بالاختيار...`}
+              </div>
+            </div>
             <h3 style={{ textAlign: 'center', marginBottom: '24px', color: 'var(--royal-blue)', fontWeight: '900', fontSize: '24px' }}>{selectedCategory}</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '12px' }}>
               {[100, 200, 300, 400, 500].map((val) => {
@@ -364,9 +385,16 @@ const App: React.FC = () => {
                 return (
                   <div
                     key={val}
-                    className={`value-button ${isAnswered ? 'tile-answered' : ''}`}
-                    onClick={() => !isAnswered && roomId && pickValue(roomId, val)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                    className={`value-button ${isAnswered ? 'tile-answered' : ''} ${!isMyTurn ? 'tile-disabled' : ''}`}
+                    onClick={() => isMyTurn && !isAnswered && roomId && pickValue(roomId, val)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      opacity: isMyTurn ? (isAnswered ? 0.5 : 1) : 0.6,
+                      cursor: (isMyTurn && !isAnswered) ? 'pointer' : 'not-allowed'
+                    }}
                   >
                     <Coins size={24} style={{ color: 'var(--accent-gold)' }} />
                     <span className="gold-text">{val}</span>

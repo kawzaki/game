@@ -618,6 +618,35 @@ body {
   text-align: right !important;
 }
 
+/* Turn Banner Styles */
+.turn-banner {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.turn-banner.my-turn {
+  background: var(--brand-yellow);
+  color: var(--royal-blue);
+  border: 1px solid var(--brand-yellow-muted);
+}
+
+.turn-banner.their-turn {
+  background: #f1f5f9;
+  color: var(--text-tertiary);
+  border: 1px solid #e2e8f0;
+}
+
+.tile-disabled {
+  opacity: 0.6;
+  filter: grayscale(0.5);
+  pointer-events: none;
+}
+
+.value-button.tile-disabled {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
 .question-text {
   font-size: 20px;
   font-weight: 800;
