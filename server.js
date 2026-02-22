@@ -41,18 +41,36 @@ function isCorrectAnswer(input, correct) {
     return input.trim().toLowerCase() === correct.trim().toLowerCase();
 }
 
-function endGame(room, io, roomId) {
+function endGame(room, io, roomId, forfeitingPlayerId = null) {
     const players = room.players;
     if (players.length === 0) return;
 
-    // Highest score wins
-    const sorted = [...players].sort((a, b) => b.score - a.score);
-    const winner = sorted[0];
+    let winner;
+    let isForfeit = false;
+
+    if (forfeitingPlayerId) {
+        // If someone forfeits, winner is the highest score among OTHERS
+        const others = players.filter(p => p.id !== forfeitingPlayerId);
+        if (others.length > 0) {
+            const sorted = [...others].sort((a, b) => b.score - a.score);
+            winner = sorted[0];
+            isForfeit = true;
+        } else {
+            // No one else left? Just use highest score (current default)
+            const sorted = [...players].sort((a, b) => b.score - a.score);
+            winner = sorted[0];
+        }
+    } else {
+        // Normal game end: highest score wins
+        const sorted = [...players].sort((a, b) => b.score - a.score);
+        winner = sorted[0];
+    }
 
     room.gameStatus = 'game_over';
     room.winner = {
         name: winner.name,
-        score: winner.score
+        score: winner.score,
+        isForfeit: isForfeit
     };
     room.activeQuestion = null;
     room.feedback = null;
@@ -201,7 +219,7 @@ io.on('connection', (socket) => {
     socket.on('forfeit_game', (roomId) => {
         const room = rooms.get(roomId);
         if (room && room.gameStatus !== 'game_over') {
-            endGame(room, io, roomId);
+            endGame(room, io, roomId, socket.id);
         }
     });
 

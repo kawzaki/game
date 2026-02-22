@@ -490,7 +490,9 @@ const App: React.FC = () => {
               className="winner-card"
             >
               <Trophy size={80} color="var(--accent-gold)" style={{ marginBottom: '16px' }} />
-              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-tertiary)' }}>الفائز هو:</div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-tertiary)' }}>
+                {winner.isForfeit ? 'لقد انسحب الخصم! الفائز هو:' : 'الفائز هو:'}
+              </div>
               <div className="winner-name">{winner.name}</div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
                 <Coins size={40} style={{ color: 'var(--accent-gold)' }} />

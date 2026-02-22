@@ -26,7 +26,7 @@ interface GameState {
     feedback: { type: 'correct' | 'wrong' | 'all_wrong'; message: string; answer?: string } | null;
     gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'question' | 'game_over';
     timer: number;
-    winner: { name: string; score: number } | null;
+    winner: { name: string; score: number; isForfeit?: boolean } | null;
 
     // Actions
     setRoomId: (id: string) => void;
