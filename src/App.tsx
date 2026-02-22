@@ -148,6 +148,12 @@ const App: React.FC = () => {
         <h1 className="hero-title">هل أنت مستعد <span style={{ color: 'var(--brand-yellow)' }}>للمنافسة؟</span></h1>
         <p className="hero-subtitle">تحد أصدقاءك أو انضم إلى الساحات العالمية لإثبات معرفتك.</p>
 
+        {/* Start Button */}
+        <button className="btn-primary-battle" onClick={handleCreateRoom}>
+          <Plus size={24} strokeWidth={3} />
+          ابدأ منافسة جديدة
+        </button>
+
         {/* Join Section */}
         <div className="join-section">
           <span className="join-label">انضم إلى مباراة</span>
@@ -171,12 +177,6 @@ const App: React.FC = () => {
             <span>رابط الدعوة يعمل أيضاً! فقط اضغط وادخل.</span>
           </div>
         </div>
-
-        {/* Start Button */}
-        <button className="btn-primary-battle" onClick={handleCreateRoom}>
-          <Plus size={24} strokeWidth={3} />
-          ابدأ منافسة جديدة
-        </button>
 
         {/* Grid Options */}
         <div className="action-grid">
