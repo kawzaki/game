@@ -103,6 +103,8 @@ const App: React.FC = () => {
     return cats;
   }, [questions]);
 
+  const hasJoined = useMemo(() => players.some(p => p.id === myId), [players, myId]);
+
   if (gameStatus === 'lobby') {
     return (
       <div className="home-container" dir="rtl">
@@ -219,12 +221,16 @@ const App: React.FC = () => {
                   onChange={(e) => setPlayerName(e.target.value)}
                 />
                 <button
-                  disabled={!playerName}
+                  disabled={!playerName || hasJoined}
                   onClick={() => addPlayer(playerName, roomId)}
-                  className="btn-primary-battle"
-                  style={{ opacity: !playerName ? 0.5 : 1 }}
+                  className={hasJoined ? "btn-secondary" : "btn-primary-battle"}
+                  style={{
+                    opacity: (!playerName && !hasJoined) ? 0.5 : (hasJoined ? 0.4 : 1),
+                    marginBottom: '12px',
+                    pointerEvents: hasJoined ? 'none' : 'auto'
+                  }}
                 >
-                  انضم إلى المنافسة!
+                  {hasJoined ? "تم الانضمام ✓" : "انضم إلى المنافسة!"}
                 </button>
                 <button
                   onClick={copyInviteLink}
@@ -245,15 +251,18 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {players.length > 0 && (
-                <button
-                  onClick={() => startGame(roomId)}
-                  className="btn-primary-battle"
-                  style={{ marginTop: '24px' }}
-                >
-                  ابدأ اللعب الآن! 🚀
-                </button>
-              )}
+              <button
+                disabled={!hasJoined || players.length === 0}
+                onClick={() => startGame(roomId)}
+                className={hasJoined ? "btn-primary-battle" : "btn-secondary"}
+                style={{
+                  marginTop: '24px',
+                  opacity: hasJoined ? 1 : 0.4,
+                  pointerEvents: hasJoined ? 'auto' : 'none'
+                }}
+              >
+                ابدأ اللعب الآن! 🚀
+              </button>
 
               <button
                 onClick={() => setRoomId('')}
