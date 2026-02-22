@@ -498,7 +498,7 @@ body {
 }
 
 .hud-player-unit.left {
-  text-align: start;
+  text-align: right;
 }
 
 .hud-player-unit.right {
@@ -546,13 +546,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  text-align: start;
-}
-
-[dir="rtl"] .modal-content,
-.modal-content[dir="rtl"] {
+  /* Force RTL for Arabic Questions */
+  direction: rtl !important;
   text-align: right !important;
-  align-items: stretch !important;
 }
 
 .modal-timer {

@@ -395,7 +395,7 @@ const App: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="modal-content"
-              dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
+              dir="rtl"
             >
               <div className="modal-timer">
                 <TimerIcon size={18} style={{ color: 'var(--accent-gold)' }} />
