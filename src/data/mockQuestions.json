@@ -5390,83 +5390,171 @@
     "isAnswered": false
   },
   {
-    "id": "luck1",
-    "category": "حظ",
+    "id": "luck-الجغرافيا-100-0",
+    "category": "الجغرافيا",
     "value": 100,
     "type": "luck",
-    "question": "حظك اليوم! اختر قيمة لنرى ماذا تخبئ لك.",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
     "isAnswered": false
   },
   {
-    "id": "luck2",
-    "category": "حظ",
-    "value": 200,
-    "type": "luck",
-    "question": "حظك اليوم! اختر قيمة لنرى ماذا تخبئ لك.",
-    "isAnswered": false
-  },
-  {
-    "id": "luck3",
-    "category": "حظ",
+    "id": "luck-الجغرافيا-300-1",
+    "category": "الجغرافيا",
     "value": 300,
     "type": "luck",
-    "question": "حظك اليوم! اختر قيمة لنرى ماذا تخبئ لك.",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
     "isAnswered": false
   },
   {
-    "id": "luck4",
-    "category": "حظ",
-    "value": 400,
-    "type": "luck",
-    "question": "حظك اليوم! اختر قيمة لنرى ماذا تخبئ لك.",
-    "isAnswered": false
-  },
-  {
-    "id": "luck5",
-    "category": "حظ",
+    "id": "luck-الجغرافيا-500-2",
+    "category": "الجغرافيا",
     "value": 500,
     "type": "luck",
-    "question": "حظك اليوم! اختر قيمة لنرى ماذا تخبئ لك.",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
     "isAnswered": false
   },
   {
-    "id": "luck6",
-    "category": "حظ",
+    "id": "luck-التاريخ-100-0",
+    "category": "التاريخ",
     "value": 100,
     "type": "luck",
-    "question": "حظك اليوم! اختر قيمة لنرى ماذا تخبئ لك.",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
     "isAnswered": false
   },
   {
-    "id": "luck7",
-    "category": "حظ",
-    "value": 200,
-    "type": "luck",
-    "question": "حظك اليوم! اختر قيمة لنرى ماذا تخبئ لك.",
-    "isAnswered": false
-  },
-  {
-    "id": "luck8",
-    "category": "حظ",
+    "id": "luck-التاريخ-300-1",
+    "category": "التاريخ",
     "value": 300,
     "type": "luck",
-    "question": "حظك اليوم! اختر قيمة لنرى ماذا تخبئ لك.",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
     "isAnswered": false
   },
   {
-    "id": "luck9",
-    "category": "حظ",
-    "value": 400,
-    "type": "luck",
-    "question": "حظك اليوم! اختر قيمة لنرى ماذا تخبئ لك.",
-    "isAnswered": false
-  },
-  {
-    "id": "luck10",
-    "category": "حظ",
+    "id": "luck-التاريخ-500-2",
+    "category": "التاريخ",
     "value": 500,
     "type": "luck",
-    "question": "حظك اليوم! اختر قيمة لنرى ماذا تخبئ لك.",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-العلوم-100-0",
+    "category": "العلوم",
+    "value": 100,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-العلوم-300-1",
+    "category": "العلوم",
+    "value": 300,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-العلوم-500-2",
+    "category": "العلوم",
+    "value": 500,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-الدين-100-0",
+    "category": "الدين",
+    "value": 100,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-الدين-300-1",
+    "category": "الدين",
+    "value": 300,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-الدين-500-2",
+    "category": "الدين",
+    "value": 500,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-معلومات عامة-100-0",
+    "category": "معلومات عامة",
+    "value": 100,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-معلومات عامة-300-1",
+    "category": "معلومات عامة",
+    "value": 300,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-معلومات عامة-500-2",
+    "category": "معلومات عامة",
+    "value": 500,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-الرياضة-100-0",
+    "category": "الرياضة",
+    "value": 100,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-الرياضة-300-1",
+    "category": "الرياضة",
+    "value": 300,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-الرياضة-500-2",
+    "category": "الرياضة",
+    "value": 500,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-شخصيات-100-0",
+    "category": "شخصيات",
+    "value": 100,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-شخصيات-300-1",
+    "category": "شخصيات",
+    "value": 300,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
+    "isAnswered": false
+  },
+  {
+    "id": "luck-شخصيات-500-2",
+    "category": "شخصيات",
+    "value": 500,
+    "type": "luck",
+    "question": "حظك اليوم! اختر هذا الرصيد لنرى ماذا تخبئ لك الأقدار.",
     "isAnswered": false
   }
 ]
