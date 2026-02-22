@@ -166,7 +166,7 @@ const App: React.FC = () => {
           </div>
           <div className="grid-item">
             <Layout size={24} color="var(--brand-yellow)" />
-            <span className="grid-label">الدوريات</span>
+            <span className="grid-label">البطولات</span>
           </div>
         </div>
 
