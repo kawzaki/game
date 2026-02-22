@@ -98,6 +98,10 @@ const App: React.FC = () => {
   useEffect(() => {
     // Sync document direction with language
     document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+    // Force iOS to allow :active states
+    const handleTouch = () => { };
+    document.body.addEventListener('touchstart', handleTouch, { passive: true });
+    return () => document.body.removeEventListener('touchstart', handleTouch);
   }, [i18n.language]);
 
   useEffect(() => {
@@ -403,14 +407,25 @@ const App: React.FC = () => {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
               {Object.keys(categories).map((cat) => (
-                <div
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
                   key={cat}
                   className={`tile-premium ${!isMyTurn ? 'tile-disabled' : ''} ${localSelecting === cat ? 'selecting' : ''}`}
                   onClick={() => handlePickCategory(cat)}
-                  style={{ height: '80px', textAlign: 'center', opacity: isMyTurn ? 1 : 0.6, cursor: isMyTurn ? 'pointer' : 'not-allowed' }}
+                  style={{
+                    height: '80px',
+                    textAlign: 'center',
+                    opacity: isMyTurn ? 1 : 0.6,
+                    cursor: isMyTurn ? 'pointer' : 'not-allowed',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%'
+                  }}
                 >
                   <span style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)' }}>{cat}</span>
-                </div>
+                </motion.button>
               ))}
             </div>
           </div>
@@ -431,7 +446,8 @@ const App: React.FC = () => {
               {[100, 200, 300, 400, 500].map((val) => {
                 const isAnswered = categories[selectedCategory || '']?.find(q => q.value === val)?.isAnswered;
                 return (
-                  <div
+                  <motion.button
+                    whileTap={(!isAnswered && isMyTurn) ? { scale: 0.95 } : {}}
                     key={val}
                     className={`value-button ${isAnswered ? 'tile-answered' : ''} ${!isMyTurn ? 'tile-disabled' : ''} ${localSelecting === val ? 'selecting' : ''}`}
                     onClick={() => !isAnswered && handlePickValue(val)}
@@ -441,12 +457,14 @@ const App: React.FC = () => {
                       justifyContent: 'center',
                       gap: '8px',
                       opacity: isMyTurn ? (isAnswered ? 0.5 : 1) : 0.6,
-                      cursor: (isMyTurn && !isAnswered) ? 'pointer' : 'not-allowed'
+                      cursor: (isMyTurn && !isAnswered) ? 'pointer' : 'not-allowed',
+                      width: '100%',
+                      border: 'none'
                     }}
                   >
                     <Coins size={24} style={{ color: 'var(--accent-gold)' }} />
                     <span className="gold-text">{val}</span>
-                  </div>
+                  </motion.button>
                 );
               })}
               <button
@@ -507,7 +525,8 @@ const App: React.FC = () => {
                     </span>
                   </div>
                 ) : !buzzedPlayerId ? (
-                  <button
+                  <motion.button
+                    whileTap={{ scale: 0.92, y: 4 }}
                     onClick={() => {
                       if (roomId) {
                         playBuzzerSound();
@@ -527,18 +546,20 @@ const App: React.FC = () => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '12px'
+                      gap: '12px',
+                      cursor: 'pointer'
                     }}
                   >
                     <Zap size={32} fill="white" />
                     إجابة!
-                  </button>
+                  </motion.button>
                 ) : buzzedPlayerId === myId ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)', marginBottom: '4px' }}>اختر الإجابة الصحيحة:</div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                       {activeQuestion.options.map((option, idx) => (
-                        <button
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
                           key={idx}
                           onClick={() => roomId && submitAnswer(roomId, option)}
                           style={{ padding: '16px', background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }}
@@ -546,7 +567,7 @@ const App: React.FC = () => {
                           onMouseOut={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#f8fafc'; }}
                         >
                           {option}
-                        </button>
+                        </motion.button>
                       ))}
                     </div>
                   </div>
