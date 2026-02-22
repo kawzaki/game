@@ -343,6 +343,48 @@ body {
 .tile-answered {
   opacity: 0.1;
   box-shadow: none;
+  pointer-events: none;
+}
+
+.value-button {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.value-button:active {
+  transform: scale(0.98);
+}
+
+.value-button .gold-text {
+  font-size: 24px;
+}
+
+.btn-back-ghost {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  color: var(--text-secondary);
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 14px;
+  width: 100%;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-back-ghost:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .bottom-hud {

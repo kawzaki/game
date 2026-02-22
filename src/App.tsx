@@ -338,14 +338,14 @@ const App: React.FC = () => {
 
         {gameStatus === 'selecting_value' && (
           <div>
-            <h3 style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--royal-blue)', fontWeight: '900' }}>{selectedCategory}</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '10px' }}>
+            <h3 style={{ textAlign: 'center', marginBottom: '24px', color: 'var(--royal-blue)', fontWeight: '900', fontSize: '24px' }}>{selectedCategory}</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '12px' }}>
               {[100, 200, 300, 400, 500].map((val) => {
                 const isAnswered = categories[selectedCategory || '']?.find(q => q.value === val)?.isAnswered;
                 return (
                   <div
                     key={val}
-                    className={`tile-premium ${isAnswered ? 'tile-answered' : ''}`}
+                    className={`value-button ${isAnswered ? 'tile-answered' : ''}`}
                     onClick={() => !isAnswered && roomId && pickValue(roomId, val)}
                   >
                     <span className="gold-text">${val}</span>
@@ -353,10 +353,10 @@ const App: React.FC = () => {
                 );
               })}
               <button
+                className="btn-back-ghost"
                 onClick={() => {
                   if (roomId) useGameStore.setState({ gameStatus: 'selecting_category', selectedCategory: null });
                 }}
-                style={{ marginTop: '10px', background: 'none', border: '1px solid #ddd', padding: '10px', borderRadius: '8px', fontSize: '12px', fontWeight: '700' }}
               >
                 BACK
               </button>
