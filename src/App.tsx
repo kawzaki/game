@@ -13,7 +13,8 @@ import {
   User,
   Layout,
   BookOpen,
-  ArrowRight
+  ArrowRight,
+  Coins
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -367,8 +368,10 @@ const App: React.FC = () => {
                     key={val}
                     className={`value-button ${isAnswered ? 'tile-answered' : ''}`}
                     onClick={() => !isAnswered && roomId && pickValue(roomId, val)}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                   >
-                    <span className="gold-text">${val}</span>
+                    <Coins size={24} style={{ color: 'var(--accent-gold)' }} />
+                    <span className="gold-text">{val}</span>
                   </div>
                 );
               })}
@@ -394,7 +397,10 @@ const App: React.FC = () => {
                 <span>{timer}s</span>
               </div>
               <div className="cat-label">{activeQuestion.category}</div>
-              <h3 className="gold-text" style={{ fontSize: '28px', marginBottom: '16px', textAlign: 'start' }}>${activeQuestion.value}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                <Coins size={28} style={{ color: 'var(--accent-gold)' }} />
+                <h3 className="gold-text" style={{ fontSize: '28px', margin: 0 }}>{activeQuestion.value}</h3>
+              </div>
               <p className="question-text">{activeQuestion.question}</p>
 
               <div style={{ marginTop: '20px' }}>
@@ -486,7 +492,10 @@ const App: React.FC = () => {
               <Trophy size={80} color="var(--accent-gold)" style={{ marginBottom: '16px' }} />
               <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-tertiary)' }}>الفائز هو:</div>
               <div className="winner-name">{winner.name}</div>
-              <div className="winner-score">${winner.score.toLocaleString()}</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
+                <Coins size={40} style={{ color: 'var(--accent-gold)' }} />
+                <div className="winner-score">{winner.score.toLocaleString()}</div>
+              </div>
               <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--accent-gold)' }}>ألف مبروك! 🎉</div>
             </motion.div>
 
@@ -515,14 +524,20 @@ const App: React.FC = () => {
               <>
                 <div className="hud-player-unit left">
                   <div className="hud-player-name">{players[0]?.name}</div>
-                  <div className="hud-player-score">${players[0]?.score.toLocaleString()}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Coins size={14} style={{ color: 'var(--accent-gold)' }} />
+                    <div className="hud-player-score">{players[0]?.score.toLocaleString()}</div>
+                  </div>
                 </div>
 
                 <div className="hud-vs-badge">VS</div>
 
                 <div className="hud-player-unit right">
                   <div className="hud-player-name">{players[1]?.name || '---'}</div>
-                  <div className="hud-player-score">${players[1]?.score.toLocaleString() || '0'}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Coins size={14} style={{ color: 'var(--accent-gold)' }} />
+                    <div className="hud-player-score">{players[1]?.score.toLocaleString() || '0'}</div>
+                  </div>
                 </div>
               </>
             ) : (
