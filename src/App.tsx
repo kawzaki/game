@@ -168,9 +168,9 @@ const App: React.FC = () => {
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
             />
           </div>
-          <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-tertiary)', fontSize: '11px' }}>
+          <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-tertiary)', fontSize: '11px', textAlign: 'inherit' }}>
             <div style={{ width: '14px', height: '14px', borderRadius: '50%', border: '1px solid currentColor', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>i</div>
-            رابط الدعوة يعمل أيضاً! فقط اضغط وادخل.
+            <span>رابط الدعوة يعمل أيضاً! فقط اضغط وادخل.</span>
           </div>
         </div>
 

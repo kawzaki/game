@@ -45,7 +45,8 @@ body {
 [dir="rtl"] button,
 [dir="rtl"] input {
   font-family: 'Cairo', 'Inter', sans-serif;
-  text-align: right;
+  text-align: right !important;
+  direction: rtl;
 }
 
 /* --- HOME SCREEN SPECIALS --- */
@@ -129,6 +130,7 @@ body {
   font-weight: 800;
   margin-bottom: 16px;
   display: block;
+  text-align: inherit;
 }
 
 .join-input-wrapper {
@@ -149,10 +151,6 @@ body {
   font-weight: 600;
   outline: none;
   text-align: inherit;
-}
-
-[dir="rtl"] .join-input {
-  text-align: right !important;
 }
 
 .join-submit-btn {
