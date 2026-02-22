@@ -107,7 +107,7 @@ const App: React.FC = () => {
 
   if (gameStatus === 'lobby') {
     return (
-      <div className="home-container" dir="rtl">
+      <div className="home-container">
         {/* Header */}
         <header className="home-header">
           <Settings size={24} color="var(--text-secondary)" />
@@ -369,8 +369,8 @@ const App: React.FC = () => {
         {gameStatus === 'question' && activeQuestion && (
           <div className="fixed modal-overlay" style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="modal-content text-center">
-              <div style={{ position: 'absolute', top: '16px', right: '16px', fontSize: '18px', fontWeight: '900' }}>
-                <TimerIcon size={18} style={{ color: 'var(--accent-gold)', marginRight: '4px' }} />
+              <div style={{ position: 'absolute', top: '16px', insetInlineEnd: '16px', fontSize: '18px', fontWeight: '900' }}>
+                <TimerIcon size={18} style={{ color: 'var(--accent-gold)', marginInlineEnd: '4px' }} />
                 <span>{timer}s</span>
               </div>
               <div className="cat-label" style={{ marginBottom: '8px' }}>{activeQuestion.category}</div>

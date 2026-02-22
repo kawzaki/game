@@ -84,7 +84,7 @@ body {
 .floating-settings {
   position: absolute;
   bottom: 20px;
-  right: 20px;
+  inset-inline-end: 20px;
   background: var(--bg-light-card);
   padding: 10px;
   border-radius: 12px;
@@ -269,7 +269,7 @@ body {
   color: var(--accent-gold);
   font-weight: 800;
   font-size: 18px;
-  margin-right: auto;
+  margin-inline-end: auto;
 }
 
 /* Bottom Navigation */
@@ -395,11 +395,11 @@ body {
 }
 
 .hud-player-unit.left {
-  text-align: left;
+  text-align: start;
 }
 
 .hud-player-unit.right {
-  text-align: right;
+  text-align: end;
 }
 
 .hud-player-name {
@@ -456,5 +456,5 @@ body {
   font-weight: 900;
   padding: 4px 8px;
   border-radius: 4px;
-  margin-right: 8px;
+  margin-inline-end: 8px;
 }
