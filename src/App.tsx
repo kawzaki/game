@@ -176,7 +176,7 @@ const App: React.FC = () => {
         {/* Start Button */}
         <button className="btn-primary-battle" onClick={handleCreateRoom}>
           <Plus size={24} strokeWidth={3} />
-          ابدأ معركة جديدة
+          ابدأ منافسة جديدة
         </button>
 
         {/* Grid Options */}
