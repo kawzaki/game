@@ -3,12 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { useGameStore } from './store/useGameStore';
 import {
   Timer as TimerIcon,
-  Trophy
+  Trophy,
+  Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const {
     roomId,
     myId,
@@ -57,6 +58,11 @@ const App: React.FC = () => {
     }
     return () => clearInterval(interval);
   }, [gameStatus, timer, roomId, answerQuestion, tickTimer]);
+
+  const playBuzzerSound = () => {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/1084/1084-preview.mp3');
+    audio.play().catch(e => console.error("Audio play failed:", e));
+  };
 
   const toggleLanguage = () => {
     const nextLng = i18n.language === 'ar' ? 'en' : 'ar';
@@ -320,9 +326,29 @@ const App: React.FC = () => {
                   </div>
                 ) : !buzzedPlayerId ? (
                   <button
-                    onClick={() => roomId && buzz(roomId)}
-                    style={{ width: '100%', padding: '20px', background: 'var(--accent-gold)', color: 'white', borderRadius: '16px', fontSize: '24px', fontWeight: '900', border: 'none', boxShadow: '0 8px 0 #a3844a' }}
+                    onClick={() => {
+                      if (roomId) {
+                        playBuzzerSound();
+                        buzz(roomId);
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '24px',
+                      background: 'var(--accent-gold)',
+                      color: 'white',
+                      borderRadius: '16px',
+                      fontSize: '32px',
+                      fontWeight: '900',
+                      border: 'none',
+                      boxShadow: '0 8px 0 #a3844a',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '12px'
+                    }}
                   >
+                    <Zap size={32} fill="white" />
                     BUZZ!
                   </button>
                 ) : buzzedPlayerId === myId ? (
