@@ -51,6 +51,7 @@ const App: React.FC = () => {
 
   const [playerName, setPlayerName] = React.useState('');
   const [joinCode, setJoinCode] = React.useState('');
+  const [qCount, setQCount] = React.useState(5);
 
   const forfeit = () => {
     if (confirm('هل أنت متأكد من إنهاء اللعبة مبكراً؟')) {
@@ -232,6 +233,15 @@ const App: React.FC = () => {
               <h2 style={{ marginBottom: '8px' }}>الغرفة جاهزة!</h2>
               <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '4px', margin: '12px 0' }}>{roomId}</div>
 
+              <div style={{ marginBottom: '16px', background: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold' }}>عدد الأسئلة لكل فئة</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                  <button onClick={() => setQCount(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+                  <span style={{ fontSize: '18px', fontWeight: 'bold', width: '30px' }}>{qCount}</span>
+                  <button onClick={() => setQCount(Math.min(50, qCount + 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                </div>
+              </div>
+
               <div style={{ marginBottom: '24px' }}>
                 <input
                   type="text"
@@ -243,7 +253,7 @@ const App: React.FC = () => {
                 />
                 <button
                   disabled={!playerName || hasJoined}
-                  onClick={() => addPlayer(playerName, roomId)}
+                  onClick={() => addPlayer(playerName, roomId, qCount)}
                   className={hasJoined ? "btn-secondary" : "btn-primary-battle"}
                   style={{
                     opacity: (!playerName && !hasJoined) ? 0.5 : (hasJoined ? 0.4 : 1),
@@ -437,7 +447,7 @@ const App: React.FC = () => {
               <div style={{ marginTop: '20px' }}>
                 {feedback ? (
                   <div style={{ padding: '24px', borderRadius: '16px', background: feedback.type === 'correct' ? '#ecfdf5' : '#fef2f2', border: `2px solid ${feedback.type === 'correct' ? '#10b981' : '#ef4444'}` }}>
-                    <div style={{ fontSize: '24px', fontWeight: '900', marginBottom: '12px', color: feedback.type === 'correct' ? '#065f46' : '#991b1b' }}>
+                    <div style={{ fontSize: '24px', fontWeight: '900', marginBottom: '12px', color: feedback.type === 'correct' ? '#065f46' : feedback.type === 'luck' ? 'var(--royal-blue)' : '#991b1b' }}>
                       {feedback.message}
                     </div>
                     {feedback.answer && (
@@ -447,7 +457,7 @@ const App: React.FC = () => {
                     )}
                     <button
                       onClick={() => roomId && closeFeedback(roomId)}
-                      style={{ padding: '12px 32px', background: feedback.type === 'correct' ? '#10b981' : '#ef4444', color: 'white', borderRadius: '12px', fontWeight: '900', border: 'none', cursor: 'pointer' }}
+                      style={{ padding: '12px 32px', background: feedback.type === 'correct' ? '#10b981' : feedback.type === 'luck' ? 'var(--brand-yellow)' : '#ef4444', color: feedback.type === 'luck' ? '#000' : 'white', borderRadius: '12px', fontWeight: '900', border: 'none', cursor: 'pointer' }}
                     >
                       حسناً
                     </button>

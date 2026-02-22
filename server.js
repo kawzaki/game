@@ -81,22 +81,33 @@ function endGame(room, io, roomId, forfeitingPlayerId = null) {
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    socket.on('join_room', ({ roomId, playerName }) => {
+    socket.on('join_room', ({ roomId, playerName, questionsPerCategory = 5 }) => {
         socket.join(roomId);
 
         if (!rooms.has(roomId)) {
+            // Select a subset of questions based on questionsPerCategory
+            const selectedQuestions = [];
+            const categories = [...new Set(questionsData.map(q => q.category))];
+
+            categories.forEach(cat => {
+                const catQuestions = questionsData.filter(q => q.category === cat);
+                const shuffled = catQuestions.sort(() => 0.5 - Math.random());
+                selectedQuestions.push(...shuffled.slice(0, questionsPerCategory));
+            });
+
             rooms.set(roomId, {
                 id: roomId,
                 players: [],
                 gameStatus: 'lobby',
-                questions: questionsData.map(q => ({ ...q })), // Deep copy for each room
+                questions: selectedQuestions.map(q => ({ ...q })), // Deep copy for each room
+                questionsPerCategory: questionsPerCategory,
                 activeQuestion: null,
                 selectedCategory: null,
                 currentPlayerIndex: 0,
                 timer: 0,
                 attempts: [],
                 feedback: null,
-                winner: null // Store winner info here
+                winner: null
             });
         }
 
@@ -167,12 +178,56 @@ io.on('connection', (socket) => {
                 !q.isAnswered
             );
             if (question) {
-                room.activeQuestion = question;
-                room.gameStatus = 'question';
-                room.timer = 15; // Set to 15 seconds for more competitive play
-                room.attempts = []; // Keep track of socket IDs that tried
-                room.feedback = null;
-                io.to(roomId).emit('room_data', room);
+                if (question.type === 'luck') {
+                    const rewards = [
+                        { msg: "تبريكاتنا! ربحت ضعف القيمة!", multiplier: 2 },
+                        { msg: "أوه لا! خسرت القيمة!", multiplier: -1 },
+                        { msg: "حظ سعيد! ربحت القيمة كاملة!", multiplier: 1 },
+                        { msg: "يا للهول! تم خصم نصف رصيدك الحالي!", effect: 'halve' },
+                        { msg: "يا لك من محظوظ! تم مضاعفة رصيدك الحالي!", effect: 'double' },
+                        { msg: "لا ربح ولا خسارة هذه المرة.", multiplier: 0 }
+                    ];
+                    const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
+                    const player = room.players.find(p => p.id === socket.id);
+
+                    if (player) {
+                        if (randomReward.multiplier !== undefined) {
+                            player.score += (question.value * randomReward.multiplier);
+                        } else if (randomReward.effect === 'halve') {
+                            player.score = Math.floor(player.score / 2);
+                        } else if (randomReward.effect === 'double') {
+                            player.score = player.score * 2;
+                        }
+                    }
+
+                    room.questions = room.questions.map(q =>
+                        q.id === question.id ? { ...q, isAnswered: true } : q
+                    );
+                    room.feedback = {
+                        type: 'luck',
+                        message: `حظ: ${randomReward.msg}`,
+                        reward: randomReward
+                    };
+                    room.selectedCategory = null;
+                    room.activeQuestion = null;
+                    room.gameStatus = 'selecting_category';
+                    room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
+
+                    // Check if all questions are answered
+                    const allAnswered = room.questions.every(q => q.isAnswered);
+                    if (allAnswered) {
+                        endGame(room, io, roomId);
+                    } else {
+                        io.to(roomId).emit('room_data', room);
+                    }
+                } else {
+                    room.activeQuestion = question;
+                    room.gameStatus = 'question';
+                    room.timer = 15;
+                    room.attempts = [];
+                    room.feedback = null;
+                    io.to(roomId).emit('room_data', room);
+                }
             }
         }
     });

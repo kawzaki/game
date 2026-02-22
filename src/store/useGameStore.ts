@@ -23,7 +23,7 @@ interface GameState {
     buzzedPlayerId: string | null;
     attempts: string[];
     myId: string | null;
-    feedback: { type: 'correct' | 'wrong' | 'all_wrong'; message: string; answer?: string } | null;
+    feedback: { type: 'correct' | 'wrong' | 'all_wrong' | 'luck'; message: string; answer?: string; reward?: any } | null;
     gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'question' | 'game_over';
     timer: number;
     winner: { name: string; score: number; isForfeit?: boolean } | null;
@@ -31,7 +31,7 @@ interface GameState {
 
     // Actions
     setRoomId: (id: string) => void;
-    addPlayer: (name: string, roomId: string) => void;
+    addPlayer: (name: string, roomId: string, questionsPerCategory?: number) => void;
     startGame: (roomId: string) => void;
     pickCategory: (roomId: string, category: string) => void;
     pickValue: (roomId: string, value: number) => void;
@@ -94,8 +94,8 @@ export const useGameStore = create<GameState>((set) => {
 
         setRoomId: (id) => set({ roomId: id }),
 
-        addPlayer: (name, roomId) => {
-            socket.emit('join_room', { roomId, playerName: name });
+        addPlayer: (name, roomId, questionsPerCategory = 5) => {
+            socket.emit('join_room', { roomId, playerName: name, questionsPerCategory });
             set({ roomId, playerName: name });
         },
 
