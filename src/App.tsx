@@ -266,7 +266,7 @@ const App: React.FC = () => {
 
         {/* Version */}
         <footer className="version-footer">
-          b
+          8
         </footer>
 
         {/* Bottom Nav */}
