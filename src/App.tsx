@@ -348,17 +348,30 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                  {Object.keys(categories).map((cat) => (
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      key={cat}
-                      className={`tile-premium ${!isMyTurn ? 'tile-disabled' : ''} ${localSelecting === cat ? 'selecting' : ''}`}
-                      onClick={() => handlePickCategory(cat)}
-                      style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >
-                      <span style={{ fontSize: '14px', fontWeight: '900' }}>{cat}</span>
-                    </motion.button>
-                  ))}
+                  {Object.keys(categories).map((cat) => {
+                    const isFinished = categories[cat].every(q => q.isAnswered);
+                    return (
+                      <motion.button
+                        whileTap={!isFinished ? { scale: 0.95 } : {}}
+                        key={cat}
+                        className={`tile-premium ${(!isMyTurn || isFinished) ? 'tile-disabled' : ''} ${localSelecting === cat ? 'selecting' : ''}`}
+                        onClick={() => !isFinished && handlePickCategory(cat)}
+                        style={{
+                          height: '80px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: isFinished ? '#e2e8f0' : '#f0fdf4',
+                          border: isFinished ? '2px solid #cbd5e1' : '2px solid #bbf7d0',
+                          opacity: isFinished ? 0.6 : 1,
+                          cursor: isFinished ? 'default' : (isMyTurn ? 'pointer' : 'default')
+                        }}
+                      >
+                        <span style={{ fontSize: '14px', fontWeight: '900', color: isFinished ? '#64748b' : '#166534' }}>{cat}</span>
+                        {isFinished && <div style={{ position: 'absolute', top: '4px', right: '8px', fontSize: '10px' }}>✓</div>}
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
             )}
