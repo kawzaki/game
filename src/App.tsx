@@ -13,7 +13,8 @@ import {
   User,
   Layout,
   Type,
-  Coins
+  Coins,
+  Share2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -124,9 +125,23 @@ const App: React.FC = () => {
     return `${window.location.origin}${window.location.pathname}?room=${roomId}`;
   };
 
-  const copyInviteLink = () => {
-    navigator.clipboard.writeText(generateInviteLink());
-    alert('Invite link copied!');
+  const shareInviteLink = async () => {
+    const link = generateInviteLink();
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'تحدى أصدقاءك في تحدي المعلومات!',
+          text: `انضم إلي في غرفة ${roomId} لنلعب معاً!`,
+          url: link,
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      // Fallback to clipboard
+      navigator.clipboard.writeText(link);
+      alert('تم نسخ رابط الدعوة!');
+    }
   };
 
   useEffect(() => {
@@ -248,6 +263,7 @@ const App: React.FC = () => {
               <button
                 disabled={!playerName || hasJoined}
                 onClick={() => {
+                  console.log('Emitting join_room with gameType:', gameType);
                   socket.emit('join_room', { roomId, playerName, questionsPerCategory: qCount, gameType });
                 }}
                 className={hasJoined ? "btn-secondary" : "btn-primary-battle"}
@@ -259,8 +275,9 @@ const App: React.FC = () => {
               >
                 {hasJoined ? "تم الانضمام ✓" : "انضم الآن!"}
               </button>
-              <button onClick={copyInviteLink} style={{ background: 'transparent', border: '1px solid #ccc', padding: '12px', borderRadius: '12px', width: '100%' }}>
-                🔗 نسخ رابط الدعوة
+              <button onClick={shareInviteLink} style={{ background: 'transparent', border: '1px solid #ccc', padding: '12px', borderRadius: '12px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <Share2 size={18} />
+                <span>مشاركة رابط الدعوة</span>
               </button>
 
               <div style={{ marginTop: '20px' }}>

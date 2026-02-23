@@ -38,44 +38,56 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
                 </div>
             </div>
 
-            <div className="huroof-grid" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(5, 1fr)',
-                gap: '12px',
-                maxWidth: '500px',
-                margin: '0 auto'
+            <div style={{
+                position: 'relative',
+                maxWidth: '520px',
+                margin: '0 auto',
+                padding: '12px',
+                borderRadius: '24px',
+                background: '#f8fafc',
+                borderTop: '6px solid #3b82f6',
+                borderBottom: '6px solid #3b82f6',
+                borderLeft: '6px solid #ef4444',
+                borderRight: '6px solid #ef4444',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
             }}>
-                {huroofGrid.map((item: any) => {
-                    const owner = players.find(p => p.id === item.ownerId);
-                    const isFirstPlayer = players[0] && owner && owner.id === players[0].id;
+                <div className="huroof-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(5, 1fr)',
+                    gap: '10px'
+                }}>
+                    {huroofGrid.map((item: any) => {
+                        const owner = players.find(p => p.id === item.ownerId);
+                        const isFirstPlayer = players[0] && owner && owner.id === players[0].id;
 
-                    return (
-                        <motion.button
-                            whileHover={!item.ownerId && isMyTurn ? { scale: 1.05 } : {}}
-                            whileTap={!item.ownerId && isMyTurn ? { scale: 0.95 } : {}}
-                            key={item.id}
-                            onClick={() => handleLetterClick(item)}
-                            style={{
-                                aspectRatio: '1/1',
-                                borderRadius: '16px',
-                                background: item.ownerId ? (isFirstPlayer ? '#3b82f6' : '#ef4444') : '#fff',
-                                border: '2px solid #e2e8f0',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '24px',
-                                fontWeight: '900',
-                                color: item.ownerId ? '#fff' : '#1e293b',
-                                cursor: isMyTurn && !item.ownerId ? 'pointer' : 'default',
-                                boxShadow: item.ownerId ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                transition: 'all 0.3s ease',
-                                opacity: !item.ownerId && !isMyTurn ? 0.7 : 1
-                            }}
-                        >
-                            {item.letter}
-                        </motion.button>
-                    );
-                })}
+                        return (
+                            <motion.button
+                                whileHover={!item.ownerId && isMyTurn ? { scale: 1.05 } : {}}
+                                whileTap={!item.ownerId && isMyTurn ? { scale: 0.95 } : {}}
+                                key={item.id}
+                                onClick={() => handleLetterClick(item)}
+                                style={{
+                                    aspectRatio: '1/1',
+                                    borderRadius: '12px',
+                                    background: item.ownerId ? (isFirstPlayer ? '#3b82f6' : '#ef4444') : '#fff',
+                                    border: '2px solid #e2e8f0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '24px',
+                                    fontWeight: '900',
+                                    color: item.ownerId ? '#fff' : '#1e293b',
+                                    cursor: isMyTurn && !item.ownerId ? 'pointer' : 'default',
+                                    boxShadow: item.ownerId ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                    transition: 'all 0.3s ease',
+                                    opacity: !item.ownerId && !isMyTurn ? 0.7 : 1
+                                }}
+                            >
+                                {item.letter}
+                            </motion.button>
+                        );
+                    })}
+                </div>
             </div>
 
             <div style={{ marginTop: '32px', textAlign: 'center', color: '#64748b' }}>

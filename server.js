@@ -161,18 +161,22 @@ io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
     socket.on('join_room', (data) => {
-        const { roomId, playerName, questionsPerCategory = 10, gameType = 'jeopardy' } = data;
+        const { roomId, playerName, questionsPerCategory = 10, gameType } = data;
+        const requestedGameType = gameType || 'jeopardy';
         socket.join(roomId);
+
+        console.log(`[Join Request] Room: ${roomId}, Player: ${playerName}, Type: ${requestedGameType}`);
 
         let room = rooms.get(roomId);
 
         if (!room) {
+            console.log(`[Room Create] Creating new room ${roomId} as ${requestedGameType}`);
             let selectedQuestions = [];
             let huroofGrid = null;
 
-            if (gameType === 'jeopardy') {
+            if (requestedGameType === 'jeopardy') {
                 selectedQuestions = selectJeopardyQuestions(questionsPerCategory);
-            } else if (gameType === 'huroof') {
+            } else if (requestedGameType === 'huroof') {
                 // Initialize 5x5 grid for Huroof
                 huroofGrid = [];
                 for (let i = 0; i < 25; i++) {
@@ -188,7 +192,7 @@ io.on('connection', (socket) => {
                 id: roomId,
                 players: [],
                 gameStatus: 'lobby',
-                gameType: gameType,
+                gameType: requestedGameType,
                 questions: selectedQuestions.map(q => ({ ...q })),
                 huroofGrid: huroofGrid,
                 questionsPerCategory: questionsPerCategory,
@@ -233,6 +237,7 @@ io.on('connection', (socket) => {
     socket.on('start_game', (roomId) => {
         const room = rooms.get(roomId);
         if (room) {
+            console.log(`[Start Game] Room: ${roomId}, Type: ${room.gameType}`);
             room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
             io.to(roomId).emit('room_data', room);
         }
@@ -249,7 +254,10 @@ io.on('connection', (socket) => {
                 room.gameStatus = 'selecting_value';
             } else if (room.gameType === 'huroof') {
                 // In Huroof, category is the letter. Pick a question starting with that letter or random if not found.
-                const matchingQuestions = questionPool.filter(q => q.question.trim().startsWith(category) || q.answer.trim().startsWith(category));
+                const matchingQuestions = questionPool.filter(q =>
+                    (q.question && q.question.trim().startsWith(category)) ||
+                    (q.answer && q.answer.trim().startsWith(category))
+                );
                 const pool = matchingQuestions.length > 0 ? matchingQuestions : questionPool;
                 const question = pool[Math.floor(Math.random() * pool.length)];
 
