@@ -18,6 +18,7 @@ interface GameState {
     players: any[];
     currentPlayerIndex: number;
     questions: Question[];
+    huroofGrid: any[] | null;
     activeQuestion: Question | null;
     selectedCategory: string | null;
     buzzedPlayerId: string | null;
@@ -25,14 +26,16 @@ interface GameState {
     myId: string | null;
     isConnected: boolean;
     feedback: { type: 'correct' | 'wrong' | 'all_wrong' | 'luck'; message: string; answer?: string; reward?: any } | null;
-    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'question' | 'game_over';
+    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'selecting_letter' | 'question' | 'game_over';
     timer: number;
     winner: { name: string; score: number; isForfeit?: boolean } | null;
     playerName: string | null;
     questionsPerCategory: number;
+    gameType: 'jeopardy' | 'huroof';
 
     // Actions
     setRoomId: (id: string) => void;
+    setGameType: (type: 'jeopardy' | 'huroof') => void;
     addPlayer: (name: string, roomId: string, questionsPerCategory?: number) => void;
     startGame: (roomId: string) => void;
     pickCategory: (roomId: string, category: string) => void;
@@ -56,8 +59,9 @@ export const useGameStore = create<GameState>((set) => {
         set({
             players: data.players,
             gameStatus: data.gameStatus,
-            questions: data.questions,
-            activeQuestion: data.activeQuestion,
+            questions: data.questions || [],
+            huroofGrid: data.huroofGrid || null,
+            activeQuestion: data.activeQuestion || null,
             selectedCategory: data.selectedCategory,
             buzzedPlayerId: data.buzzedPlayerId,
             attempts: data.attempts || [],
@@ -66,6 +70,7 @@ export const useGameStore = create<GameState>((set) => {
             timer: data.timer,
             winner: data.winner,
             questionsPerCategory: data.questionsPerCategory,
+            gameType: data.gameType || 'jeopardy',
             myId: socket.id || null,
             isConnected: true
         });
@@ -89,6 +94,7 @@ export const useGameStore = create<GameState>((set) => {
         players: [],
         currentPlayerIndex: 0,
         questions: [],
+        huroofGrid: null, // Initialize huroofGrid in the store's initial state
         activeQuestion: null,
         selectedCategory: null,
         buzzedPlayerId: null,
@@ -101,8 +107,11 @@ export const useGameStore = create<GameState>((set) => {
         winner: null,
         playerName: null,
         questionsPerCategory: 10,
+        gameType: 'jeopardy',
 
         setRoomId: (id) => set({ roomId: id }),
+
+        setGameType: (type) => set({ gameType: type }),
 
         addPlayer: (name, roomId, questionsPerCategory = 10) => {
             socket.emit('join_room', { roomId, playerName: name, questionsPerCategory });
@@ -148,6 +157,7 @@ export const useGameStore = create<GameState>((set) => {
             players: [],
             currentPlayerIndex: 0,
             questions: [],
+            huroofGrid: null,
             activeQuestion: null,
             selectedCategory: null,
             buzzedPlayerId: null,

@@ -1,5 +1,397 @@
 [
   {
+    "id": "huroof-1",
+    "category": "الحروف",
+    "value": 100,
+    "question": "أ: ما هو أول حرف في الأبجدية العربية؟",
+    "answer": "ألف",
+    "options": [
+      "ألف",
+      "باء",
+      "تاء",
+      "ثاء"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-2",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ب: ما هو الحيوان الذي يُلقب بسفينة الصحراء؟",
+    "answer": "بعير",
+    "options": [
+      "بعير",
+      "بقرة",
+      "ببغاء",
+      "بومة"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-3",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ت: فاكهة صيفية لونها أحمر من الداخل وبها بذور سوداء؟",
+    "answer": "تمور",
+    "options": [
+      "تمور",
+      "تفاح",
+      "توت",
+      "تين"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-4",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ث: حيوان ماكر مشهور في الحكايات؟",
+    "answer": "ثعلب",
+    "options": [
+      "ثعلب",
+      "ثعبان",
+      "ثور",
+      "ثديي"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-5",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ج: حيوان له رقبة طويلة جداً؟",
+    "answer": "جمل",
+    "options": [
+      "جمل",
+      "جاموس",
+      "جدي",
+      "جراد"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-6",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ح: طائر لا يطير سباح ماهر؟",
+    "answer": "حوت",
+    "options": [
+      "حوت",
+      "حمار",
+      "حمامة",
+      "حصان"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-7",
+    "category": "الحروف",
+    "value": 100,
+    "question": "خ: مادة سائلة نستخدمها في السلطة؟",
+    "answer": "خل",
+    "options": [
+      "خل",
+      "خبز",
+      "خيار",
+      "خوخ"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-8",
+    "category": "الحروف",
+    "value": 100,
+    "question": "د: حيوان وفي يعتبر صديق الإنسان؟",
+    "answer": "دب",
+    "options": [
+      "دب",
+      "ديك",
+      "دجاجة",
+      "دلفين"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-9",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ذ: حشرة مزعجة تطير في كل مكان؟",
+    "answer": "ذبابة",
+    "options": [
+      "ذبابة",
+      "ذئب",
+      "ذرة",
+      "ذيل"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-10",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ر: فصل من فصول السنة تتفتح فيه الأزهار؟",
+    "answer": "ربيع",
+    "options": [
+      "ربيع",
+      "رمان",
+      "ريشة",
+      "رمل"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-11",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ز: حيوان له رقبة طويلة جداً وجلد منقط؟",
+    "answer": "زرافة",
+    "options": [
+      "زرافة",
+      "زيتون",
+      "زبدة",
+      "زمرد"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-12",
+    "category": "الحروف",
+    "value": 100,
+    "question": "س: حيوان يعيش في الماء وله زعانف؟",
+    "answer": "سمك",
+    "options": [
+      "سمك",
+      "سلحفاة",
+      "سنجاب",
+      "سلطعون"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-13",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ش: نجم ملتهب يمدنا بالضوء والحرارة؟",
+    "answer": "شمس",
+    "options": [
+      "شمس",
+      "شجرة",
+      "شاي",
+      "شمعة"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-14",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ص: طائر جارح قوي البصر؟",
+    "answer": "صقر",
+    "options": [
+      "صقر",
+      "صابون",
+      "صندوق",
+      "صحراء"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-15",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ض: حيوان برمائي يطلق صوتاً يسمى نقيق؟",
+    "answer": "ضفدع",
+    "options": [
+      "ضفدع",
+      "ضبع",
+      "ضوء",
+      "ضرس"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-16",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ط: وسيلة مواصلات تطير في الجو؟",
+    "answer": "طائرة",
+    "options": [
+      "طائرة",
+      "طاولة",
+      "طاووس",
+      "طبل"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-17",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ظ: جزء من اليد نستخدمه في الحك؟",
+    "answer": "ظفر",
+    "options": [
+      "ظفر",
+      "ظبي",
+      "ظرف",
+      "ظل"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-18",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ع: حشرة مفيدة تنتج العسل؟",
+    "answer": "عسل",
+    "options": [
+      "عسل",
+      "عنكبوت",
+      "عصفور",
+      "عقرب"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-19",
+    "category": "الحروف",
+    "value": 100,
+    "question": "غ: طائر أسود اللون صوته يسمى نعيق؟",
+    "answer": "غراب",
+    "options": [
+      "غراب",
+      "غزال",
+      "غواصة",
+      "غيمة"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-20",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ف: حيوان ضخم له خرطوم طويل؟",
+    "answer": "فيل",
+    "options": [
+      "فيل",
+      "فأر",
+      "فراشة",
+      "فهد"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-21",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ق: حيوان مشهور بحبه للموز؟",
+    "answer": "قرد",
+    "options": [
+      "قرد",
+      "قطة",
+      "قمر",
+      "قلم"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-22",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ك: حيوان وفي ينبح؟",
+    "answer": "كلب",
+    "options": [
+      "كلب",
+      "كتاب",
+      "كرسي",
+      "كرة"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-23",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ل: سائل أبيض اللون نشربه لتقوية العظام؟",
+    "answer": "لبن",
+    "options": [
+      "لبن",
+      "لحم",
+      "ليمون",
+      "لعبة"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-24",
+    "category": "الحروف",
+    "value": 100,
+    "question": "م: فاكهة صيفية لونها أصفر من الداخل ولها قشرة ناعمة؟",
+    "answer": "مانجو",
+    "options": [
+      "مانجو",
+      "موز",
+      "مشمش",
+      "ملح"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-25",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ن: حشرة نشيطة تعيش في مستعمرات؟",
+    "answer": "نملة",
+    "options": [
+      "نملة",
+      "نحلة",
+      "نمر",
+      "نسر"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-26",
+    "category": "الحروف",
+    "value": 100,
+    "question": "هـ: هرم شهير في مصر؟",
+    "answer": "هرم",
+    "options": [
+      "هرم",
+      "هلال",
+      "هدية",
+      "هاتف"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-27",
+    "category": "الحروف",
+    "value": 100,
+    "question": "و: ملكة جمال الزهور؟",
+    "answer": "وردة",
+    "options": [
+      "وردة",
+      "وحيد القرن",
+      "وزة",
+      "وليد"
+    ],
+    "isAnswered": false
+  },
+  {
+    "id": "huroof-28",
+    "category": "الحروف",
+    "value": 100,
+    "question": "ي: العملة الرسمية في اليابان؟",
+    "answer": "ين",
+    "options": [
+      "ين",
+      "ياسمين",
+      "يمامة",
+      "يد"
+    ],
+    "isAnswered": false
+  },
+  {
     "id": "g-1",
     "category": "الجغرافيا",
     "value": 100,

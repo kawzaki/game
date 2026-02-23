@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore, socket } from './store/useGameStore';
+import HuroofGame from './components/HuroofGame';
 import confetti from 'canvas-confetti';
 import {
   Timer as TimerIcon,
@@ -11,8 +12,7 @@ import {
   Clock,
   User,
   Layout,
-  BookOpen,
-  ArrowRight,
+  Type,
   Coins
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,6 +24,7 @@ const App: React.FC = () => {
     myId,
     setRoomId,
     gameStatus,
+    gameType,
     players,
     questions,
     activeQuestion,
@@ -38,7 +39,6 @@ const App: React.FC = () => {
     closeFeedback,
     answerQuestion,
     tickTimer,
-    addPlayer,
     currentPlayerIndex,
     selectedCategory,
     feedback,
@@ -54,6 +54,7 @@ const App: React.FC = () => {
   const [joinCode, setJoinCode] = React.useState('');
   const [qCount, setQCount] = React.useState(10);
   const [localSelecting, setLocalSelecting] = React.useState<string | number | null>(null);
+  const [gameSelectionMode, setGameSelectionMode] = React.useState(false);
 
   // Sync local selection when game state changes
   useEffect(() => {
@@ -61,12 +62,12 @@ const App: React.FC = () => {
   }, [gameStatus, selectedCategory, activeQuestion]);
 
   // Sync qCount with server data (important for guests)
-  const questionsPerCategory = useGameStore(state => (state as any).questionsPerCategory);
+  const questionsPerCategoryServer = useGameStore(state => (state as any).questionsPerCategory);
   useEffect(() => {
-    if (questionsPerCategory && players[0]?.id !== myId) {
-      setQCount(questionsPerCategory);
+    if (questionsPerCategoryServer && players[0]?.id !== myId) {
+      setQCount(questionsPerCategoryServer);
     }
-  }, [questionsPerCategory, players, myId]);
+  }, [questionsPerCategoryServer, players, myId]);
 
   const forfeit = () => {
     if (confirm('هل أنت متأكد من إنهاء اللعبة مبكراً؟')) {
@@ -75,27 +76,18 @@ const App: React.FC = () => {
   };
 
   const handlePickCategory = (cat: string) => {
-    if (!isMyTurn || !roomId) {
-      console.log(`[Selection] Blocked: isMyTurn=${isMyTurn}, roomId=${!!roomId}`);
-      return;
-    }
-    console.log(`[Selection] Picking category: ${cat}`);
+    if (!isMyTurn || !roomId) return;
     setLocalSelecting(cat);
     pickCategory(roomId, cat);
   };
 
   const handlePickValue = (val: number) => {
-    if (!isMyTurn || !roomId) {
-      console.log(`[Selection] Blocked: isMyTurn=${isMyTurn}, roomId=${!!roomId}`);
-      return;
-    }
-    console.log(`[Selection] Picking value: ${val}`);
+    if (!isMyTurn || !roomId) return;
     setLocalSelecting(val);
     pickValue(roomId, val);
   };
 
   useEffect(() => {
-    // If room is in URL, set it automatically
     const urlParams = new URLSearchParams(window.location.search);
     const urlRoom = urlParams.get('room');
     if (urlRoom && !roomId) {
@@ -104,12 +96,7 @@ const App: React.FC = () => {
   }, [roomId, setRoomId]);
 
   useEffect(() => {
-    // Sync document direction with language
     document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
-    // Force iOS to allow :active states
-    const handleTouch = () => { };
-    document.body.addEventListener('touchstart', handleTouch, { passive: true });
-    return () => document.body.removeEventListener('touchstart', handleTouch);
   }, [i18n.language]);
 
   useEffect(() => {
@@ -128,8 +115,15 @@ const App: React.FC = () => {
   };
 
   const handleCreateRoom = () => {
+    setGameSelectionMode(true);
+  };
+
+  const setGameTypeLocal = useGameStore(state => (state as any).setGameType);
+  const finalizeCreateRoom = (type: 'jeopardy' | 'huroof') => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setGameTypeLocal(type);
     setRoomId(code);
+    setGameSelectionMode(false);
   };
 
   const generateInviteLink = () => {
@@ -167,10 +161,36 @@ const App: React.FC = () => {
 
   const hasJoined = useMemo(() => players.some(p => p.id === myId), [players, myId]);
 
+  // UI RENDERING STARTS HERE
+
+  if (gameSelectionMode) {
+    return (
+      <div className="home-container">
+        <header className="home-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', justifyContent: 'center' }}>
+            <span style={{ fontWeight: 900, fontSize: '18px' }}>اختر اللعبة</span>
+          </div>
+        </header>
+        <div style={{ padding: '40px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <button className="btn-primary-battle" onClick={() => finalizeCreateRoom('jeopardy')}>
+            <Layout size={24} />
+            لعبة جيباردي (العادية)
+          </button>
+          <button className="btn-primary-battle" style={{ background: 'var(--brand-yellow)', color: '#000' }} onClick={() => finalizeCreateRoom('huroof')}>
+            <Type size={24} />
+            لعبة الحروف (Huroof)
+          </button>
+          <button className="btn-secondary" style={{ marginTop: '20px' }} onClick={() => setGameSelectionMode(false)}>
+            إلغاء
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (gameStatus === 'lobby') {
     return (
       <div className="home-container">
-        {/* Header */}
         <header className="home-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', justifyContent: 'center' }}>
             <span style={{ fontWeight: 900, fontSize: '18px' }}>تحدي المعلومات</span>
@@ -178,26 +198,20 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        {/* Hero Section */}
         <div className="hero-card">
           <div className="hero-card-inner">
             <Trophy size={60} color="#000" strokeWidth={3} />
           </div>
-          <div className="floating-settings">
-            <Layout size={20} color="var(--brand-yellow)" />
-          </div>
         </div>
 
         <h1 className="hero-title">هل أنت مستعد <span style={{ color: 'var(--brand-yellow)' }}>للمنافسة؟</span></h1>
-        <p className="hero-subtitle">تحد أصدقاءك أو انضم إلى الساحات العالمية لإثبات معرفتك.</p>
+        <p className="hero-subtitle">تحد أصدقاءك لإثبات معرفتك في مختلف الألعاب.</p>
 
-        {/* Start Button */}
         <button className="btn-primary-battle" onClick={handleCreateRoom}>
           <Plus size={24} strokeWidth={3} />
           ابدأ منافسة جديدة
         </button>
 
-        {/* Join Section */}
         <div className="join-section">
           <span className="join-label">انضم إلى مباراة</span>
           <div className="join-input-wrapper">
@@ -209,60 +223,14 @@ const App: React.FC = () => {
             </button>
             <input
               type="text"
-              placeholder="أدخل رمز الغرفة (مثال: 99-TRV)"
+              placeholder="أدخل رمز الغرفة"
               className="join-input"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
             />
           </div>
-          <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-tertiary)', fontSize: '11px', textAlign: 'inherit' }}>
-            <div style={{ width: '14px', height: '14px', borderRadius: '50%', border: '1px solid currentColor', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>i</div>
-            <span>رابط الدعوة يعمل أيضاً! فقط اضغط وادخل.</span>
-          </div>
         </div>
 
-        {/* Grid Options */}
-        <div className="action-grid">
-          <div className="grid-item">
-            <BookOpen size={24} color="var(--brand-yellow)" />
-            <span className="grid-label">كيفية اللعب</span>
-          </div>
-          <div className="grid-item">
-            <Layout size={24} color="var(--brand-yellow)" />
-            <span className="grid-label">البطولات</span>
-          </div>
-        </div>
-
-        {/* Leaderboard */}
-        <div className="dimmed-section">
-          <div className="section-title">
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span className="coming-soon-badge">قريباً</span>
-              <h3>أفضل اللاعبين</h3>
-            </div>
-            <a href="#" className="btn-view-all">عرض الكل</a>
-          </div>
-
-          <div className="leaderboard-list">
-            {[
-              { name: 'Alex Storm', rate: '98%', rank: 1, avatar: 'https://i.pravatar.cc/150?u=alex' },
-              { name: 'Sarah Logic', rate: '94%', rank: 2, avatar: 'https://i.pravatar.cc/150?u=sarah' },
-              { name: 'Dev_Mind', rate: '91%', rank: 3, avatar: 'https://i.pravatar.cc/150?u=dev' }
-            ].map(player => (
-              <div key={player.rank} className="player-card">
-                <span className="rank">{player.rank}</span>
-                <img src={player.avatar} alt={player.name} className="avatar" />
-                <div className="player-info">
-                  <div className="player-name">{player.name}</div>
-                  <div className="player-stats">معدل الذكاء: {player.rate}</div>
-                </div>
-                <ArrowRight size={20} color="var(--text-tertiary)" className="flip-rtl" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Room Ready State (if roomId is set) */}
         {roomId && (
           <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
             <div className="modal-content" style={{ width: '100%', maxWidth: '400px', textAlign: 'center' }}>
@@ -272,60 +240,58 @@ const App: React.FC = () => {
               <h2 style={{ marginBottom: '8px' }}>الغرفة جاهزة!</h2>
               <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '4px', margin: '12px 0' }}>{roomId}</div>
 
-              <div style={{ marginBottom: '16px', background: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
-                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                  {players[0]?.id === myId && <Trophy size={14} color="var(--accent-gold)" />}
-                  <span>عدد الأسئلة لكل فئة</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                  {players[0]?.id === myId ? (
-                    <>
-                      <button onClick={() => setQCount(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
-                      <span style={{ fontSize: '18px', fontWeight: 'bold', width: '30px' }}>{qCount}</span>
-                      <button onClick={() => setQCount(Math.min(50, qCount + 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
-                    </>
-                  ) : (
-                    <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{qCount}</span>
-                  )}
-                </div>
+              <div style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+                نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'جيباردي' : 'لعبة الحروف'}</strong>
               </div>
 
-              <div style={{ marginBottom: '24px' }}>
-                <input
-                  type="text"
-                  placeholder="أدخل اسمك ..."
-                  className="join-input"
-                  style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', width: '100%', marginBottom: '12px' }}
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                />
-                <button
-                  disabled={!playerName || hasJoined}
-                  onClick={() => addPlayer(playerName, roomId, qCount)}
-                  className={hasJoined ? "btn-secondary" : "btn-primary-battle"}
-                  style={{
-                    opacity: (!playerName && !hasJoined) ? 0.5 : (hasJoined ? 0.4 : 1),
-                    marginBottom: '12px',
-                    pointerEvents: hasJoined ? 'none' : 'auto'
-                  }}
-                >
-                  {hasJoined ? "تم الانضمام ✓" : "انضم إلى المنافسة!"}
-                </button>
-                <button
-                  onClick={copyInviteLink}
-                  style={{ background: 'transparent', border: '1px solid var(--text-tertiary)', color: 'var(--text-secondary)', padding: '12px', borderRadius: '12px', width: '100%' }}
-                >
-                  🔗 نسخ رابط الدعوة
-                </button>
-              </div>
+              {gameType === 'jeopardy' && (
+                <div style={{ marginBottom: '16px', background: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold' }}>عدد الأسئلة لكل فئة</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                    {players[0]?.id === myId ? (
+                      <>
+                        <button onClick={() => setQCount(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>-</button>
+                        <span style={{ fontSize: '18px', fontWeight: 'bold', width: '30px' }}>{qCount}</span>
+                        <button onClick={() => setQCount(Math.min(50, qCount + 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>+</button>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{qCount}</span>
+                    )}
+                  </div>
+                </div>
+              )}
 
-              <div className="player-list">
-                <h4 style={{ marginBottom: '12px' }}>اللاعبون ({players.length})</h4>
+              <input
+                type="text"
+                placeholder="أدخل اسمك ..."
+                className="join-input"
+                style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', width: '100%', marginBottom: '12px' }}
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+              />
+              <button
+                disabled={!playerName || hasJoined}
+                onClick={() => {
+                  socket.emit('join_room', { roomId, playerName, questionsPerCategory: qCount, gameType });
+                }}
+                className={hasJoined ? "btn-secondary" : "btn-primary-battle"}
+                style={{
+                  opacity: (!playerName && !hasJoined) ? 0.5 : (hasJoined ? 0.4 : 1),
+                  marginBottom: '12px',
+                  pointerEvents: hasJoined ? 'none' : 'auto'
+                }}
+              >
+                {hasJoined ? "تم الانضمام ✓" : "انضم الآن!"}
+              </button>
+              <button onClick={copyInviteLink} style={{ background: 'transparent', border: '1px solid #ccc', padding: '12px', borderRadius: '12px', width: '100%' }}>
+                🔗 نسخ رابط الدعوة
+              </button>
+
+              <div style={{ marginTop: '20px' }}>
+                <h4 style={{ marginBottom: '8px' }}>اللاعبون المتواجدون:</h4>
                 <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
                   {players.map((p, i) => (
-                    <div key={i} style={{ background: '#f1f5f9', color: 'var(--text-secondary)', border: '1px solid rgba(0,0,0,0.05)', padding: '8px 16px', borderRadius: '20px', whiteSpace: 'nowrap', fontSize: '13px' }}>
-                      {p.name}
-                    </div>
+                    <div key={i} style={{ background: '#eee', padding: '4px 12px', borderRadius: '20px', fontSize: '12px' }}>{p.name}</div>
                   ))}
                 </div>
               </div>
@@ -333,330 +299,151 @@ const App: React.FC = () => {
               <button
                 disabled={!hasJoined || players.length === 0}
                 onClick={() => startGame(roomId)}
-                className={hasJoined ? "btn-primary-battle" : "btn-secondary"}
-                style={{
-                  marginTop: '24px',
-                  opacity: hasJoined ? 1 : 0.4,
-                  pointerEvents: hasJoined ? 'auto' : 'none'
-                }}
+                className="btn-primary-battle"
+                style={{ marginTop: '20px' }}
               >
-                ابدأ اللعب الآن! 🚀
+                ابدأ اللعب! 🚀
               </button>
-
-              <button
-                onClick={() => setRoomId('')}
-                style={{ marginTop: '12px', background: 'none', border: 'none', color: 'var(--text-tertiary)' }}
-              >
-                إلغاء
-              </button>
+              <button onClick={() => setRoomId('')} style={{ marginTop: '10px', background: 'none', border: 'none', color: '#999' }}>إلغاء</button>
             </div>
           </div>
         )}
 
-        {/* Version */}
-        <footer className="version-footer">
-          2
-        </footer>
-
-        {/* Bottom Nav */}
         <nav className="bottom-nav">
-          <div className="nav-item active">
-            <Home size={24} />
-            <span>الرئيسية</span>
-          </div>
-          <div className="nav-item">
-            <Trophy size={24} />
-            <span>البطولات</span>
-          </div>
-          <div className="nav-plus">
-            <Plus size={32} strokeWidth={3} />
-          </div>
-          <div className="nav-item">
-            <Clock size={24} />
-            <span>السجل</span>
-          </div>
-          <div className="nav-item">
-            <User size={24} />
-            <span>الملف الشخصي</span>
-          </div>
+          <div className="nav-item active"><Home size={24} /><span>الرئيسية</span></div>
+          <div className="nav-item"><Trophy size={24} /><span>البطولات</span></div>
+          <div className="nav-plus"><Plus size={32} strokeWidth={3} /></div>
+          <div className="nav-item"><Clock size={24} /><span>السجل</span></div>
+          <div className="nav-item"><User size={24} /><span>الملف</span></div>
         </nav>
       </div>
     );
   }
 
+  // GAME BOARD RENDERING (Jeopardy or Huroof)
   return (
     <div className="game-wrapper" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', paddingBottom: '200px' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #eee', background: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Trophy size={18} style={{ color: 'var(--accent-gold)' }} />
           <span className="gold-text" style={{ fontSize: '14px' }}>غرفة #{roomId}</span>
-          <div
-            style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: isConnected ? '#10b981' : '#ef4444',
-              marginLeft: '8px',
-              boxShadow: isConnected ? '0 0 8px #10b981' : '0 0 8px #ef4444'
-            }}
-            title={isConnected ? 'Connected' : 'Disconnected'}
-          />
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isConnected ? '#10b981' : '#ef4444' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8' }}>AR</span>
-          <button className="rules-btn">قوانين اللعبة</button>
-          {gameStatus !== ('lobby' as any) && gameStatus !== 'game_over' && (
-            <button className="btn-forfeit" onClick={forfeit}>إنهاء اللعبة</button>
-          )}
+          <button className="btn-forfeit" onClick={forfeit}>إنهاء اللعبة</button>
         </div>
       </header>
 
       <main style={{ padding: '16px' }}>
-        {gameStatus === 'selecting_category' && (
-          <div>
-            <div className={`turn-banner ${isMyTurn ? 'my-turn' : 'their-turn'}`} style={{ marginBottom: '16px', padding: '12px', borderRadius: '12px', textAlign: 'center', transition: 'all 0.3s ease' }}>
-              <div style={{ fontSize: '12px', fontWeight: '800', opacity: 0.7, marginBottom: '2px' }}>
-                {isMyTurn ? 'دورك الآن' : 'بانتظار المنافس'}
+        {gameType === 'jeopardy' ? (
+          /* JEOPARDY BOARD */
+          <>
+            {(gameStatus === 'selecting_category') && (
+              <div>
+                <div className={`turn-banner ${isMyTurn ? 'my-turn' : 'their-turn'}`} style={{ marginBottom: '16px', padding: '12px', borderRadius: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '18px', fontWeight: '900' }}>
+                    {isMyTurn ? 'اختر الفئة' : `يقوم ${activePlayerName} بالاختيار...`}
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                  {Object.keys(categories).map((cat) => (
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      key={cat}
+                      className={`tile-premium ${!isMyTurn ? 'tile-disabled' : ''} ${localSelecting === cat ? 'selecting' : ''}`}
+                      onClick={() => handlePickCategory(cat)}
+                      style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <span style={{ fontSize: '14px', fontWeight: '900' }}>{cat}</span>
+                    </motion.button>
+                  ))}
+                </div>
               </div>
-              <div style={{ fontSize: '18px', fontWeight: '900' }}>
-                {isMyTurn ? 'اختر الفئة' : `يقوم ${activePlayerName} بالاختيار...`}
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-              {Object.keys(categories).map((cat) => (
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  key={cat}
-                  className={`tile-premium ${!isMyTurn ? 'tile-disabled' : ''} ${localSelecting === cat ? 'selecting' : ''}`}
-                  onClick={() => handlePickCategory(cat)}
-                  style={{
-                    height: '80px',
-                    textAlign: 'center',
-                    opacity: isMyTurn ? 1 : 0.6,
-                    cursor: isMyTurn ? 'pointer' : 'not-allowed',
-                    border: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '100%'
-                  }}
-                >
-                  <span style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)' }}>{cat}</span>
-                </motion.button>
-              ))}
-            </div>
-          </div>
-        )}
+            )}
 
-        {gameStatus === 'selecting_value' && (
-          <div>
-            <div className={`turn-banner ${isMyTurn ? 'my-turn' : 'their-turn'}`} style={{ marginBottom: '16px', padding: '12px', borderRadius: '12px', textAlign: 'center', transition: 'all 0.3s ease' }}>
-              <div style={{ fontSize: '12px', fontWeight: '800', opacity: 0.7, marginBottom: '2px' }}>
-                {isMyTurn ? 'دورك الآن' : 'بانتظار المنافس'}
+            {(gameStatus === 'selecting_value') && (
+              <div>
+                <div className={`turn-banner ${isMyTurn ? 'my-turn' : 'their-turn'}`} style={{ marginBottom: '16px', padding: '12px', borderRadius: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '18px', fontWeight: '900' }}>
+                    {isMyTurn ? 'اختر القيمة' : `يقوم ${activePlayerName} بالاختيار...`}
+                  </div>
+                </div>
+                <h3 style={{ textAlign: 'center', marginBottom: '24px' }}>{selectedCategory}</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '12px' }}>
+                  {[100, 200, 300, 400, 500].map((val) => {
+                    const catQuestions = categories[selectedCategory || ''] || [];
+                    const answeredCount = catQuestions.filter(q => q.value === val && q.isAnswered).length;
+                    const totalForValue = catQuestions.filter(q => q.value === val).length;
+                    const isFullyAnswered = answeredCount >= totalForValue && totalForValue > 0;
+                    return (
+                      <motion.button
+                        whileTap={(!isFullyAnswered && isMyTurn) ? { scale: 0.95 } : {}}
+                        key={val}
+                        className={`value-button ${isFullyAnswered ? 'tile-answered' : ''} ${!isMyTurn ? 'tile-disabled' : ''}`}
+                        onClick={() => !isFullyAnswered && handlePickValue(val)}
+                        style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                      >
+                        <Coins size={20} />
+                        <span style={{ fontWeight: 900 }}>{val}</span>
+                      </motion.button>
+                    );
+                  })}
+                  <button className="btn-back-ghost" onClick={() => useGameStore.setState({ gameStatus: 'selecting_category', selectedCategory: null })}>رجوع</button>
+                </div>
               </div>
-              <div style={{ fontSize: '18px', fontWeight: '900' }}>
-                {isMyTurn ? 'اختر القيمة' : `يقوم ${activePlayerName} بالاختيار...`}
-              </div>
-            </div>
-            <h3 style={{ textAlign: 'center', marginBottom: '24px', color: 'var(--royal-blue)', fontWeight: '900', fontSize: '24px' }}>{selectedCategory}</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '12px' }}>
-              {[100, 200, 300, 400, 500].map((val) => {
-                const catQuestions = categories[selectedCategory || ''] || [];
-                const answeredCount = catQuestions.filter(q => q.value === val && q.isAnswered).length;
-                const totalForValue = catQuestions.filter(q => q.value === val).length;
-                const isFullyAnswered = answeredCount >= totalForValue && totalForValue > 0;
-                return (
-                  <motion.button
-                    whileTap={(!isFullyAnswered && isMyTurn) ? { scale: 0.95 } : {}}
-                    key={val}
-                    className={`value-button ${isFullyAnswered ? 'tile-answered' : ''} ${!isMyTurn ? 'tile-disabled' : ''} ${localSelecting === val ? 'selecting' : ''}`}
-                    onClick={() => !isFullyAnswered && handlePickValue(val)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      opacity: isMyTurn ? (isFullyAnswered ? 0.5 : 1) : 0.6,
-                      cursor: (isMyTurn && !isFullyAnswered) ? 'pointer' : 'not-allowed',
-                      width: '100%',
-                      border: 'none',
-                      position: 'relative'
-                    }}
-                  >
-                    <Coins size={24} style={{ color: 'var(--accent-gold)' }} />
-                    <span className="gold-text">{val}</span>
-                    {!isFullyAnswered && totalForValue > 1 && (
-                      <span style={{
-                        position: 'absolute',
-                        top: '-8px',
-                        right: '-8px',
-                        background: 'var(--brand-yellow)',
-                        color: 'black',
-                        borderRadius: '50%',
-                        width: '24px',
-                        height: '24px',
-                        fontSize: '10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: '900',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                      }}>
-                        {totalForValue - answeredCount}
-                      </span>
-                    )}
-                  </motion.button>
-                );
-              })}
-              <button
-                className="btn-back-ghost"
-                onClick={() => {
-                  if (roomId) useGameStore.setState({ gameStatus: 'selecting_category', selectedCategory: null });
-                }}
-              >
-                رجوع
-              </button>
-            </div>
-          </div>
+            )}
+          </>
+        ) : (
+          /* HUROOF BOARD */
+          <HuroofGame roomId={roomId || ''} />
         )}
       </main>
 
       <AnimatePresence>
         {gameStatus === 'question' && activeQuestion && (
           <div className="fixed modal-overlay" style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="modal-content"
-              dir="rtl"
-            >
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="modal-content" dir="rtl">
               <div className="modal-timer">
-                <TimerIcon size={18} style={{ color: 'var(--accent-gold)' }} />
+                <TimerIcon size={18} />
                 <span>{timer}s</span>
               </div>
               <div className="cat-label">{activeQuestion.category}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', width: '100%' }}>
-                <Coins size={28} style={{ color: 'var(--accent-gold)' }} />
-                <h3 className="gold-text" style={{ fontSize: '28px', margin: 0 }}>{activeQuestion.value}</h3>
-              </div>
+              <h3 style={{ fontSize: '28px' }}>{activeQuestion.value}</h3>
               <p className="question-text">{activeQuestion.question}</p>
 
               <div style={{ marginTop: '20px' }}>
                 {feedback ? (
-                  <div style={{ padding: '24px', borderRadius: '16px', background: feedback.type === 'correct' ? '#ecfdf5' : '#fef2f2', border: `2px solid ${feedback.type === 'correct' ? '#10b981' : '#ef4444'}` }}>
-                    <div style={{ fontSize: '24px', fontWeight: '900', marginBottom: '12px', color: feedback.type === 'correct' ? '#065f46' : feedback.type === 'luck' ? 'var(--royal-blue)' : '#991b1b' }}>
-                      {feedback.message}
-                    </div>
-                    {feedback.answer && (
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#64748b', marginBottom: '16px' }}>
-                        الإجابة: {feedback.answer}
-                      </div>
-                    )}
-                    <button
-                      onClick={() => roomId && closeFeedback(roomId)}
-                      style={{ padding: '12px 32px', background: feedback.type === 'correct' ? '#10b981' : feedback.type === 'luck' ? 'var(--brand-yellow)' : '#ef4444', color: feedback.type === 'luck' ? '#000' : 'white', borderRadius: '12px', fontWeight: '900', border: 'none', cursor: 'pointer' }}
-                    >
-                      حسناً
-                    </button>
+                  <div style={{
+                    padding: '24px',
+                    borderRadius: '16px',
+                    background: feedback.type === 'correct' ? '#ecfdf5' : (feedback.type === 'luck' ? '#fffbeb' : '#fef2f2'),
+                    border: feedback.type === 'correct' ? '2px solid #10b981' : (feedback.type === 'luck' ? '2px solid #f59e0b' : '2px solid #ef4444')
+                  }}>
+                    <div style={{ fontSize: '24px', fontWeight: '900', marginBottom: '12px', color: feedback.type === 'correct' ? '#065f46' : (feedback.type === 'luck' ? '#92400e' : '#991b1b') }}>{feedback.message}</div>
+                    {feedback.answer && <div style={{ marginBottom: '16px', fontWeight: 'bold' }}>الإجابة: {feedback.answer}</div>}
+                    <button onClick={() => roomId && closeFeedback(roomId)} className="btn-primary-battle">حسناً</button>
                   </div>
                 ) : attempts.includes(myId || '') ? (
-                  <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #cbd5e1' }}>
-                    <span style={{ color: '#64748b', fontWeight: 'bold' }}>
-                      لقد حاولت بالفعل! بانتظار البقية...
-                    </span>
-                  </div>
+                  <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px' }}>حاولت بالفعل، انتظر الآخرين...</div>
                 ) : !buzzedPlayerId ? (
                   <motion.button
                     whileTap={{ scale: 0.92, y: 4 }}
-                    onClick={() => {
-                      if (roomId) {
-                        playBuzzerSound();
-                        buzz(roomId);
-                      }
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '24px',
-                      background: 'var(--accent-gold)',
-                      color: 'white',
-                      borderRadius: '16px',
-                      fontSize: '32px',
-                      fontWeight: '900',
-                      border: 'none',
-                      boxShadow: '0 8px 0 #a3844a',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '12px',
-                      cursor: 'pointer'
-                    }}
+                    onClick={() => roomId && (playBuzzerSound(), buzz(roomId))}
+                    className="btn-primary-battle"
+                    style={{ height: '80px', fontSize: '32px' }}
                   >
-                    <Zap size={32} fill="white" />
                     إجابة!
                   </motion.button>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {buzzedPlayerId ? (
-                      <div style={{ fontSize: '14px', fontWeight: '900', color: '#64748b', marginBottom: '4px' }}>
-                        {players.find(p => p.id === buzzedPlayerId)?.name} يجيب الآن...
+                    {buzzedPlayerId === myId ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        {activeQuestion.options.map((opt, idx) => (
+                          <button key={idx} onClick={() => roomId && submitAnswer(roomId, opt)} style={{ padding: '16px', borderRadius: '12px', border: '2px solid #ddd' }}>{opt}</button>
+                        ))}
                       </div>
                     ) : (
-                      <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)', marginBottom: '4px' }}>بانتظار الضغط على الزر...</div>
-                    )}
-
-                    {/* Show options if someone has buzzed */}
-                    {buzzedPlayerId && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        {activeQuestion.options.map((option, idx) => {
-                          const isBuzzedPlayer = buzzedPlayerId === myId;
-                          return isBuzzedPlayer ? (
-                            <motion.button
-                              whileTap={{ scale: 0.95 }}
-                              key={idx}
-                              onClick={() => roomId && submitAnswer(roomId, option)}
-                              style={{
-                                padding: '16px',
-                                background: '#f8fafc',
-                                border: '2px solid #e2e8f0',
-                                borderRadius: '12px',
-                                fontWeight: 'bold',
-                                fontSize: '16px',
-                                cursor: 'pointer',
-                                textAlign: 'center',
-                                transition: 'all 0.2s',
-                                color: 'var(--text-primary)'
-                              }}
-                            >
-                              {option}
-                            </motion.button>
-                          ) : (
-                            <div
-                              key={idx}
-                              style={{
-                                padding: '16px',
-                                background: '#f1f5f9',
-                                border: '2px solid #e2e8f0',
-                                borderRadius: '12px',
-                                fontWeight: 'bold',
-                                fontSize: '16px',
-                                textAlign: 'center',
-                                color: '#94a3b8',
-                                opacity: 0.7
-                              }}
-                            >
-                              {option}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {!buzzedPlayerId && (
-                      <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #cbd5e1', textAlign: 'center' }}>
-                        <span style={{ color: '#64748b', fontWeight: 'bold' }}>
-                          بانتظار أسرع واحد يضغط!
-                        </span>
-                      </div>
+                      <div style={{ fontSize: '18px' }}>{players.find(p => p.id === buzzedPlayerId)?.name} يجيب الآن...</div>
                     )}
                   </div>
                 )}
@@ -664,56 +451,26 @@ const App: React.FC = () => {
             </motion.div>
           </div>
         )}
+
         {gameStatus === 'game_over' && winner && (
           <div className="game-over-container">
-            <motion.div
-              initial={{ scale: 0, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              className="winner-card"
-            >
-              <Trophy size={80} color="var(--accent-gold)" style={{ marginBottom: '16px' }} />
-              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-tertiary)' }}>
-                {winner.isForfeit ? 'لقد انسحب الخصم! الفائز هو:' : 'الفائز هو:'}
-              </div>
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="winner-card">
+              <Trophy size={80} color="var(--accent-gold)" />
               <div className="winner-name">{winner.name}</div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
-                <Coins size={40} style={{ color: 'var(--accent-gold)' }} />
-                <div className="winner-score">{winner.score.toLocaleString()}</div>
-              </div>
-              <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--accent-gold)' }}>ألف مبروك! 🎉</div>
+              <div className="winner-score">{winner.score.toLocaleString()}</div>
+              <button className="btn-gold" style={{ marginTop: '20px' }} onClick={() => resetRoom()}>العودة للرئيسية</button>
             </motion.div>
-
-            <button
-              className="btn-gold"
-              style={{ padding: '16px 40px', fontSize: '18px', width: 'auto' }}
-              onClick={() => resetRoom()}
-            >
-              العودة للرئيسية
-            </button>
           </div>
         )}
       </AnimatePresence>
 
       {players.length > 0 && (
         <div className="bottom-hud">
-          {/* Row 1: Current Turn */}
-          <div className="hud-row-turn">
-            <div className="hud-turn-label">دور اللاعب الآن:</div>
-            <div className="hud-turn-name">{players[currentPlayerIndex]?.name || '---'}</div>
-          </div>
-
-          {/* Row 2: Dynamic Player List */}
           <div className="hud-row-players">
-            {players.map((player, index) => (
-              <div
-                key={player.id}
-                className={`hud-player-unit ${index === currentPlayerIndex ? 'active' : ''}`}
-              >
-                <div className="hud-player-name">{player.name}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Coins size={14} style={{ color: 'var(--accent-gold)' }} />
-                  <div className="hud-player-score">{player.score.toLocaleString()}</div>
-                </div>
+            {players.map((p, i) => (
+              <div key={p.id} className={`hud-player-unit ${i === currentPlayerIndex ? 'active' : ''}`}>
+                <div className="hud-player-name">{p.name}</div>
+                <div className="hud-player-score">{p.score}</div>
               </div>
             ))}
           </div>

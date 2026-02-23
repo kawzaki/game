@@ -10,7 +10,31 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Pre-load questions for all rooms
-const questionsData = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
+const questionPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
+
+const ARABIC_LETTERS = [
+    'أ', 'ب', 'ت', 'ث', 'ج',
+    'ح', 'خ', 'د', 'ذ', 'ر',
+    'ز', 'س', 'ش', 'ص', 'ض',
+    'ط', 'ظ', 'ع', 'غ', 'ف',
+    'ق', 'ك', 'ل', 'م', 'ن',
+    'هـ', 'و', 'ي', 'لا', 'ة'
+];
+
+function selectJeopardyQuestions(questionsPerCategory) {
+    const selectedQuestions = [];
+    const shuffledPool = [...questionPool].sort(() => Math.random() - 0.5);
+    const categoryCounts = {};
+
+    shuffledPool.forEach(q => {
+        if (!categoryCounts[q.category]) categoryCounts[q.category] = 0;
+        if (categoryCounts[q.category] < questionsPerCategory) {
+            selectedQuestions.push(q);
+            categoryCounts[q.category]++;
+        }
+    });
+    return selectedQuestions;
+}
 
 const app = express();
 app.use(cors());
@@ -18,8 +42,7 @@ app.use(cors());
 // Serve static files from the build folder
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Fallback for SPA routing - must handle socket.io separately or before
-// Using regex to catch everything while ignoring socket.io explicitly
+// Fallback for SPA routing
 app.get(/^(?!\/socket\.io).*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
@@ -35,6 +58,65 @@ const io = new Server(httpServer, {
 // In-memory room storage
 const rooms = new Map();
 
+function checkHuroofWinner(grid, playerId, players) {
+    const size = 5;
+    const isFirstPlayer = players[0] && players[0].id === playerId;
+
+    // Player 1 (Blue): Top to Bottom
+    // Player 2 (Red): Right to Left
+
+    const startNodes = [];
+    const targetNodes = new Set();
+
+    if (isFirstPlayer) {
+        // Top row (indices 0-4)
+        for (let i = 0; i < size; i++) {
+            if (grid[i].ownerId === playerId) startNodes.push(i);
+            targetNodes.add(size * (size - 1) + i); // Bottom row (20-24)
+        }
+    } else {
+        // Left side (indices 0, 5, 10, 15, 20)
+        for (let i = 0; i < size; i++) {
+            const idx = i * size;
+            if (grid[idx].ownerId === playerId) startNodes.push(idx);
+            targetNodes.add(i * size + (size - 1)); // Right side (4, 9, 14, 19, 24)
+        }
+    }
+
+    if (startNodes.length === 0) return false;
+
+    const queue = [...startNodes];
+    const visited = new Set(startNodes);
+
+    while (queue.length > 0) {
+        const current = queue.shift();
+        if (targetNodes.has(current)) return true;
+
+        const row = Math.floor(current / size);
+        const col = current % size;
+
+        // Neighbors (Top, Bottom, Left, Right)
+        const neighbors = [
+            { r: row - 1, c: col },
+            { r: row + 1, c: col },
+            { r: row, c: col - 1 },
+            { r: row, c: col + 1 }
+        ];
+
+        for (const neighbor of neighbors) {
+            if (neighbor.r >= 0 && neighbor.r < size && neighbor.c >= 0 && neighbor.c < size) {
+                const nIdx = neighbor.r * size + neighbor.c;
+                if (!visited.has(nIdx) && grid[nIdx].ownerId === playerId) {
+                    visited.add(nIdx);
+                    queue.push(nIdx);
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 // Helper for smart answer checking
 function isCorrectAnswer(input, correct) {
     if (!input || !correct) return false;
@@ -49,19 +131,16 @@ function endGame(room, io, roomId, forfeitingPlayerId = null) {
     let isForfeit = false;
 
     if (forfeitingPlayerId) {
-        // If someone forfeits, winner is the highest score among OTHERS
         const others = players.filter(p => p.id !== forfeitingPlayerId);
         if (others.length > 0) {
             const sorted = [...others].sort((a, b) => b.score - a.score);
             winner = sorted[0];
             isForfeit = true;
         } else {
-            // No one else left? Just use highest score (current default)
             const sorted = [...players].sort((a, b) => b.score - a.score);
             winner = sorted[0];
         }
     } else {
-        // Normal game end: highest score wins
         const sorted = [...players].sort((a, b) => b.score - a.score);
         winner = sorted[0];
     }
@@ -81,45 +160,37 @@ function endGame(room, io, roomId, forfeitingPlayerId = null) {
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    socket.on('join_room', ({ roomId, playerName, questionsPerCategory = 10 }) => {
+    socket.on('join_room', (data) => {
+        const { roomId, playerName, questionsPerCategory = 10, gameType = 'jeopardy' } = data;
         socket.join(roomId);
 
-        if (!rooms.has(roomId)) {
-            // Select a subset of questions based on questionsPerCategory
-            const selectedQuestions = [];
-            const categories = [...new Set(questionsData.map(q => q.category))];
+        let room = rooms.get(roomId);
 
-            categories.forEach(cat => {
-                const catQuestions = questionsData.filter(q => q.category === cat);
+        if (!room) {
+            let selectedQuestions = [];
+            let huroofGrid = null;
 
-                // Group by value to ensure we get a balanced distribution
-                const constByValue = {};
-                [100, 200, 300, 400, 500].forEach(v => {
-                    constByValue[v] = catQuestions.filter(q => q.value === v).sort(() => 0.5 - Math.random());
-                });
-
-                // Pick questions evenly across values
-                let added = 0;
-                let valueIndex = 0;
-                const values = [100, 200, 300, 400, 500];
-
-                while (added < questionsPerCategory) {
-                    const v = values[valueIndex % values.length];
-                    if (constByValue[v].length > 0) {
-                        selectedQuestions.push(constByValue[v].shift());
-                        added++;
-                    }
-                    valueIndex++;
-                    // Safety break if we run out of questions in this category
-                    if (valueIndex > 100) break;
+            if (gameType === 'jeopardy') {
+                selectedQuestions = selectJeopardyQuestions(questionsPerCategory);
+            } else if (gameType === 'huroof') {
+                // Initialize 5x5 grid for Huroof
+                huroofGrid = [];
+                for (let i = 0; i < 25; i++) {
+                    huroofGrid.push({
+                        id: i,
+                        letter: ARABIC_LETTERS[i % ARABIC_LETTERS.length],
+                        ownerId: null
+                    });
                 }
-            });
+            }
 
             rooms.set(roomId, {
                 id: roomId,
                 players: [],
                 gameStatus: 'lobby',
-                questions: selectedQuestions.map(q => ({ ...q })), // Deep copy for each room
+                gameType: gameType,
+                questions: selectedQuestions.map(q => ({ ...q })),
+                huroofGrid: huroofGrid,
                 questionsPerCategory: questionsPerCategory,
                 activeQuestion: null,
                 selectedCategory: null,
@@ -128,23 +199,22 @@ io.on('connection', (socket) => {
                 attempts: [],
                 feedback: null,
                 winner: null,
-                correctAnswer: null, // Store correct answer server-side only
+                correctAnswer: null,
                 buzzedPlayerId: null
             });
         }
 
-        const room = rooms.get(roomId);
+        room = rooms.get(roomId);
         const existingPlayer = room.players.find(p => p.name === playerName);
 
         if (existingPlayer) {
             existingPlayer.id = socket.id;
         } else {
-            const player = { id: socket.id, name: playerName, score: 0 };
-            room.players.push(player);
+            room.players.push({ id: socket.id, name: playerName, score: 0 });
         }
 
         io.to(roomId).emit('room_data', room);
-        console.log(`${playerName} joined room ${roomId}`);
+        console.log(`[Join] Player ${playerName} joined room ${roomId} (Game: ${gameType})`);
     });
 
     socket.on('rejoin_room', ({ roomId, playerName }) => {
@@ -163,7 +233,7 @@ io.on('connection', (socket) => {
     socket.on('start_game', (roomId) => {
         const room = rooms.get(roomId);
         if (room) {
-            room.gameStatus = 'selecting_category';
+            room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
             io.to(roomId).emit('room_data', room);
         }
     });
@@ -171,29 +241,40 @@ io.on('connection', (socket) => {
     socket.on('pick_category', ({ roomId, category }) => {
         const room = rooms.get(roomId);
         if (room) {
-            // Check if it's the player's turn
             const activePlayer = room.players[room.currentPlayerIndex];
-            if (activePlayer && activePlayer.id !== socket.id) {
-                console.log(`Action blocked: ${socket.id} tried to pick category out of turn.`);
-                return;
-            }
+            if (activePlayer && activePlayer.id !== socket.id) return;
 
-            room.selectedCategory = category;
-            room.gameStatus = 'selecting_value';
+            if (room.gameType === 'jeopardy') {
+                room.selectedCategory = category;
+                room.gameStatus = 'selecting_value';
+            } else if (room.gameType === 'huroof') {
+                // In Huroof, category is the letter. Pick a question starting with that letter or random if not found.
+                const matchingQuestions = questionPool.filter(q => q.question.trim().startsWith(category) || q.answer.trim().startsWith(category));
+                const pool = matchingQuestions.length > 0 ? matchingQuestions : questionPool;
+                const question = pool[Math.floor(Math.random() * pool.length)];
+
+                const shuffledOptions = [...question.options].sort(() => 0.5 - Math.random());
+                const safeQuestion = { ...question, options: shuffledOptions, value: 100 }; // Huroof constant value
+                delete safeQuestion.answer;
+
+                room.activeQuestion = safeQuestion;
+                room.correctAnswer = question.answer;
+                room.selectedCategory = category; // Store the letter here
+                room.gameStatus = 'question';
+                room.timer = 15;
+                room.attempts = [];
+                room.feedback = null;
+                room.buzzedPlayerId = null;
+            }
             io.to(roomId).emit('room_data', room);
-            console.log(`[Selection] Player ${socket.id} picked category: ${category} in room ${roomId}`);
         }
     });
 
     socket.on('pick_value', ({ roomId, value }) => {
         const room = rooms.get(roomId);
         if (room) {
-            // Check if it's the player's turn
             const activePlayer = room.players[room.currentPlayerIndex];
-            if (activePlayer && activePlayer.id !== socket.id) {
-                console.log(`Action blocked: ${socket.id} tried to pick value out of turn.`);
-                return;
-            }
+            if (activePlayer && activePlayer.id !== socket.id) return;
 
             const question = room.questions.find(q =>
                 q.category === room.selectedCategory &&
@@ -201,15 +282,9 @@ io.on('connection', (socket) => {
                 !q.isAnswered
             );
 
-            console.log(`[Debug] Player ${socket.id} attempting to pick value: ${value} in category: ${room.selectedCategory}`);
-            if (!question) {
-                const availableForCat = room.questions.filter(q => q.category === room.selectedCategory);
-                console.log(`[Debug] Question NOT found. Available in this category:`, availableForCat.map(q => `v:${q.value}, ans:${q.isAnswered}`).join(' | '));
-            }
-
             if (question) {
-                if (question.type === 'luck') {
-                    // ... (keep existing luck logic)
+                const isLuck = Math.random() < 0.1;
+                if (isLuck) {
                     const rewards = [
                         { msg: "تبريكاتنا! ربحت ضعف القيمة!", multiplier: 2 },
                         { msg: "أوه لا! خسرت القيمة!", multiplier: -1 },
@@ -239,33 +314,26 @@ io.on('connection', (socket) => {
                         message: `حظ: ${randomReward.msg}`,
                         reward: randomReward
                     };
-                    // Strip answer even for luck questions
                     const safeQuestion = { ...question };
                     delete safeQuestion.answer;
                     room.activeQuestion = safeQuestion;
-                    room.correctAnswer = null; // No answer to check for luck
+                    room.correctAnswer = null;
                     room.gameStatus = 'question';
                     io.to(roomId).emit('room_data', room);
                 } else {
-                    // Shuffle options before sending
                     const shuffledOptions = [...question.options].sort(() => 0.5 - Math.random());
-
-                    // STRIP ANSWER from object sent to client
                     const safeQuestion = { ...question, options: shuffledOptions };
                     delete safeQuestion.answer;
 
                     room.activeQuestion = safeQuestion;
-                    room.correctAnswer = question.answer; // Store for verification
+                    room.correctAnswer = question.answer;
                     room.gameStatus = 'question';
                     room.timer = 15;
                     room.attempts = [];
                     room.feedback = null;
                     room.buzzedPlayerId = null;
                     io.to(roomId).emit('room_data', room);
-                    console.log(`[Selection] Player ${socket.id} picked value: ${value} in room ${roomId}. Answer stripped.`);
                 }
-            } else {
-                console.log(`[Selection] Question not found or already answered: cat=${room.selectedCategory}, val=${value}`);
             }
         }
     });
@@ -273,12 +341,9 @@ io.on('connection', (socket) => {
     socket.on('buzz', (roomId) => {
         const room = rooms.get(roomId);
         if (room && room.gameStatus === 'question' && !room.buzzedPlayerId) {
-            // Check if this socket already tried
             if (room.attempts && room.attempts.includes(socket.id)) return;
-
             room.buzzedPlayerId = socket.id;
             io.to(roomId).emit('room_data', room);
-            console.log(`Player ${socket.id} buzzed in room ${roomId}`);
         }
     });
 
@@ -291,16 +356,29 @@ io.on('connection', (socket) => {
             if (isCorrect) {
                 if (player) player.score += room.activeQuestion.value;
                 room.feedback = { type: 'correct', message: `إجابة صحيحة! ${player?.name} حصل على ${room.activeQuestion.value} عملة.`, answer: room.correctAnswer };
-                room.questions = room.questions.map(q =>
-                    q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
-                );
+
+                if (room.gameType === 'jeopardy') {
+                    room.questions = room.questions.map(q =>
+                        q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
+                    );
+                } else if (room.gameType === 'huroof') {
+                    // Claim the letter in the grid
+                    room.huroofGrid = room.huroofGrid.map(g =>
+                        g.letter === room.selectedCategory && g.ownerId === null ? { ...g, ownerId: socket.id } : g
+                    );
+
+                    // Check for win
+                    if (checkHuroofWinner(room.huroofGrid, socket.id, room.players)) {
+                        endGame(room, io, roomId);
+                        return; // Game over, stop further processing
+                    }
+                }
             } else {
                 if (player) player.score -= room.activeQuestion.value;
                 if (!room.attempts) room.attempts = [];
                 room.attempts.push(socket.id);
                 room.buzzedPlayerId = null;
 
-                // Check if everyone has tried
                 if (room.attempts.length >= room.players.length) {
                     room.feedback = {
                         type: 'all_wrong',
@@ -312,12 +390,9 @@ io.on('connection', (socket) => {
                     );
                 } else {
                     room.feedback = { type: 'wrong', message: `خطأ! ${player?.name} فقد نقاطاً. بإمكان الآخرين المحاولة الآن!` };
-                    // Reset timer for the next buzz? Or keep it going? 
-                    // Lets keep it simple: reset timer to 10s for the next person
                     room.timer = 10;
                 }
             }
-
             io.to(roomId).emit('room_data', room);
         }
     });
@@ -325,19 +400,14 @@ io.on('connection', (socket) => {
     socket.on('close_feedback', (roomId) => {
         const room = rooms.get(roomId);
         if (room) {
-            const wasLuck = room.feedback && room.feedback.type === 'luck';
             room.feedback = null;
             room.activeQuestion = null;
             room.selectedCategory = null;
             room.buzzedPlayerId = null;
-            room.gameStatus = 'selecting_category';
-
-            // Turn always moves after any feedback is closed
-            // (Unless we want correct answer to let you pick again? The current logic says move turns)
             room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
+            room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
 
-            // Check if all questions are answered
-            const allAnswered = room.questions.every(q => q.isAnswered);
+            const allAnswered = room.gameType === 'jeopardy' ? room.questions.every(q => q.isAnswered) : room.huroofGrid.every(g => g.ownerId !== null);
             if (allAnswered) {
                 endGame(room, io, roomId);
             } else {
@@ -353,50 +423,12 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('answer_question', ({ roomId, isCorrect }) => {
-        const room = rooms.get(roomId);
-        if (room && room.activeQuestion) {
-            // Manual overrides or timeout
-            const currentPlayer = room.players[room.currentPlayerIndex];
-            if (isCorrect) {
-                currentPlayer.score += room.activeQuestion.value;
-            }
-
-            room.questions = room.questions.map(q =>
-                q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
-            );
-
-            room.activeQuestion = null;
-            room.selectedCategory = null;
-            room.buzzedPlayerId = null;
-            room.gameStatus = 'selecting_category';
-            room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
-
-            // Check if all questions are answered
-            const allAnswered = room.questions.every(q => q.isAnswered);
-            if (allAnswered) {
-                endGame(room, io, roomId);
-            } else {
-                io.to(roomId).emit('room_data', room);
-            }
-        }
-    });
-
     socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-
-        // Remove player from all rooms they were in
         rooms.forEach((room, roomId) => {
             const playerIndex = room.players.findIndex(p => p.id === socket.id);
             if (playerIndex !== -1) {
-                const playerName = room.players[playerIndex].name;
                 room.players.splice(playerIndex, 1);
-                console.log(`${playerName} removed from room ${roomId}`);
-
-                // If room is empty, maybe delete it or just sync
-                if (room.players.length === 0) {
-                    // Optionally: rooms.delete(roomId);
-                } else {
+                if (room.players.length > 0) {
                     io.to(roomId).emit('room_data', room);
                 }
             }
