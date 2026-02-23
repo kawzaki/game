@@ -124,10 +124,12 @@ const BentOWalad: React.FC<BentOWaladProps> = ({ roomId }) => {
     }
 
     if (gameStatus === 'round_scoring') {
-        const lastResult = roundResults[roundResults.length - 1];
+        const lastResult = roundResults && roundResults.length > 0 ? roundResults[roundResults.length - 1] : null;
+        if (!lastResult) return <div style={{ textAlign: 'center' }}>جاري حساب النتائج...</div>;
+
         return (
             <div style={{ textAlign: 'center' }}>
-                <h2 style={{ marginBottom: '20px' }}>نتائج الجولة ({currentLetter})</h2>
+                <h2 style={{ marginBottom: '20px' }}>نتائج الجولة ({lastResult.letter || currentLetter})</h2>
                 <div style={{ overflowX: 'auto', background: '#fff', borderRadius: '20px', padding: '10px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
@@ -139,8 +141,9 @@ const BentOWalad: React.FC<BentOWaladProps> = ({ roomId }) => {
                         </thead>
                         <tbody>
                             {players.map(p => {
-                                const pSub = lastResult?.submissions[p.id] || {};
-                                const pRoundScore = lastResult?.scores[p.id] || 0;
+                                const submissions = lastResult.submissions || {};
+                                const pSub = submissions[p.name] || {}; // Lookup by name
+                                const pRoundScore = lastResult.scores ? lastResult.scores[p.id] : 0;
                                 return (
                                     <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                                         <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold' }}>{p.name}</td>

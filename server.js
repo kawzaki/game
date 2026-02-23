@@ -331,7 +331,7 @@ io.on('connection', (socket) => {
             const answers = {}; // normalized -> count
 
             players.forEach(p => {
-                const sub = submissions[p.id];
+                const sub = submissions[p.name];
                 const rawAnswer = sub ? sub[catKey] : "";
                 const normalized = normalizeArabic(rawAnswer);
 
@@ -344,9 +344,9 @@ io.on('connection', (socket) => {
             });
 
             players.forEach(p => {
-                const sub = submissions[p.id];
+                const sub = submissions[p.name];
                 const rawAnswer = sub ? sub[catKey] : "";
-                const normalized = normalizeArabic(rawAnswer);
+                const normalized = normalized = normalizeArabic(rawAnswer);
                 let score = 0;
 
                 if (normalized && rawAnswer.trim().startsWith(letter)) {
@@ -373,7 +373,7 @@ io.on('connection', (socket) => {
 
         io.to(roomId).emit('room_data', room);
 
-        // Wait 10 seconds to show results then start next round or end
+        // Wait 7 seconds to show results then start next round or end
         setTimeout(() => {
             if (room.currentRound < room.roundCount) {
                 room.currentRound++;
@@ -381,14 +381,16 @@ io.on('connection', (socket) => {
             } else {
                 endGame(room, io, roomId);
             }
-        }, 10000);
+        }, 7000);
     }
 
     socket.on('submit_round_bin_o_walad', ({ roomId, inputs }) => {
         const room = rooms.get(roomId);
         if (room && room.gameStatus === 'round_active') {
-            room.roundSubmissions[room.currentRound][socket.id] = inputs;
-            // Option: If all players submitted early, we could speed up the timer
+            const player = room.players.find(p => p.id === socket.id);
+            if (player) {
+                room.roundSubmissions[room.currentRound][player.name] = inputs;
+            }
         }
     });
 
