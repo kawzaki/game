@@ -52,7 +52,7 @@ const App: React.FC = () => {
 
   const [playerName, setPlayerName] = React.useState('');
   const [joinCode, setJoinCode] = React.useState('');
-  const [qCount, setQCount] = React.useState(5);
+  const [qCount, setQCount] = React.useState(10);
   const [localSelecting, setLocalSelecting] = React.useState<string | number | null>(null);
 
   // Reset local selection when game state changes
@@ -445,26 +445,49 @@ const App: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '12px' }}>
               {[100, 200, 300, 400, 500].map((val) => {
                 const catQuestions = categories[selectedCategory || ''] || [];
-                const isAnswered = !catQuestions.some(q => q.value === val && !q.isAnswered);
+                const answeredCount = catQuestions.filter(q => q.value === val && q.isAnswered).length;
+                const totalForValue = catQuestions.filter(q => q.value === val).length;
+                const isFullyAnswered = answeredCount >= totalForValue && totalForValue > 0;
                 return (
                   <motion.button
-                    whileTap={(!isAnswered && isMyTurn) ? { scale: 0.95 } : {}}
+                    whileTap={(!isFullyAnswered && isMyTurn) ? { scale: 0.95 } : {}}
                     key={val}
-                    className={`value-button ${isAnswered ? 'tile-answered' : ''} ${!isMyTurn ? 'tile-disabled' : ''} ${localSelecting === val ? 'selecting' : ''}`}
-                    onClick={() => !isAnswered && handlePickValue(val)}
+                    className={`value-button ${isFullyAnswered ? 'tile-answered' : ''} ${!isMyTurn ? 'tile-disabled' : ''} ${localSelecting === val ? 'selecting' : ''}`}
+                    onClick={() => !isFullyAnswered && handlePickValue(val)}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       gap: '8px',
-                      opacity: isMyTurn ? (isAnswered ? 0.5 : 1) : 0.6,
-                      cursor: (isMyTurn && !isAnswered) ? 'pointer' : 'not-allowed',
+                      opacity: isMyTurn ? (isFullyAnswered ? 0.5 : 1) : 0.6,
+                      cursor: (isMyTurn && !isFullyAnswered) ? 'pointer' : 'not-allowed',
                       width: '100%',
-                      border: 'none'
+                      border: 'none',
+                      position: 'relative'
                     }}
                   >
                     <Coins size={24} style={{ color: 'var(--accent-gold)' }} />
                     <span className="gold-text">{val}</span>
+                    {!isFullyAnswered && totalForValue > 1 && (
+                      <span style={{
+                        position: 'absolute',
+                        top: '-8px',
+                        right: '-8px',
+                        background: 'var(--brand-yellow)',
+                        color: 'black',
+                        borderRadius: '50%',
+                        width: '24px',
+                        height: '24px',
+                        fontSize: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: '900',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }}>
+                        {totalForValue - answeredCount}
+                      </span>
+                    )}
                   </motion.button>
                 );
               })}
@@ -554,27 +577,70 @@ const App: React.FC = () => {
                     <Zap size={32} fill="white" />
                     إجابة!
                   </motion.button>
-                ) : buzzedPlayerId === myId ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)', marginBottom: '4px' }}>اختر الإجابة الصحيحة:</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      {activeQuestion.options.map((option, idx) => (
-                        <motion.button
-                          whileTap={{ scale: 0.95 }}
-                          key={idx}
-                          onClick={() => roomId && submitAnswer(roomId, option)}
-                          style={{ padding: '16px', background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }}
-                        >
-                          {option}
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
                 ) : (
-                  <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #cbd5e1' }}>
-                    <span style={{ color: '#64748b', fontWeight: 'bold' }}>
-                      {players.find(p => p.id === buzzedPlayerId)?.name} يجيب الآن...
-                    </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {buzzedPlayerId ? (
+                      <div style={{ fontSize: '14px', fontWeight: '900', color: '#64748b', marginBottom: '4px' }}>
+                        {players.find(p => p.id === buzzedPlayerId)?.name} يجيب الآن...
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '14px', fontWeight: '900', color: 'var(--royal-blue)', marginBottom: '4px' }}>بانتظار الضغط على الزر...</div>
+                    )}
+
+                    {/* Show options if someone has buzzed */}
+                    {buzzedPlayerId && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        {activeQuestion.options.map((option, idx) => {
+                          const isBuzzedPlayer = buzzedPlayerId === myId;
+                          return isBuzzedPlayer ? (
+                            <motion.button
+                              whileTap={{ scale: 0.95 }}
+                              key={idx}
+                              onClick={() => roomId && submitAnswer(roomId, option)}
+                              style={{
+                                padding: '16px',
+                                background: '#f8fafc',
+                                border: '2px solid #e2e8f0',
+                                borderRadius: '12px',
+                                fontWeight: 'bold',
+                                fontSize: '16px',
+                                cursor: 'pointer',
+                                textAlign: 'center',
+                                transition: 'all 0.2s',
+                                color: 'var(--text-primary)'
+                              }}
+                            >
+                              {option}
+                            </motion.button>
+                          ) : (
+                            <div
+                              key={idx}
+                              style={{
+                                padding: '16px',
+                                background: '#f1f5f9',
+                                border: '2px solid #e2e8f0',
+                                borderRadius: '12px',
+                                fontWeight: 'bold',
+                                fontSize: '16px',
+                                textAlign: 'center',
+                                color: '#94a3b8',
+                                opacity: 0.7
+                              }}
+                            >
+                              {option}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {!buzzedPlayerId && (
+                      <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #cbd5e1', textAlign: 'center' }}>
+                        <span style={{ color: '#64748b', fontWeight: 'bold' }}>
+                          بانتظار أسرع واحد يضغط!
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

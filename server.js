@@ -81,7 +81,7 @@ function endGame(room, io, roomId, forfeitingPlayerId = null) {
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    socket.on('join_room', ({ roomId, playerName, questionsPerCategory = 5 }) => {
+    socket.on('join_room', ({ roomId, playerName, questionsPerCategory = 10 }) => {
         socket.join(roomId);
 
         if (!rooms.has(roomId)) {
@@ -127,7 +127,9 @@ io.on('connection', (socket) => {
                 timer: 0,
                 attempts: [],
                 feedback: null,
-                winner: null
+                winner: null,
+                correctAnswer: null, // Store correct answer server-side only
+                buzzedPlayerId: null
             });
         }
 
@@ -198,8 +200,16 @@ io.on('connection', (socket) => {
                 q.value === value &&
                 !q.isAnswered
             );
+
+            console.log(`[Debug] Player ${socket.id} attempting to pick value: ${value} in category: ${room.selectedCategory}`);
+            if (!question) {
+                const availableForCat = room.questions.filter(q => q.category === room.selectedCategory);
+                console.log(`[Debug] Question NOT found. Available in this category:`, availableForCat.map(q => `v:${q.value}, ans:${q.isAnswered}`).join(' | '));
+            }
+
             if (question) {
                 if (question.type === 'luck') {
+                    // ... (keep existing luck logic)
                     const rewards = [
                         { msg: "تبريكاتنا! ربحت ضعف القيمة!", multiplier: 2 },
                         { msg: "أوه لا! خسرت القيمة!", multiplier: -1 },
@@ -229,19 +239,30 @@ io.on('connection', (socket) => {
                         message: `حظ: ${randomReward.msg}`,
                         reward: randomReward
                     };
-                    room.activeQuestion = question; // Keep it as active to show the modal
-                    room.gameStatus = 'question'; // Show as a question modal
+                    // Strip answer even for luck questions
+                    const safeQuestion = { ...question };
+                    delete safeQuestion.answer;
+                    room.activeQuestion = safeQuestion;
+                    room.correctAnswer = null; // No answer to check for luck
+                    room.gameStatus = 'question';
                     io.to(roomId).emit('room_data', room);
                 } else {
                     // Shuffle options before sending
                     const shuffledOptions = [...question.options].sort(() => 0.5 - Math.random());
-                    room.activeQuestion = { ...question, options: shuffledOptions };
+
+                    // STRIP ANSWER from object sent to client
+                    const safeQuestion = { ...question, options: shuffledOptions };
+                    delete safeQuestion.answer;
+
+                    room.activeQuestion = safeQuestion;
+                    room.correctAnswer = question.answer; // Store for verification
                     room.gameStatus = 'question';
                     room.timer = 15;
                     room.attempts = [];
                     room.feedback = null;
+                    room.buzzedPlayerId = null;
                     io.to(roomId).emit('room_data', room);
-                    console.log(`[Selection] Player ${socket.id} picked value: ${value} in room ${roomId}`);
+                    console.log(`[Selection] Player ${socket.id} picked value: ${value} in room ${roomId}. Answer stripped.`);
                 }
             } else {
                 console.log(`[Selection] Question not found or already answered: cat=${room.selectedCategory}, val=${value}`);
@@ -265,11 +286,11 @@ io.on('connection', (socket) => {
         const room = rooms.get(roomId);
         if (room && room.activeQuestion && room.buzzedPlayerId === socket.id) {
             const player = room.players.find(p => p.id === socket.id);
-            const isCorrect = isCorrectAnswer(answer, room.activeQuestion.answer);
+            const isCorrect = isCorrectAnswer(answer, room.correctAnswer);
 
             if (isCorrect) {
                 if (player) player.score += room.activeQuestion.value;
-                room.feedback = { type: 'correct', message: `إجابة صحيحة! ${player?.name} حصل على ${room.activeQuestion.value} عملة.`, answer: room.activeQuestion.answer };
+                room.feedback = { type: 'correct', message: `إجابة صحيحة! ${player?.name} حصل على ${room.activeQuestion.value} عملة.`, answer: room.correctAnswer };
                 room.questions = room.questions.map(q =>
                     q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
                 );
@@ -284,7 +305,7 @@ io.on('connection', (socket) => {
                     room.feedback = {
                         type: 'all_wrong',
                         message: `عذراً، المحاولات انتهت والإجابات خاطئة.`,
-                        answer: room.activeQuestion.answer
+                        answer: room.correctAnswer
                     };
                     room.questions = room.questions.map(q =>
                         q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q

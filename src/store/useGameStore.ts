@@ -101,7 +101,7 @@ export const useGameStore = create<GameState>((set) => {
 
         setRoomId: (id) => set({ roomId: id }),
 
-        addPlayer: (name, roomId, questionsPerCategory = 5) => {
+        addPlayer: (name, roomId, questionsPerCategory = 10) => {
             socket.emit('join_room', { roomId, playerName: name, questionsPerCategory });
             set({ roomId, playerName: name });
         },
