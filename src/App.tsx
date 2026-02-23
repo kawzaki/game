@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore, socket } from './store/useGameStore';
 import HuroofGame from './components/HuroofGame';
+import BentOWalad from './components/BentOWalad';
 import confetti from 'canvas-confetti';
 import {
   Timer as TimerIcon,
@@ -116,7 +117,7 @@ const App: React.FC = () => {
   };
 
   const setGameTypeLocal = useGameStore(state => (state as any).setGameType);
-  const finalizeCreateRoom = (type: 'jeopardy' | 'huroof') => {
+  const finalizeCreateRoom = (type: 'jeopardy' | 'huroof' | 'bin_o_walad') => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     setGameTypeLocal(type);
     setRoomId(code);
@@ -201,6 +202,10 @@ const App: React.FC = () => {
           <button className="btn-primary-battle" style={{ background: 'var(--brand-yellow)', color: '#000' }} onClick={() => finalizeCreateRoom('huroof')}>
             <Type size={24} />
             لعبة الحروف
+          </button>
+          <button className="btn-primary-battle" style={{ background: '#10b981', color: '#fff' }} onClick={() => finalizeCreateRoom('bin_o_walad')}>
+            <Layout size={24} />
+            تحدي بنت وولد (Classic)
           </button>
         </div>
 
@@ -408,6 +413,8 @@ const App: React.FC = () => {
               </div>
             )}
           </>
+        ) : gameType === 'bin_o_walad' ? (
+          <BentOWalad roomId={roomId || ''} />
         ) : (
           /* HUROOF BOARD */
           <HuroofGame roomId={roomId || ''} />

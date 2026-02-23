@@ -26,12 +26,16 @@ interface GameState {
     myId: string | null;
     isConnected: boolean;
     feedback: { type: 'correct' | 'wrong' | 'all_wrong' | 'luck'; message: string; answer?: string; reward?: any } | null;
-    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'selecting_letter' | 'question' | 'game_over';
+    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'selecting_letter' | 'question' | 'game_over' | 'countdown' | 'round_active' | 'round_scoring';
     timer: number;
     winner: { name: string; score: number; isForfeit?: boolean } | null;
     playerName: string | null;
     questionsPerCategory: number;
-    gameType: 'jeopardy' | 'huroof';
+    gameType: 'jeopardy' | 'huroof' | 'bin_o_walad';
+    currentLetter: string | null;
+    currentRound: number;
+    roundCount: number;
+    roundResults: any[];
 
     // Actions
     setRoomId: (id: string) => void;
@@ -47,6 +51,7 @@ interface GameState {
     tickTimer: () => void;
     resetTimer: (seconds: number) => void;
     resetRoom: () => void;
+    submitRoundBinOWalad: (roomId: string, inputs: Record<string, string>) => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
@@ -71,6 +76,10 @@ export const useGameStore = create<GameState>((set) => {
             winner: data.winner,
             questionsPerCategory: data.questionsPerCategory,
             gameType: data.gameType || 'jeopardy',
+            currentLetter: data.currentLetter,
+            currentRound: data.currentRound,
+            roundCount: data.roundCount,
+            roundResults: data.roundResults || [],
             myId: socket.id || null,
             isConnected: true
         });
@@ -108,6 +117,10 @@ export const useGameStore = create<GameState>((set) => {
         playerName: null,
         questionsPerCategory: 10,
         gameType: 'jeopardy',
+        currentLetter: null,
+        currentRound: 0,
+        roundCount: 10,
+        roundResults: [],
 
         setRoomId: (id) => set({ roomId: id }),
 
@@ -164,7 +177,14 @@ export const useGameStore = create<GameState>((set) => {
             attempts: [],
             feedback: null,
             gameStatus: 'lobby',
-            winner: null
-        })
+            winner: null,
+            currentLetter: null,
+            currentRound: 0,
+            roundResults: []
+        }),
+
+        submitRoundBinOWalad: (roomId, inputs) => {
+            socket.emit('submit_round_bin_o_walad', { roomId, inputs });
+        }
     };
 });

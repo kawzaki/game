@@ -123,6 +123,26 @@ function isCorrectAnswer(input, correct) {
     return input.trim().toLowerCase() === correct.trim().toLowerCase();
 }
 
+// Helper for Arabic normalization
+function normalizeArabic(text) {
+    if (!text) return "";
+    return text.trim()
+        .replace(/[أإآ]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/ى/g, 'ي')
+        .replace(/[\u064B-\u0652]/g, "") // Remove harakat
+        .toLowerCase();
+}
+
+const CATEGORIES_BIN_O_WALAD = [
+    { key: 'girl', label: 'بنت' },
+    { key: 'boy', label: 'ولد' },
+    { key: 'thing', label: 'جماد' },
+    { key: 'food', label: 'أكل' },
+    { key: 'animal', label: 'حيوان' },
+    { key: 'location', label: 'بلاد' }
+];
+
 function endGame(room, io, roomId, forfeitingPlayerId = null) {
     const players = room.players;
     if (players.length === 0) return;
@@ -204,7 +224,14 @@ io.on('connection', (socket) => {
                 feedback: null,
                 winner: null,
                 correctAnswer: null,
-                buzzedPlayerId: null
+                buzzedPlayerId: null,
+                // Bent o Walad specific
+                roundCount: requestedGameType === 'bin_o_walad' ? 10 : 0,
+                currentRound: 0,
+                usedLetters: [],
+                currentLetter: null,
+                roundSubmissions: {}, // roomId -> { roundIndex -> { playerId -> { girl, boy, thing, food, animal, location } } }
+                roundResults: []
             });
         }
 
@@ -239,8 +266,129 @@ io.on('connection', (socket) => {
         const room = rooms.get(roomId);
         if (room) {
             console.log(`[Start Game] Room: ${roomId}, Type: ${room.gameType}`);
-            room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
+            if (room.gameType === 'bin_o_walad') {
+                room.gameStatus = 'countdown';
+                room.timer = 10;
+                room.currentRound = 1;
+
+                const countdownInterval = setInterval(() => {
+                    if (room.timer > 0) {
+                        room.timer--;
+                        io.to(roomId).emit('room_data', room);
+                    } else {
+                        clearInterval(countdownInterval);
+                        startBinOWaladRound(room, io, roomId);
+                    }
+                }, 1000);
+            } else {
+                room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
+            }
             io.to(roomId).emit('room_data', room);
+        }
+    });
+
+    function startBinOWaladRound(room, io, roomId) {
+        // Pick random unused letter
+        const availableLetters = ARABIC_LETTERS.filter(l => !room.usedLetters.includes(l));
+        if (availableLetters.length === 0 || room.currentRound > room.roundCount) {
+            endGame(room, io, roomId);
+            return;
+        }
+
+        const letter = availableLetters[Math.floor(Math.random() * availableLetters.length)];
+        room.usedLetters.push(letter);
+        room.currentLetter = letter;
+        room.gameStatus = 'round_active';
+        room.timer = 60;
+        room.roundSubmissions[room.currentRound] = {};
+
+        io.to(roomId).emit('room_data', room);
+
+        const roundInterval = setInterval(() => {
+            if (room.timer > 0 && room.gameStatus === 'round_active') {
+                room.timer--;
+                io.to(roomId).emit('room_data', room);
+            } else {
+                clearInterval(roundInterval);
+                if (room.gameStatus === 'round_active') {
+                    scoreBinOWaladRound(room, io, roomId);
+                }
+            }
+        }, 1000);
+    }
+
+    function scoreBinOWaladRound(room, io, roomId) {
+        room.gameStatus = 'round_scoring';
+        const currentRound = room.currentRound;
+        const submissions = room.roundSubmissions[currentRound] || {};
+        const players = room.players;
+        const letter = room.currentLetter;
+
+        const roundTotalScores = {}; // playerId -> score this round
+
+        CATEGORIES_BIN_O_WALAD.forEach(cat => {
+            const catKey = cat.key;
+            const answers = {}; // normalized -> count
+
+            players.forEach(p => {
+                const sub = submissions[p.id];
+                const rawAnswer = sub ? sub[catKey] : "";
+                const normalized = normalizeArabic(rawAnswer);
+
+                // Basic validation: must start with the correct letter
+                if (normalized && rawAnswer.trim().startsWith(letter)) {
+                    answers[normalized] = (answers[normalized] || 0) + 1;
+                } else {
+                    // Invalid or empty
+                }
+            });
+
+            players.forEach(p => {
+                const sub = submissions[p.id];
+                const rawAnswer = sub ? sub[catKey] : "";
+                const normalized = normalizeArabic(rawAnswer);
+                let score = 0;
+
+                if (normalized && rawAnswer.trim().startsWith(letter)) {
+                    if (answers[normalized] === 1) {
+                        score = 10;
+                    } else {
+                        score = 5;
+                    }
+                } else {
+                    score = 0;
+                }
+
+                p.score += score;
+                roundTotalScores[p.id] = (roundTotalScores[p.id] || 0) + score;
+            });
+        });
+
+        room.roundResults.push({
+            round: currentRound,
+            letter: letter,
+            scores: roundTotalScores,
+            submissions: submissions
+        });
+
+        io.to(roomId).emit('room_data', room);
+
+        // Wait 10 seconds to show results then start next round or end
+        setTimeout(() => {
+            if (room.currentRound < room.roundCount) {
+                room.currentRound++;
+                startBinOWaladRound(room, io, roomId);
+            } else {
+                endGame(room, io, roomId);
+            }
+        }, 10000);
+    }
+
+    socket.on('submit_round_bin_o_walad', ({ roomId, inputs }) => {
+        const room = rooms.get(roomId);
+        if (room && room.gameStatus === 'round_active') {
+            room.roundSubmissions[room.currentRound][socket.id] = inputs;
+            // Option: If all players submitted early, we could speed up the timer
         }
     });
 
