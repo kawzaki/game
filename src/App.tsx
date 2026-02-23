@@ -196,11 +196,11 @@ const App: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '20px' }}>
           <button className="btn-primary-battle" onClick={() => finalizeCreateRoom('jeopardy')}>
             <Layout size={24} />
-            لعبة جيباردي (العادية)
+            تحدي الاسئلة
           </button>
           <button className="btn-primary-battle" style={{ background: 'var(--brand-yellow)', color: '#000' }} onClick={() => finalizeCreateRoom('huroof')}>
             <Type size={24} />
-            لعبة الحروف (Huroof)
+            لعبة الحروف
           </button>
         </div>
 
@@ -233,7 +233,7 @@ const App: React.FC = () => {
               <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '4px', margin: '12px 0' }}>{roomId}</div>
 
               <div style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'جيباردي' : 'لعبة الحروف'}</strong>
+                نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'تحدي الاسئلة' : 'لعبة الحروف'}</strong>
               </div>
 
               {gameType === 'jeopardy' && (
