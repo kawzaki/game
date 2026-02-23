@@ -54,7 +54,6 @@ const App: React.FC = () => {
   const [joinCode, setJoinCode] = React.useState('');
   const [qCount, setQCount] = React.useState(10);
   const [localSelecting, setLocalSelecting] = React.useState<string | number | null>(null);
-  const [gameSelectionMode, setGameSelectionMode] = React.useState(false);
 
   // Sync local selection when game state changes
   useEffect(() => {
@@ -114,16 +113,11 @@ const App: React.FC = () => {
     audio.play().catch(e => console.error("Audio play failed:", e));
   };
 
-  const handleCreateRoom = () => {
-    setGameSelectionMode(true);
-  };
-
   const setGameTypeLocal = useGameStore(state => (state as any).setGameType);
   const finalizeCreateRoom = (type: 'jeopardy' | 'huroof') => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     setGameTypeLocal(type);
     setRoomId(code);
-    setGameSelectionMode(false);
   };
 
   const generateInviteLink = () => {
@@ -163,30 +157,6 @@ const App: React.FC = () => {
 
   // UI RENDERING STARTS HERE
 
-  if (gameSelectionMode) {
-    return (
-      <div className="home-container">
-        <header className="home-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', justifyContent: 'center' }}>
-            <span style={{ fontWeight: 900, fontSize: '18px' }}>اختر اللعبة</span>
-          </div>
-        </header>
-        <div style={{ padding: '40px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <button className="btn-primary-battle" onClick={() => finalizeCreateRoom('jeopardy')}>
-            <Layout size={24} />
-            لعبة جيباردي (العادية)
-          </button>
-          <button className="btn-primary-battle" style={{ background: 'var(--brand-yellow)', color: '#000' }} onClick={() => finalizeCreateRoom('huroof')}>
-            <Type size={24} />
-            لعبة الحروف (Huroof)
-          </button>
-          <button className="btn-secondary" style={{ marginTop: '20px' }} onClick={() => setGameSelectionMode(false)}>
-            إلغاء
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   if (gameStatus === 'lobby') {
     return (
@@ -207,10 +177,16 @@ const App: React.FC = () => {
         <h1 className="hero-title">هل أنت مستعد <span style={{ color: 'var(--brand-yellow)' }}>للمنافسة؟</span></h1>
         <p className="hero-subtitle">تحد أصدقاءك لإثبات معرفتك في مختلف الألعاب.</p>
 
-        <button className="btn-primary-battle" onClick={handleCreateRoom}>
-          <Plus size={24} strokeWidth={3} />
-          ابدأ منافسة جديدة
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '20px' }}>
+          <button className="btn-primary-battle" onClick={() => finalizeCreateRoom('jeopardy')}>
+            <Layout size={24} />
+            لعبة جيباردي (العادية)
+          </button>
+          <button className="btn-primary-battle" style={{ background: 'var(--brand-yellow)', color: '#000' }} onClick={() => finalizeCreateRoom('huroof')}>
+            <Type size={24} />
+            لعبة الحروف (Huroof)
+          </button>
+        </div>
 
         <div className="join-section">
           <span className="join-label">انضم إلى مباراة</span>
@@ -304,7 +280,12 @@ const App: React.FC = () => {
               >
                 ابدأ اللعب! 🚀
               </button>
-              <button onClick={() => setRoomId('')} style={{ marginTop: '10px', background: 'none', border: 'none', color: '#999' }}>إلغاء</button>
+              <button onClick={() => {
+                setRoomId('');
+                window.history.replaceState({}, '', window.location.pathname);
+              }} style={{ marginTop: '10px', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '14px', textDecoration: 'underline' }}>
+                العودة لتغيير نوع اللعبة
+              </button>
             </div>
           </div>
         )}
