@@ -214,7 +214,8 @@ io.on('connection', (socket) => {
         if (existingPlayer) {
             existingPlayer.id = socket.id;
         } else {
-            room.players.push({ id: socket.id, name: playerName, score: 0 });
+            const playerNumber = room.players.length + 1;
+            room.players.push({ id: socket.id, name: playerName, score: 0, number: playerNumber });
         }
 
         io.to(roomId).emit('room_data', room);
@@ -424,6 +425,45 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('answer_question', ({ roomId, isCorrect }) => {
+        const room = rooms.get(roomId);
+        if (room && room.activeQuestion) {
+            const player = room.players.find(p => p.id === socket.id);
+
+            if (isCorrect) {
+                if (player) player.score += room.activeQuestion.value;
+                room.feedback = { type: 'correct', message: `إجابة صحيحة! ${player?.name} حصل على ${room.activeQuestion.value} عملة.`, answer: room.correctAnswer };
+
+                if (room.gameType === 'jeopardy') {
+                    room.questions = room.questions.map(q =>
+                        q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
+                    );
+                } else if (room.gameType === 'huroof') {
+                    room.huroofGrid = room.huroofGrid.map(g =>
+                        g.letter === room.selectedCategory && g.ownerId === null ? { ...g, ownerId: socket.id } : g
+                    );
+                    if (checkHuroofWinner(room.huroofGrid, socket.id, room.players)) {
+                        endGame(room, io, roomId);
+                        return;
+                    }
+                }
+            } else {
+                // Timeout or wrong answer from client
+                room.feedback = {
+                    type: 'all_wrong',
+                    message: `انتهى الوقت! لم يتم الإجابة على السؤال.`,
+                    answer: room.correctAnswer
+                };
+                if (room.gameType === 'jeopardy') {
+                    room.questions = room.questions.map(q =>
+                        q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
+                    );
+                }
+            }
+            io.to(roomId).emit('room_data', room);
+        }
+    });
+
     socket.on('close_feedback', (roomId) => {
         const room = rooms.get(roomId);
         if (room) {
@@ -431,7 +471,11 @@ io.on('connection', (socket) => {
             room.activeQuestion = null;
             room.selectedCategory = null;
             room.buzzedPlayerId = null;
-            room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
+
+            if (room.players.length > 0) {
+                room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
+            }
+
             room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
 
             const allAnswered = room.gameType === 'jeopardy' ? room.questions.every(q => q.isAnswered) : room.huroofGrid.every(g => g.ownerId !== null);
@@ -454,9 +498,37 @@ io.on('connection', (socket) => {
         rooms.forEach((room, roomId) => {
             const playerIndex = room.players.findIndex(p => p.id === socket.id);
             if (playerIndex !== -1) {
+                console.log(`[Disconnect] Player ${room.players[playerIndex].name} left room ${roomId}`);
+
+                // If the player who left was the current player, reset turn or move to next
+                if (room.currentPlayerIndex === playerIndex) {
+                    room.currentPlayerIndex = 0; // Reset to first available player
+
+                    // If they left during a question/feedback, clear it
+                    if (room.gameStatus === 'question' || room.feedback) {
+                        room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
+                        room.activeQuestion = null;
+                        room.feedback = null;
+                        room.selectedCategory = null;
+                        room.buzzedPlayerId = null;
+                    }
+                } else if (room.currentPlayerIndex > playerIndex) {
+                    // Shift index back to keep the same relative player
+                    room.currentPlayerIndex--;
+                }
+
                 room.players.splice(playerIndex, 1);
+
+                // Update numbers for remaining players if needed
+                room.players.forEach((p, idx) => {
+                    p.number = idx + 1;
+                });
+
                 if (room.players.length > 0) {
                     io.to(roomId).emit('room_data', room);
+                } else {
+                    console.log(`[Cleanup] Room ${roomId} is empty, removing.`);
+                    rooms.delete(roomId);
                 }
             }
         });

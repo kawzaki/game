@@ -49,7 +49,8 @@ const App: React.FC = () => {
   } = useGameStore();
 
   const isMyTurn = players[currentPlayerIndex]?.id === myId;
-  const activePlayerName = players[currentPlayerIndex]?.name || '...';
+  const activePlayer = players[currentPlayerIndex];
+  const activePlayerName = activePlayer ? `${activePlayer.name} (#${activePlayer.number || currentPlayerIndex + 1})` : '...';
 
   const [playerName, setPlayerName] = React.useState('');
   const [joinCode, setJoinCode] = React.useState('');
@@ -284,7 +285,10 @@ const App: React.FC = () => {
                 <h4 style={{ marginBottom: '8px' }}>اللاعبون المتواجدون:</h4>
                 <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
                   {players.map((p, i) => (
-                    <div key={i} style={{ background: '#eee', padding: '4px 12px', borderRadius: '20px', fontSize: '12px' }}>{p.name}</div>
+                    <div key={i} style={{ background: '#eee', padding: '4px 12px', borderRadius: '20px', fontSize: '12px' }}>
+                      <span style={{ fontWeight: 'bold', marginRight: '4px' }}>#{p.number || (i + 1)}</span>
+                      {p.name}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -467,7 +471,10 @@ const App: React.FC = () => {
           <div className="hud-row-players">
             {players.map((p, i) => (
               <div key={p.id} className={`hud-player-unit ${i === currentPlayerIndex ? 'active' : ''}`}>
-                <div className="hud-player-name">{p.name}</div>
+                <div className="hud-player-name">
+                  <span style={{ fontSize: '10px', opacity: 0.8, marginRight: '4px' }}>#{p.number || (i + 1)}</span>
+                  {p.name}
+                </div>
                 <div className="hud-player-score">{p.score}</div>
               </div>
             ))}

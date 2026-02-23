@@ -16,7 +16,8 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
     } = useGameStore();
 
     const isMyTurn = players[currentPlayerIndex]?.id === myId;
-    const activePlayerName = players[currentPlayerIndex]?.name || '...';
+    const activePlayer = players[currentPlayerIndex];
+    const activePlayerName = activePlayer ? `${activePlayer.name} (#${activePlayer.number || currentPlayerIndex + 1})` : '...';
 
     const handleLetterClick = (item: any) => {
         if (!isMyTurn || item.ownerId !== null) return;
@@ -95,11 +96,11 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '12px', fontSize: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#3b82f6' }} />
-                        <span>{players[0]?.name || 'لاعب 1'}</span>
+                        <span>{players[0]?.name ? `${players[0].name} (#${players[0].number || 1})` : 'لاعب 1'}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#ef4444' }} />
-                        <span>{players[1]?.name || 'لاعب 2'}</span>
+                        <span>{players[1]?.name ? `${players[1].name} (#${players[1].number || 2})` : 'لاعب 2'}</span>
                     </div>
                 </div>
             </div>
