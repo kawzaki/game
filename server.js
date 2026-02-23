@@ -261,12 +261,31 @@ io.on('connection', (socket) => {
                 const pool = matchingQuestions.length > 0 ? matchingQuestions : questionPool;
                 const question = pool[Math.floor(Math.random() * pool.length)];
 
-                const shuffledOptions = [...question.options].sort(() => 0.5 - Math.random());
+                // Ensure all options start with the same letter for Huroof mode
+                let huroofOptions = [];
+                const correctAnswer = question.answer;
+
+                // Get other answers from the pool that start with the same letter
+                const sameLetterAnswers = [...new Set(questionPool
+                    .filter(q => q.answer && q.answer.trim().startsWith(category) && q.answer.trim() !== correctAnswer.trim())
+                    .map(q => q.answer.trim())
+                )];
+
+                if (sameLetterAnswers.length >= 3) {
+                    // Pick 3 random wrong answers starting with the same letter
+                    const shuffledWrong = sameLetterAnswers.sort(() => 0.5 - Math.random());
+                    huroofOptions = [correctAnswer, ...shuffledWrong.slice(0, 3)];
+                } else {
+                    // Fallback: Use original options but try to filter them or keep as is
+                    huroofOptions = [...question.options];
+                }
+
+                const shuffledOptions = huroofOptions.sort(() => 0.5 - Math.random());
                 const safeQuestion = { ...question, options: shuffledOptions, value: 100 }; // Huroof constant value
                 delete safeQuestion.answer;
 
                 room.activeQuestion = safeQuestion;
-                room.correctAnswer = question.answer;
+                room.correctAnswer = correctAnswer;
                 room.selectedCategory = category; // Store the letter here
                 room.gameStatus = 'question';
                 room.timer = 15;
