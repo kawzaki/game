@@ -29,6 +29,7 @@ interface GameState {
     timer: number;
     winner: { name: string; score: number; isForfeit?: boolean } | null;
     playerName: string | null;
+    questionsPerCategory: number;
 
     // Actions
     setRoomId: (id: string) => void;
@@ -64,6 +65,7 @@ export const useGameStore = create<GameState>((set) => {
             currentPlayerIndex: data.currentPlayerIndex,
             timer: data.timer,
             winner: data.winner,
+            questionsPerCategory: data.questionsPerCategory,
             myId: socket.id || null,
             isConnected: true
         });
@@ -98,6 +100,7 @@ export const useGameStore = create<GameState>((set) => {
         timer: 30,
         winner: null,
         playerName: null,
+        questionsPerCategory: 10,
 
         setRoomId: (id) => set({ roomId: id }),
 

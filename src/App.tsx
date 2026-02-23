@@ -55,10 +55,18 @@ const App: React.FC = () => {
   const [qCount, setQCount] = React.useState(10);
   const [localSelecting, setLocalSelecting] = React.useState<string | number | null>(null);
 
-  // Reset local selection when game state changes
+  // Sync local selection when game state changes
   useEffect(() => {
     setLocalSelecting(null);
   }, [gameStatus, selectedCategory, activeQuestion]);
+
+  // Sync qCount with server data (important for guests)
+  const questionsPerCategory = useGameStore(state => (state as any).questionsPerCategory);
+  useEffect(() => {
+    if (questionsPerCategory && players[0]?.id !== myId) {
+      setQCount(questionsPerCategory);
+    }
+  }, [questionsPerCategory, players, myId]);
 
   const forfeit = () => {
     if (confirm('هل أنت متأكد من إنهاء اللعبة مبكراً؟')) {
@@ -265,11 +273,20 @@ const App: React.FC = () => {
               <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '4px', margin: '12px 0' }}>{roomId}</div>
 
               <div style={{ marginBottom: '16px', background: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
-                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold' }}>عدد الأسئلة لكل فئة</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                  {players[0]?.id === myId && <Trophy size={14} color="var(--accent-gold)" />}
+                  <span>عدد الأسئلة لكل فئة</span>
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                  <button onClick={() => setQCount(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
-                  <span style={{ fontSize: '18px', fontWeight: 'bold', width: '30px' }}>{qCount}</span>
-                  <button onClick={() => setQCount(Math.min(50, qCount + 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                  {players[0]?.id === myId ? (
+                    <>
+                      <button onClick={() => setQCount(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
+                      <span style={{ fontSize: '18px', fontWeight: 'bold', width: '30px' }}>{qCount}</span>
+                      <button onClick={() => setQCount(Math.min(50, qCount + 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
+                    </>
+                  ) : (
+                    <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{qCount}</span>
+                  )}
                 </div>
               </div>
 
