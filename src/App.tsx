@@ -454,7 +454,7 @@ const App: React.FC = () => {
                     {buzzedPlayerId === myId ? (
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                         {activeQuestion.options.map((opt, idx) => (
-                          <button key={idx} onClick={() => roomId && submitAnswer(roomId, opt)} style={{ padding: '16px', borderRadius: '12px', border: '2px solid #ddd' }}>{opt}</button>
+                          <button key={idx} onClick={() => roomId && submitAnswer(roomId, opt)} style={{ padding: '16px', borderRadius: '12px', border: '2px solid #ddd', fontWeight: 'bold' }}>{opt}</button>
                         ))}
                       </div>
                     ) : (
