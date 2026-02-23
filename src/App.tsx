@@ -444,7 +444,8 @@ const App: React.FC = () => {
             <h3 style={{ textAlign: 'center', marginBottom: '24px', color: 'var(--royal-blue)', fontWeight: '900', fontSize: '24px' }}>{selectedCategory}</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '12px' }}>
               {[100, 200, 300, 400, 500].map((val) => {
-                const isAnswered = categories[selectedCategory || '']?.find(q => q.value === val)?.isAnswered;
+                const catQuestions = categories[selectedCategory || ''] || [];
+                const isAnswered = !catQuestions.some(q => q.value === val && !q.isAnswered);
                 return (
                   <motion.button
                     whileTap={(!isAnswered && isMyTurn) ? { scale: 0.95 } : {}}
@@ -563,8 +564,6 @@ const App: React.FC = () => {
                           key={idx}
                           onClick={() => roomId && submitAnswer(roomId, option)}
                           style={{ padding: '16px', background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }}
-                          onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--accent-gold)'; e.currentTarget.style.background = '#fffbeb'; }}
-                          onMouseOut={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#f8fafc'; }}
                         >
                           {option}
                         </motion.button>

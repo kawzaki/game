@@ -91,8 +91,28 @@ io.on('connection', (socket) => {
 
             categories.forEach(cat => {
                 const catQuestions = questionsData.filter(q => q.category === cat);
-                const shuffled = catQuestions.sort(() => 0.5 - Math.random());
-                selectedQuestions.push(...shuffled.slice(0, questionsPerCategory));
+
+                // Group by value to ensure we get a balanced distribution
+                const constByValue = {};
+                [100, 200, 300, 400, 500].forEach(v => {
+                    constByValue[v] = catQuestions.filter(q => q.value === v).sort(() => 0.5 - Math.random());
+                });
+
+                // Pick questions evenly across values
+                let added = 0;
+                let valueIndex = 0;
+                const values = [100, 200, 300, 400, 500];
+
+                while (added < questionsPerCategory) {
+                    const v = values[valueIndex % values.length];
+                    if (constByValue[v].length > 0) {
+                        selectedQuestions.push(constByValue[v].shift());
+                        added++;
+                    }
+                    valueIndex++;
+                    // Safety break if we run out of questions in this category
+                    if (valueIndex > 100) break;
+                }
             });
 
             rooms.set(roomId, {
@@ -209,20 +229,13 @@ io.on('connection', (socket) => {
                         message: `حظ: ${randomReward.msg}`,
                         reward: randomReward
                     };
-                    room.selectedCategory = null;
-                    room.activeQuestion = null;
-                    room.gameStatus = 'selecting_category';
-                    room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
-
-                    // Check if all questions are answered
-                    const allAnswered = room.questions.every(q => q.isAnswered);
-                    if (allAnswered) {
-                        endGame(room, io, roomId);
-                    } else {
-                        io.to(roomId).emit('room_data', room);
-                    }
+                    room.activeQuestion = question; // Keep it as active to show the modal
+                    room.gameStatus = 'question'; // Show as a question modal
+                    io.to(roomId).emit('room_data', room);
                 } else {
-                    room.activeQuestion = question;
+                    // Shuffle options before sending
+                    const shuffledOptions = [...question.options].sort(() => 0.5 - Math.random());
+                    room.activeQuestion = { ...question, options: shuffledOptions };
                     room.gameStatus = 'question';
                     room.timer = 15;
                     room.attempts = [];
@@ -290,12 +303,16 @@ io.on('connection', (socket) => {
 
     socket.on('close_feedback', (roomId) => {
         const room = rooms.get(roomId);
-        if (room && room.feedback) {
+        if (room) {
+            const wasLuck = room.feedback && room.feedback.type === 'luck';
             room.feedback = null;
             room.activeQuestion = null;
             room.selectedCategory = null;
             room.buzzedPlayerId = null;
             room.gameStatus = 'selecting_category';
+
+            // Turn always moves after any feedback is closed
+            // (Unless we want correct answer to let you pick again? The current logic says move turns)
             room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
 
             // Check if all questions are answered
