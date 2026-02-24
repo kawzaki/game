@@ -734,6 +734,67 @@ body {
   margin-inline-end: 8px;
 }
 
+/* Huroof Hexagon Grid */
+.huroof-honeycomb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.honeycomb-row {
+  display: flex;
+  justify-content: center;
+  margin-top: -12px;
+}
+
+.honeycomb-row:first-child {
+  margin-top: 0;
+}
+
+.honeycomb-row:nth-child(even) {
+  transform: translateX(34px);
+}
+
+.huroof-hexagon {
+  width: 66px;
+  height: 76px;
+  background: #fff;
+  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 1px;
+  position: relative;
+  border: none;
+  outline: none;
+}
+
+.huroof-hexagon.occupied {
+  color: #fff;
+  cursor: default;
+}
+
+.huroof-hexagon.blue {
+  background: #3b82f6;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+.huroof-hexagon.red {
+  background: #ef4444;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+.huroof-hexagon:not(.occupied):hover {
+  transform: scale(1.1);
+  z-index: 10;
+  background: #f1f5f9;
+}
+
 [dir="rtl"] .flip-rtl {
   transform: scaleX(-1);
 }

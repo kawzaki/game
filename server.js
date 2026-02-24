@@ -90,13 +90,30 @@ function checkHuroofWinner(grid, team) {
         const row = Math.floor(current / size);
         const col = current % size;
 
-        // Neighbors (Top, Bottom, Left, Right)
-        const neighbors = [
-            { r: row - 1, c: col },
-            { r: row + 1, c: col },
-            { r: row, c: col - 1 },
-            { r: row, c: col + 1 }
-        ];
+        // Hexagonal Neighbors (Staggered Row / Pointy Top logic)
+        // Odd rows shifted right
+        let neighbors = [];
+        const isOddRow = row % 2 === 1;
+
+        if (isOddRow) {
+            neighbors = [
+                { r: row, c: col - 1 }, // Left
+                { r: row, c: col + 1 }, // Right
+                { r: row - 1, c: col }, // Top-Left
+                { r: row - 1, c: col + 1 }, // Top-Right
+                { r: row + 1, c: col }, // Bottom-Left
+                { r: row + 1, c: col + 1 } // Bottom-Right
+            ];
+        } else {
+            neighbors = [
+                { r: row, c: col - 1 }, // Left
+                { r: row, c: col + 1 }, // Right
+                { r: row - 1, c: col - 1 }, // Top-Left
+                { r: row - 1, c: col }, // Top-Right
+                { r: row + 1, c: col - 1 }, // Bottom-Left
+                { r: row + 1, c: col } // Bottom-Right
+            ];
+        }
 
         for (const neighbor of neighbors) {
             if (neighbor.r >= 0 && neighbor.r < size && neighbor.c >= 0 && neighbor.c < size) {

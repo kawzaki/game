@@ -39,55 +39,39 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
                 </div>
             </div>
 
-            <div style={{
-                position: 'relative',
+            <div className="huroof-honeycomb" style={{
                 maxWidth: '520px',
                 margin: '0 auto',
-                padding: '12px',
-                borderRadius: '24px',
+                padding: '24px 12px',
                 background: '#f8fafc',
+                borderRadius: '24px',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
                 borderTop: '6px solid #3b82f6',
                 borderBottom: '6px solid #3b82f6',
                 borderLeft: '6px solid #ef4444',
                 borderRight: '6px solid #ef4444',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                position: 'relative',
+                overflow: 'visible'
             }}>
-                <div className="huroof-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(5, 1fr)',
-                    gap: '10px'
-                }}>
-                    {huroofGrid.map((item: any) => {
-                        const tileColor = item.ownerTeam === 'blue' ? '#3b82f6' : item.ownerTeam === 'red' ? '#ef4444' : '#fff';
+                {[0, 1, 2, 3, 4].map(rowIndex => (
+                    <div key={rowIndex} className="honeycomb-row">
+                        {huroofGrid.slice(rowIndex * 5, (rowIndex * 5) + 5).map((item: any) => {
+                            const tileClass = `huroof-hexagon ${item.ownerTeam ? `occupied ${item.ownerTeam}` : ''}`;
 
-                        return (
-                            <motion.button
-                                whileHover={!item.ownerId && isMyTurn ? { scale: 1.05 } : {}}
-                                whileTap={!item.ownerId && isMyTurn ? { scale: 0.95 } : {}}
-                                key={item.id}
-                                onClick={() => handleLetterClick(item)}
-                                style={{
-                                    aspectRatio: '1/1',
-                                    borderRadius: '12px',
-                                    background: tileColor,
-                                    border: '2px solid #e2e8f0',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '24px',
-                                    fontWeight: '900',
-                                    color: item.ownerTeam ? '#fff' : '#1e293b',
-                                    cursor: isMyTurn && !item.ownerId ? 'pointer' : 'default',
-                                    boxShadow: item.ownerTeam ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                    transition: 'all 0.3s ease',
-                                    opacity: !item.ownerId && !isMyTurn ? 0.7 : 1
-                                }}
-                            >
-                                {item.letter}
-                            </motion.button>
-                        );
-                    })}
-                </div>
+                            return (
+                                <motion.button
+                                    whileHover={!item.ownerId && isMyTurn ? { scale: 1.1 } : {}}
+                                    whileTap={!item.ownerId && isMyTurn ? { scale: 0.95 } : {}}
+                                    key={item.id}
+                                    onClick={() => handleLetterClick(item)}
+                                    className={tileClass}
+                                >
+                                    {item.letter}
+                                </motion.button>
+                            );
+                        })}
+                    </div>
+                ))}
             </div>
 
             <div style={{ marginTop: '32px', textAlign: 'center', color: '#64748b' }}>
