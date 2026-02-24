@@ -362,7 +362,7 @@ io.on('connection', (socket) => {
             players.forEach(p => {
                 const sub = submissions[p.name];
                 const rawAnswer = sub ? sub[catKey] : "";
-                const normalized = normalized = normalizeArabic(rawAnswer);
+                const normalized = normalizeArabic(rawAnswer);
                 let score = 0;
 
                 if (normalized && rawAnswer.trim().startsWith(letter)) {
@@ -406,7 +406,14 @@ io.on('connection', (socket) => {
             const player = room.players.find(p => p.id === socket.id);
             if (player) {
                 room.roundSubmissions[room.currentRound][player.name] = inputs;
+
+                // Fast Finish: If everyone has submitted, set timer to 0
+                const submissionCount = Object.keys(room.roundSubmissions[room.currentRound]).length;
+                if (submissionCount >= room.players.length) {
+                    room.timer = 0;
+                }
             }
+            io.to(roomId).emit('room_data', room);
         }
     });
 
