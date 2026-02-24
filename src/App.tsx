@@ -19,6 +19,15 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const BIN_O_WALAD_CATEGORIES = [
+  { key: 'girl', label: 'بنت' },
+  { key: 'boy', label: 'ولد' },
+  { key: 'thing', label: 'جماد' },
+  { key: 'food', label: 'أكل' },
+  { key: 'animal', label: 'حيوان' },
+  { key: 'location', label: 'بلاد' }
+];
+
 const App: React.FC = () => {
   const { i18n } = useTranslation();
   const {
@@ -46,7 +55,8 @@ const App: React.FC = () => {
     feedback,
     winner,
     resetRoom,
-    isConnected
+    isConnected,
+    roundResults
   } = useGameStore();
 
   const isMyTurn = players[currentPlayerIndex]?.id === myId;
@@ -490,12 +500,51 @@ const App: React.FC = () => {
         )}
 
         {gameStatus === 'game_over' && winner && (
-          <div className="game-over-container">
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="winner-card">
+          <div className="game-over-container" style={{ maxHeight: '100vh', overflowY: 'auto', padding: '20px' }}>
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="winner-card" style={{ maxWidth: '600px', width: '100%' }}>
               <Trophy size={80} color="var(--accent-gold)" />
               <div className="winner-name">{winner.name}</div>
               <div className="winner-score">{winner.score.toLocaleString()}</div>
-              <button className="btn-gold" style={{ marginTop: '20px' }} onClick={() => {
+
+              {gameType === 'bin_o_walad' && roundResults && roundResults.length > 0 && (
+                <div style={{ marginTop: '30px', width: '100%', textAlign: 'right' }}>
+                  <h3 style={{ marginBottom: '16px', borderBottom: '2px solid #eee', paddingBottom: '8px' }}>ملخص المباراة</h3>
+                  <div style={{ overflowX: 'auto', background: '#f8fafc', borderRadius: '12px', padding: '8px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid #cbd5e1' }}>
+                          <th style={{ padding: '8px' }}>الجولة / اللاعب</th>
+                          {BIN_O_WALAD_CATEGORIES.map(c => <th key={c.key} style={{ padding: '4px' }}>{c.label}</th>)}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {roundResults.map((res, ridx) => (
+                          <React.Fragment key={ridx}>
+                            <tr style={{ background: '#e2e8f0', fontWeight: 'bold' }}>
+                              <td colSpan={BIN_O_WALAD_CATEGORIES.length + 1} style={{ padding: '4px 8px' }}>
+                                الجولة {res.round} (حرف {res.letter})
+                              </td>
+                            </tr>
+                            {players.map(p => {
+                              const pSub = (res.submissions || {})[p.name] || {};
+                              return (
+                                <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                  <td style={{ padding: '6px 8px', fontWeight: 'bold' }}>{p.name}</td>
+                                  {BIN_O_WALAD_CATEGORIES.map(c => (
+                                    <td key={c.key} style={{ padding: '4px' }}>{pSub[c.key] || '-'}</td>
+                                  ))}
+                                </tr>
+                              );
+                            })}
+                          </React.Fragment>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              <button className="btn-gold" style={{ marginTop: '30px' }} onClick={() => {
                 resetRoom();
                 window.history.replaceState({}, '', window.location.pathname);
               }}>العودة للرئيسية</button>
