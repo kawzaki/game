@@ -39,39 +39,48 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
                 </div>
             </div>
 
-            <div className="huroof-honeycomb" style={{
-                maxWidth: '520px',
-                margin: '0 auto',
-                padding: '24px 12px',
-                background: '#f8fafc',
-                borderRadius: '24px',
-                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                borderTop: '6px solid #3b82f6',
-                borderBottom: '6px solid #3b82f6',
-                borderLeft: '6px solid #ef4444',
-                borderRight: '6px solid #ef4444',
-                position: 'relative',
-                overflow: 'visible'
-            }}>
-                {[0, 1, 2, 3, 4].map(rowIndex => (
-                    <div key={rowIndex} className="honeycomb-row">
-                        {huroofGrid.slice(rowIndex * 5, (rowIndex * 5) + 5).map((item: any) => {
-                            const tileClass = `huroof-hexagon ${item.ownerTeam ? `occupied ${item.ownerTeam}` : ''}`;
+            <div className="huroof-board-view">
+                {/* Left Red Boundary */}
+                <div className="huroof-side-boundary">
+                    {[1, 2, 3, 4, 5].map(i => <div key={`l-${i}`} className="boundary-block red" />)}
+                </div>
 
-                            return (
-                                <motion.button
-                                    whileHover={!item.ownerId && isMyTurn ? { scale: 1.1 } : {}}
-                                    whileTap={!item.ownerId && isMyTurn ? { scale: 0.95 } : {}}
-                                    key={item.id}
-                                    onClick={() => handleLetterClick(item)}
-                                    className={tileClass}
-                                >
-                                    {item.letter}
-                                </motion.button>
-                            );
-                        })}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    {/* Top Blue Boundary */}
+                    <div className="huroof-top-bottom-boundary">
+                        {[1, 2, 3, 4, 5].map(i => <div key={`t-${i}`} className="boundary-block blue" />)}
                     </div>
-                ))}
+
+                    <div className="huroof-honeycomb">
+                        {[0, 1, 2, 3, 4].map(rowIndex => (
+                            <div key={rowIndex} className="honeycomb-row">
+                                {huroofGrid.slice(rowIndex * 5, (rowIndex * 5) + 5).map((item: any) => {
+                                    const tileClass = `huroof-hexagon ${item.ownerTeam ? `occupied ${item.ownerTeam}` : ''}`;
+
+                                    return (
+                                        <motion.button
+                                            whileTap={!item.ownerId && isMyTurn ? { scale: 0.95 } : {}}
+                                            key={item.id}
+                                            onClick={() => handleLetterClick(item)}
+                                            className={tileClass}
+                                            data-letter={item.letter}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Bottom Blue Boundary */}
+                    <div className="huroof-top-bottom-boundary">
+                        {[1, 2, 3, 4, 5].map(i => <div key={`b-${i}`} className="boundary-block blue" />)}
+                    </div>
+                </div>
+
+                {/* Right Red Boundary */}
+                <div className="huroof-side-boundary">
+                    {[1, 2, 3, 4, 5].map(i => <div key={`r-${i}`} className="boundary-block red" />)}
+                </div>
             </div>
 
             <div style={{ marginTop: '32px', textAlign: 'center', color: '#64748b' }}>
