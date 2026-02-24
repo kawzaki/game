@@ -15,7 +15,7 @@ interface Question {
 
 interface GameState {
     roomId: string | null;
-    players: any[];
+    players: any[]; // Individual player objects now include 'team'
     currentPlayerIndex: number;
     questions: Question[];
     huroofGrid: any[] | null;
@@ -28,7 +28,7 @@ interface GameState {
     feedback: { type: 'correct' | 'wrong' | 'all_wrong' | 'luck'; message: string; answer?: string; reward?: any } | null;
     gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'selecting_letter' | 'question' | 'game_over' | 'countdown' | 'round_active' | 'round_scoring';
     timer: number;
-    winner: { name: string; score: number; isForfeit?: boolean } | null;
+    winner: { name: string; score: number; isForfeit?: boolean; winningTeam?: 'red' | 'blue' } | null;
     playerName: string | null;
     questionsPerCategory: number;
     gameType: 'jeopardy' | 'huroof' | 'bin_o_walad';

@@ -58,8 +58,7 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
                     gap: '10px'
                 }}>
                     {huroofGrid.map((item: any) => {
-                        const owner = players.find(p => p.id === item.ownerId);
-                        const isFirstPlayer = players[0] && owner && owner.id === players[0].id;
+                        const tileColor = item.ownerTeam === 'blue' ? '#3b82f6' : item.ownerTeam === 'red' ? '#ef4444' : '#fff';
 
                         return (
                             <motion.button
@@ -70,16 +69,16 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
                                 style={{
                                     aspectRatio: '1/1',
                                     borderRadius: '12px',
-                                    background: item.ownerId ? (isFirstPlayer ? '#3b82f6' : '#ef4444') : '#fff',
+                                    background: tileColor,
                                     border: '2px solid #e2e8f0',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     fontSize: '24px',
                                     fontWeight: '900',
-                                    color: item.ownerId ? '#fff' : '#1e293b',
+                                    color: item.ownerTeam ? '#fff' : '#1e293b',
                                     cursor: isMyTurn && !item.ownerId ? 'pointer' : 'default',
-                                    boxShadow: item.ownerId ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                    boxShadow: item.ownerTeam ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                                     transition: 'all 0.3s ease',
                                     opacity: !item.ownerId && !isMyTurn ? 0.7 : 1
                                 }}
@@ -92,15 +91,15 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
             </div>
 
             <div style={{ marginTop: '32px', textAlign: 'center', color: '#64748b' }}>
-                <p style={{ fontSize: '14px' }}>الهدف: كوّن طريقاً متصلاً من جانب إلى الجانب الآخر لتفوز!</p>
+                <p style={{ fontSize: '14px' }}>الأحمر 🔴: هدفك طريق أفقي | الأزرق 🔵: هدفك طريق رأسي</p>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '12px', fontSize: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#3b82f6' }} />
-                        <span>{players[0]?.name ? `${players[0].name} (#${players[0].number || 1})` : 'لاعب 1'}</span>
+                        <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#ef4444' }} />
+                        <span>الفريق الأحمر</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#ef4444' }} />
-                        <span>{players[1]?.name ? `${players[1].name} (#${players[1].number || 2})` : 'لاعب 2'}</span>
+                        <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#3b82f6' }} />
+                        <span>الفريق الأزرق</span>
                     </div>
                 </div>
             </div>

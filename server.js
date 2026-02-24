@@ -58,28 +58,23 @@ const io = new Server(httpServer, {
 // In-memory room storage
 const rooms = new Map();
 
-function checkHuroofWinner(grid, playerId, players) {
+function checkHuroofWinner(grid, team) {
     const size = 5;
-    const isFirstPlayer = players[0] && players[0].id === playerId;
-
-    // Player 1 (Blue): Top to Bottom
-    // Player 2 (Red): Right to Left
-
     const startNodes = [];
     const targetNodes = new Set();
 
-    if (isFirstPlayer) {
-        // Top row (indices 0-4)
+    if (team === 'blue') {
+        // Blue (Vertical): Top row to Bottom row
         for (let i = 0; i < size; i++) {
-            if (grid[i].ownerId === playerId) startNodes.push(i);
-            targetNodes.add(size * (size - 1) + i); // Bottom row (20-24)
+            if (grid[i].ownerTeam === 'blue') startNodes.push(i);
+            targetNodes.add(size * (size - 1) + i);
         }
     } else {
-        // Left side (indices 0, 5, 10, 15, 20)
+        // Red (Horizontal): Left side to Right side
         for (let i = 0; i < size; i++) {
             const idx = i * size;
-            if (grid[idx].ownerId === playerId) startNodes.push(idx);
-            targetNodes.add(i * size + (size - 1)); // Right side (4, 9, 14, 19, 24)
+            if (grid[idx].ownerTeam === 'red') startNodes.push(idx);
+            targetNodes.add(i * size + (size - 1));
         }
     }
 
@@ -106,7 +101,7 @@ function checkHuroofWinner(grid, playerId, players) {
         for (const neighbor of neighbors) {
             if (neighbor.r >= 0 && neighbor.r < size && neighbor.c >= 0 && neighbor.c < size) {
                 const nIdx = neighbor.r * size + neighbor.c;
-                if (!visited.has(nIdx) && grid[nIdx].ownerId === playerId) {
+                if (!visited.has(nIdx) && grid[nIdx].ownerTeam === team) {
                     visited.add(nIdx);
                     queue.push(nIdx);
                 }
@@ -143,12 +138,26 @@ const CATEGORIES_BIN_O_WALAD = [
     { key: 'location', label: 'بلاد' }
 ];
 
-function endGame(room, io, roomId, forfeitingPlayerId = null) {
+function endGame(room, io, roomId, forfeitingPlayerId = null, winningTeam = null) {
     const players = room.players;
     if (players.length === 0) return;
 
     let winner;
     let isForfeit = false;
+
+    if (winningTeam) {
+        room.gameStatus = 'game_over';
+        room.winner = {
+            name: winningTeam === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق',
+            score: 0,
+            isForfeit: false,
+            winningTeam: winningTeam
+        };
+        room.activeQuestion = null;
+        room.feedback = null;
+        io.to(roomId).emit('room_data', room);
+        return;
+    }
 
     if (forfeitingPlayerId) {
         const others = players.filter(p => p.id !== forfeitingPlayerId);
@@ -243,7 +252,8 @@ io.on('connection', (socket) => {
             existingPlayer.id = socket.id;
         } else {
             const playerNumber = room.players.length + 1;
-            room.players.push({ id: socket.id, name: playerName, score: 0, number: playerNumber });
+            const team = playerNumber % 2 === 1 ? 'red' : 'blue';
+            room.players.push({ id: socket.id, name: playerName, score: 0, number: playerNumber, team });
         }
 
         io.to(roomId).emit('room_data', room);
@@ -623,14 +633,14 @@ io.on('connection', (socket) => {
                         q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
                     );
                 } else if (room.gameType === 'huroof') {
-                    // Claim the letter in the grid
+                    // Claim the letter in the grid for the team
                     room.huroofGrid = room.huroofGrid.map(g =>
-                        g.letter === room.selectedCategory && g.ownerId === null ? { ...g, ownerId: socket.id } : g
+                        g.letter === room.selectedCategory && g.ownerId === null ? { ...g, ownerId: socket.id, ownerTeam: player.team } : g
                     );
 
-                    // Check for win
-                    if (checkHuroofWinner(room.huroofGrid, socket.id, room.players)) {
-                        endGame(room, io, roomId);
+                    // Check for team win
+                    if (checkHuroofWinner(room.huroofGrid, player.team)) {
+                        endGame(room, io, roomId, null, player.team);
                         return; // Game over, stop further processing
                     }
                 }
@@ -673,10 +683,10 @@ io.on('connection', (socket) => {
                     );
                 } else if (room.gameType === 'huroof') {
                     room.huroofGrid = room.huroofGrid.map(g =>
-                        g.letter === room.selectedCategory && g.ownerId === null ? { ...g, ownerId: socket.id } : g
+                        g.letter === room.selectedCategory && g.ownerId === null ? { ...g, ownerId: socket.id, ownerTeam: player.team } : g
                     );
-                    if (checkHuroofWinner(room.huroofGrid, socket.id, room.players)) {
-                        endGame(room, io, roomId);
+                    if (checkHuroofWinner(room.huroofGrid, player.team)) {
+                        endGame(room, io, roomId, null, player.team);
                         return;
                     }
                 }

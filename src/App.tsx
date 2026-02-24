@@ -545,9 +545,9 @@ const App: React.FC = () => {
                 <span>الرئيسية</span>
               </button>
 
-              <Trophy size={80} color="var(--accent-gold)" />
-              <div className="winner-name">{winner.name}</div>
-              <div className="winner-score">{winner.score.toLocaleString()}</div>
+              <Trophy size={80} color={winner.winningTeam === 'blue' ? '#3b82f6' : winner.winningTeam === 'red' ? '#ef4444' : 'var(--accent-gold)'} />
+              <div className="winner-name" style={winner.winningTeam ? { color: winner.winningTeam === 'blue' ? '#3b82f6' : '#ef4444' } : {}}>{winner.name}</div>
+              {winner.score > 0 && <div className="winner-score">{winner.score.toLocaleString()}</div>}
 
               {gameType === 'bin_o_walad' && roundResults && roundResults.length > 0 && (
                 <div style={{ marginTop: '30px', width: '100%', textAlign: 'right' }}>
@@ -600,10 +600,19 @@ const App: React.FC = () => {
         <div className="bottom-hud">
           <div className="hud-row-players">
             {players.map((p, i) => (
-              <div key={p.id} className={`hud-player-unit ${i === currentPlayerIndex ? 'active' : ''}`}>
+              <div
+                key={p.id}
+                className={`hud-player-unit ${i === currentPlayerIndex ? 'active' : ''}`}
+                style={gameType === 'huroof' ? { borderBottom: `4px solid ${p.team === 'blue' ? '#3b82f6' : '#ef4444'}` } : {}}
+              >
                 <div className="hud-player-name">
                   <span style={{ fontSize: '10px', opacity: 0.8, marginRight: '4px' }}>#{p.number || (i + 1)}</span>
                   {p.name}
+                  {gameType === 'huroof' && (
+                    <span style={{ fontSize: '10px', marginLeft: '4px', color: p.team === 'blue' ? '#3b82f6' : '#ef4444', fontWeight: 'bold' }}>
+                      ({p.team === 'blue' ? 'أزرق' : 'أحمر'})
+                    </span>
+                  )}
                 </div>
                 <div className="hud-player-score">{p.score}</div>
               </div>
