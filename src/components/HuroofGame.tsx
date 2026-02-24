@@ -40,46 +40,44 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
             </div>
 
             <div className="huroof-board-view">
-                {/* Left Red Boundary */}
-                <div className="huroof-side-boundary">
-                    {[1, 2, 3, 4, 5].map(i => <div key={`l-${i}`} className="boundary-block red" />)}
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    {/* Top Blue Boundary */}
-                    <div className="huroof-top-bottom-boundary">
-                        {[1, 2, 3, 4, 5].map(i => <div key={`t-${i}`} className="boundary-block blue" />)}
-                    </div>
-
-                    <div className="huroof-honeycomb">
-                        {[0, 1, 2, 3, 4].map(rowIndex => (
-                            <div key={rowIndex} className="honeycomb-row">
-                                {huroofGrid.slice(rowIndex * 5, (rowIndex * 5) + 5).map((item: any) => {
-                                    const tileClass = `huroof-hexagon ${item.ownerTeam ? `occupied ${item.ownerTeam}` : ''}`;
-
-                                    return (
-                                        <motion.button
-                                            whileTap={!item.ownerId && isMyTurn ? { scale: 0.95 } : {}}
-                                            key={item.id}
-                                            onClick={() => handleLetterClick(item)}
-                                            className={tileClass}
-                                            data-letter={item.letter}
-                                        />
-                                    );
-                                })}
-                            </div>
+                <div className="huroof-honeycomb">
+                    {/* Row 0: Top Blue Boundary */}
+                    <div className="honeycomb-row">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={`top-${i}`} className="huroof-hexagon boundary blue" />
                         ))}
                     </div>
 
-                    {/* Bottom Blue Boundary */}
-                    <div className="huroof-top-bottom-boundary">
-                        {[1, 2, 3, 4, 5].map(i => <div key={`b-${i}`} className="boundary-block blue" />)}
-                    </div>
-                </div>
+                    {[0, 1, 2, 3, 4].map(rowIndex => (
+                        <div key={`row-${rowIndex}`} className={`honeycomb-row ${rowIndex % 2 === 1 ? 'staggered' : ''}`}>
+                            {/* Left Red Boundary */}
+                            <div className="huroof-hexagon boundary red" />
 
-                {/* Right Red Boundary */}
-                <div className="huroof-side-boundary">
-                    {[1, 2, 3, 4, 5].map(i => <div key={`r-${i}`} className="boundary-block red" />)}
+                            {/* Game Letters */}
+                            {huroofGrid.slice(rowIndex * 5, (rowIndex * 5) + 5).map((item: any) => {
+                                const tileClass = `huroof-hexagon interactive ${item.ownerTeam ? `occupied ${item.ownerTeam}` : ''}`;
+                                return (
+                                    <motion.button
+                                        whileTap={!item.ownerId && isMyTurn ? { scale: 0.95 } : {}}
+                                        key={item.id}
+                                        onClick={() => handleLetterClick(item)}
+                                        className={tileClass}
+                                        data-letter={item.letter}
+                                    />
+                                );
+                            })}
+
+                            {/* Right Red Boundary */}
+                            <div className="huroof-hexagon boundary red" />
+                        </div>
+                    ))}
+
+                    {/* Row 6: Bottom Blue Boundary */}
+                    <div className="honeycomb-row">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={`bottom-${i}`} className="huroof-hexagon boundary blue" />
+                        ))}
+                    </div>
                 </div>
             </div>
 
