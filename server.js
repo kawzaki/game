@@ -226,11 +226,11 @@ io.on('connection', (socket) => {
                 correctAnswer: null,
                 buzzedPlayerId: null,
                 // Bent o Walad specific
-                roundCount: requestedGameType === 'bin_o_walad' ? 10 : 0,
+                roundCount: requestedGameType === 'bin_o_walad' ? questionsPerCategory : 0,
                 currentRound: 0,
                 usedLetters: [],
                 currentLetter: null,
-                roundSubmissions: {}, // roomId -> { roundIndex -> { playerId -> { girl, boy, thing, food, animal, location } } }
+                roundSubmissions: {}, // roomId -> { roundIndex -> { playerName -> { girl, boy, thing, food, animal, location } } }
                 roundResults: []
             });
         }
@@ -247,6 +247,22 @@ io.on('connection', (socket) => {
 
         io.to(roomId).emit('room_data', room);
         console.log(`[Join] Player ${playerName} joined room ${roomId} (Game: ${gameType})`);
+    });
+
+    socket.on('update_settings', ({ roomId, questionsPerCategory }) => {
+        const room = rooms.get(roomId);
+        if (room && room.players[0]?.id === socket.id) {
+            room.questionsPerCategory = questionsPerCategory;
+            if (room.gameType === 'bin_o_walad') {
+                room.roundCount = questionsPerCategory;
+            } else if (room.gameType === 'jeopardy') {
+                // For Jeopardy, we might need to re-select questions, 
+                // but usually this is set at creation. 
+                // However, let's just update the value for UI sync for now.
+                room.questionsPerCategory = questionsPerCategory;
+            }
+            io.to(roomId).emit('room_data', room);
+        }
     });
 
     socket.on('rejoin_room', ({ roomId, playerName }) => {

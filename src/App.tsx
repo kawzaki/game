@@ -56,6 +56,12 @@ const App: React.FC = () => {
   const [playerName, setPlayerName] = React.useState('');
   const [joinCode, setJoinCode] = React.useState('');
   const [qCount, setQCount] = React.useState(10);
+  const handleQCountChange = (newCount: number) => {
+    setQCount(newCount);
+    if (players[0]?.id === myId && roomId) {
+      socket.emit('update_settings', { roomId, questionsPerCategory: newCount });
+    }
+  };
   const [localSelecting, setLocalSelecting] = React.useState<string | number | null>(null);
 
   // Sync local selection when game state changes
@@ -238,18 +244,20 @@ const App: React.FC = () => {
               <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '4px', margin: '12px 0' }}>{roomId}</div>
 
               <div style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'تحدي الاسئلة' : 'لعبة الحروف'}</strong>
+                نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'تحدي الاسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : 'تحدي بنت وولد'}</strong>
               </div>
 
-              {gameType === 'jeopardy' && (
+              {(gameType === 'jeopardy' || gameType === 'bin_o_walad') && (
                 <div style={{ marginBottom: '16px', background: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold' }}>عدد الأسئلة لكل فئة</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold' }}>
+                    {gameType === 'jeopardy' ? 'عدد الأسئلة لكل فئة' : 'عدد الجولات'}
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
                     {players[0]?.id === myId ? (
                       <>
-                        <button onClick={() => setQCount(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>-</button>
+                        <button onClick={() => handleQCountChange(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>-</button>
                         <span style={{ fontSize: '18px', fontWeight: 'bold', width: '30px' }}>{qCount}</span>
-                        <button onClick={() => setQCount(Math.min(50, qCount + 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>+</button>
+                        <button onClick={() => handleQCountChange(Math.min(50, qCount + 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>+</button>
                       </>
                     ) : (
                       <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{qCount}</span>
@@ -298,14 +306,21 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                disabled={!hasJoined || players.length === 0}
-                onClick={() => startGame(roomId)}
-                className="btn-primary-battle"
-                style={{ marginTop: '20px' }}
-              >
-                ابدأ اللعب! 🚀
-              </button>
+              {players[0]?.id === myId ? (
+                <button
+                  disabled={!hasJoined || players.length === 0}
+                  onClick={() => roomId && startGame(roomId)}
+                  className="btn-primary-battle"
+                  style={{ marginTop: '20px' }}
+                >
+                  <Zap size={24} />
+                  ابدأ اللعبة!
+                </button>
+              ) : (
+                <div style={{ marginTop: '20px', padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: '14px' }}>
+                  بانتظار المضيف لبدء اللعبة...
+                </div>
+              )}
               <button onClick={() => {
                 setRoomId('');
                 window.history.replaceState({}, '', window.location.pathname);
