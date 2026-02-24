@@ -145,11 +145,13 @@ const App: React.FC = () => {
 
   const shareInviteLink = async () => {
     const link = generateInviteLink();
+    const gameName = gameType === 'jeopardy' ? 'تحدي الأسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : 'بنت وولد';
+
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'تحدى أصدقاءك في تحدي المعلومات!',
-          text: `انضم إلي في غرفة ${roomId} لنلعب معاً!`,
+          text: `انضم إلي في غرفة ${roomId} لنلعب ${gameName} معاً!`,
           url: link,
         });
       } catch (err) {
@@ -158,7 +160,7 @@ const App: React.FC = () => {
     } else {
       // Fallback to clipboard
       navigator.clipboard.writeText(link);
-      alert('تم نسخ رابط الدعوة!');
+      alert(`تم نسخ رابط الدعوة للعبة ${gameName}!`);
     }
   };
 

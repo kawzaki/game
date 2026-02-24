@@ -327,7 +327,8 @@ io.on('connection', (socket) => {
             } else {
                 clearInterval(roundInterval);
                 if (room.gameStatus === 'round_active') {
-                    scoreBinOWaladRound(room, io, roomId);
+                    // Brief grace period for other clients to send partial inputs
+                    setTimeout(() => scoreBinOWaladRound(room, io, roomId), 1200);
                 }
             }
         }, 1000);

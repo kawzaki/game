@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion } from 'framer-motion';
 import { User, Heart, Package, Utensils, Dog, MapPin, Timer } from 'lucide-react';
@@ -33,6 +33,18 @@ const BentOWalad: React.FC<BentOWaladProps> = ({ roomId }) => {
     });
 
     const [hasSubmitted, setHasSubmitted] = useState(false);
+    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (index < CATEGORIES.length - 1) {
+                inputRefs.current[index + 1]?.focus();
+            } else {
+                handleManualSubmit();
+            }
+        }
+    };
 
     // Reset inputs when a new round starts
     useEffect(() => {
@@ -94,17 +106,19 @@ const BentOWalad: React.FC<BentOWaladProps> = ({ roomId }) => {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
-                    {CATEGORIES.map(cat => (
+                    {CATEGORIES.map((cat, idx) => (
                         <div key={cat.key} style={{ background: '#fff', padding: '12px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '12px', color: '#3b82f6' }}>{cat.icon}</div>
                             <div style={{ flex: 1 }}>
                                 <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>{cat.label}</div>
                                 <input
+                                    ref={(el) => { inputRefs.current[idx] = el; }}
                                     type="text"
                                     disabled={hasSubmitted}
                                     placeholder={`بداية بحرف ${currentLetter}...`}
                                     value={inputs[cat.key]}
                                     onChange={(e) => setInputs({ ...inputs, [cat.key]: e.target.value })}
+                                    onKeyDown={(e) => handleKeyDown(e, idx)}
                                     style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '16px', fontWeight: 'bold' }}
                                 />
                             </div>
