@@ -735,16 +735,42 @@ body {
 }
 
 /* Huroof Hexagon Grid - Improved Pointy-Topped Interlocking */
+:root {
+  --hex-width: 80px;
+  --hex-height: 90px;
+  --hex-row-offset: -24px;
+  --hex-stagger: 40px;
+  --hex-border: 3px;
+  --hex-font-size: 32px;
+  --board-padding: 40px;
+  --board-radius: 40px;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --hex-width: 46px;
+    --hex-height: 52px;
+    --hex-row-offset: -13px;
+    --hex-stagger: 23px;
+    --hex-border: 2px;
+    --hex-font-size: 18px;
+    --board-padding: 12px;
+    --board-radius: 20px;
+  }
+}
+
 .huroof-board-view {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px;
+  padding: var(--board-padding);
   background: #f8fafc;
-  border-radius: 40px;
+  border-radius: var(--board-radius);
   position: relative;
   border: 4px solid #1e293b;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+  max-width: 100%;
 }
 
 .huroof-honeycomb {
@@ -752,14 +778,14 @@ body {
   flex-direction: column;
   align-items: center;
   overflow: visible;
-  padding: 20px;
+  padding: 10px;
 }
 
 .honeycomb-row {
   display: flex;
   justify-content: center;
   /* Interlock Pointy-topped hexes vertically (3/4 height) */
-  margin-top: -24px;
+  margin-top: var(--hex-row-offset);
 }
 
 .honeycomb-row:first-child {
@@ -768,18 +794,17 @@ body {
 
 /* Stagger alternating rows to create the honeycomb effect */
 .honeycomb-row.staggered {
-  transform: translateX(40px);
-  /* Half width of 80px hexagon */
+  transform: translateX(var(--hex-stagger));
 }
 
-/* Specific shift for blue boundary rows as requested */
+/* Specific shift for blue boundary rows if needed */
 .honeycomb-row.blue-boundary {
   transform: translateX(0px);
 }
 
 .huroof-hexagon {
-  width: 80px;
-  height: 90px;
+  width: var(--hex-width);
+  height: var(--hex-height);
   background: #000;
   /* Black for thick border effect */
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
@@ -790,22 +815,23 @@ body {
   position: relative;
   border: none;
   outline: none;
+  flex-shrink: 0;
 }
 
 .huroof-hexagon::after {
   content: attr(data-letter);
   position: absolute;
-  top: 3px;
-  left: 3px;
-  right: 3px;
-  bottom: 3px;
+  top: var(--hex-border);
+  left: var(--hex-border);
+  right: var(--hex-border);
+  bottom: var(--hex-border);
   background: #fff9e6;
   /* Creamy color like the image */
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: var(--hex-font-size);
   font-weight: 900;
   color: #1e293b;
   z-index: 1;
