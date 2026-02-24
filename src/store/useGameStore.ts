@@ -36,6 +36,7 @@ interface GameState {
     currentRound: number;
     roundCount: number;
     roundResults: any[];
+    roomDataLoading: boolean;
 
     // Actions
     setRoomId: (id: string) => void;
@@ -83,7 +84,8 @@ export const useGameStore = create<GameState>((set) => {
             roundCount: data.roundCount,
             roundResults: data.roundResults || [],
             myId: socket.id || null,
-            isConnected: true
+            isConnected: true,
+            roomDataLoading: false
         });
     });
 
@@ -123,6 +125,7 @@ export const useGameStore = create<GameState>((set) => {
         currentRound: 0,
         roundCount: 10,
         roundResults: [],
+        roomDataLoading: false,
 
         setRoomId: (id) => set({ roomId: id }),
 
@@ -190,6 +193,7 @@ export const useGameStore = create<GameState>((set) => {
         },
 
         getRoomStatus: (roomId: string) => {
+            set({ roomDataLoading: true });
             socket.emit('get_room_status', roomId);
         },
 

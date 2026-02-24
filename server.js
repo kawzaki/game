@@ -231,7 +231,8 @@ io.on('connection', (socket) => {
                 usedLetters: [],
                 currentLetter: null,
                 roundSubmissions: {}, // roomId -> { roundIndex -> { playerName -> { girl, boy, thing, food, animal, location } } }
-                roundResults: []
+                roundResults: [],
+                creatorSocketId: socket.id
             });
         }
 
@@ -293,7 +294,8 @@ io.on('connection', (socket) => {
                 usedLetters: [],
                 currentLetter: null,
                 roundSubmissions: {},
-                roundResults: []
+                roundResults: [],
+                creatorSocketId: socket.id
             });
 
             // Note: We don't join the socket to the room yet, 
@@ -311,7 +313,7 @@ io.on('connection', (socket) => {
 
     socket.on('update_settings', ({ roomId, questionsPerCategory }) => {
         const room = rooms.get(roomId);
-        if (room && room.players[0]?.id === socket.id) {
+        if (room && (room.players[0]?.id === socket.id || room.creatorSocketId === socket.id)) {
             room.questionsPerCategory = questionsPerCategory;
             if (room.gameType === 'bin_o_walad') {
                 room.roundCount = questionsPerCategory;
@@ -340,7 +342,7 @@ io.on('connection', (socket) => {
 
     socket.on('start_game', (roomId) => {
         const room = rooms.get(roomId);
-        if (room) {
+        if (room && (room.players[0]?.id === socket.id || room.creatorSocketId === socket.id)) {
             console.log(`[Start Game] Room: ${roomId}, Type: ${room.gameType}`);
             if (room.gameType === 'bin_o_walad') {
                 room.gameStatus = 'countdown';

@@ -57,7 +57,9 @@ const App: React.FC = () => {
     resetRoom,
     isConnected,
     roundResults,
-    createRoom
+    createRoom,
+    roomDataLoading,
+    addPlayer
   } = useGameStore();
 
   const [isCreator, setIsCreator] = useState(false);
@@ -265,75 +267,80 @@ const App: React.FC = () => {
               <h2 style={{ marginBottom: '8px' }}>الغرفة جاهزة!</h2>
               <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '4px', margin: '12px 0' }}>{roomId}</div>
 
-              <div style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'تحدي الاسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : 'تحدي بنت وولد'}</strong>
-              </div>
-
-              {(gameType === 'jeopardy' || gameType === 'bin_o_walad') && (
-                <div style={{ marginBottom: '16px', background: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold' }}>
-                    {gameType === 'jeopardy' ? 'عدد الأسئلة لكل فئة' : 'عدد الجولات'}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                    {(players[0]?.id === myId || isCreator) ? (
-                      <>
-                        <button onClick={() => handleQCountChange(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>-</button>
-                        <span style={{ fontSize: '18px', fontWeight: 'bold', width: '30px' }}>{qCount}</span>
-                        <button onClick={() => handleQCountChange(Math.min(50, qCount + 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>+</button>
-                      </>
-                    ) : (
-                      <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{qCount}</span>
-                    )}
-                  </div>
+              {roomDataLoading ? (
+                <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '30px', height: '30px', border: '3px solid #f3f3f3', borderTop: '3px solid var(--brand-yellow)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                  <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>جاري جلب معلومات الغرفة...</div>
                 </div>
+              ) : (
+                <>
+                  <div style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+                    نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'تحدي الاسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : 'تحدي بنت وولد'}</strong>
+                  </div>
+
+                  {(gameType === 'jeopardy' || gameType === 'bin_o_walad') && (
+                    <div style={{ marginBottom: '16px', background: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold' }}>
+                        {gameType === 'jeopardy' ? 'عدد الأسئلة لكل فئة' : 'عدد الجولات'}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                        {(players[0]?.id === myId || isCreator) ? (
+                          <>
+                            <button onClick={() => handleQCountChange(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>-</button>
+                            <span style={{ fontSize: '18px', fontWeight: 'bold', width: '30px' }}>{qCount}</span>
+                            <button onClick={() => handleQCountChange(Math.min(50, qCount + 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>+</button>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{qCount}</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <input
+                    type="text"
+                    placeholder="أدخل اسمك ..."
+                    className="join-input"
+                    style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', width: '100%', marginBottom: '12px' }}
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                  />
+                  <button
+                    disabled={!playerName || hasJoined}
+                    onClick={() => roomId && addPlayer(playerName, roomId, qCount)}
+                    className="btn-primary-battle"
+                    style={{ width: '100%', marginBottom: '12px', opacity: (hasJoined || !playerName) ? 0.6 : 1 }}
+                  >
+                    {hasJoined ? 'تم الانضمام ✓' : 'انضم الآن'}
+                  </button>
+                </>
               )}
 
-              <input
-                type="text"
-                placeholder="أدخل اسمك ..."
-                className="join-input"
-                style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', width: '100%', marginBottom: '12px' }}
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-              />
-              <button
-                disabled={!playerName || hasJoined}
-                onClick={() => {
-                  console.log('Emitting join_room with gameType:', gameType);
-                  socket.emit('join_room', { roomId, playerName, questionsPerCategory: qCount, gameType });
-                }}
-                className={hasJoined ? "btn-secondary" : "btn-primary-battle"}
-                style={{
-                  opacity: (!playerName && !hasJoined) ? 0.5 : (hasJoined ? 0.4 : 1),
-                  marginBottom: '12px',
-                  pointerEvents: hasJoined ? 'none' : 'auto'
-                }}
-              >
-                {hasJoined ? "تم الانضمام ✓" : "انضم الآن!"}
-              </button>
               <button onClick={shareInviteLink} style={{ background: 'transparent', border: '1px solid #ccc', padding: '12px', borderRadius: '12px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <Share2 size={18} />
                 <span>مشاركة رابط الدعوة</span>
               </button>
 
-              <div style={{ marginTop: '20px' }}>
-                <h4 style={{ marginBottom: '8px' }}>اللاعبون المتواجدون:</h4>
-                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
-                  {players.map((p, i) => (
-                    <div key={i} style={{ background: '#eee', padding: '4px 12px', borderRadius: '20px', fontSize: '12px' }}>
-                      <span style={{ fontWeight: 'bold', marginRight: '4px' }}>#{p.number || (i + 1)}</span>
-                      {p.name}
-                    </div>
-                  ))}
+              {players.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4 style={{ marginBottom: '8px', fontSize: '14px' }}>اللاعبون المتواجدون:</h4>
+                  <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', justifyContent: 'center' }}>
+                    {players.map((p, i) => (
+                      <div key={i} style={{ background: '#eee', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: 'bold', marginRight: '4px' }}>#{p.number || (i + 1)}</span>
+                        {p.name}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {(players[0]?.id === myId || isCreator) ? (
                 <button
                   disabled={!hasJoined || players.length === 0}
                   onClick={() => roomId && startGame(roomId)}
                   className="btn-primary-battle"
-                  style={{ marginTop: '20px' }}
+                  style={{ marginTop: '20px', background: 'var(--brand-yellow)', color: '#000' }}
                 >
                   <Zap size={24} />
                   ابدأ اللعبة!
@@ -343,6 +350,7 @@ const App: React.FC = () => {
                   بانتظار المضيف لبدء اللعبة...
                 </div>
               )}
+
               <button onClick={() => {
                 setRoomId('');
                 window.history.replaceState({}, '', window.location.pathname);
@@ -360,7 +368,7 @@ const App: React.FC = () => {
           <div className="nav-item"><Clock size={24} /><span>السجل</span></div>
           <div className="nav-item"><User size={24} /><span>الملف</span></div>
         </nav>
-      </div>
+      </div >
     );
   }
 
