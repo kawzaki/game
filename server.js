@@ -249,6 +249,59 @@ io.on('connection', (socket) => {
         console.log(`[Join] Player ${playerName} joined room ${roomId} (Game: ${gameType})`);
     });
 
+    socket.on('create_room', ({ roomId, gameType, questionsPerCategory = 10 }) => {
+        const requestedGameType = gameType || 'jeopardy';
+        let room = rooms.get(roomId);
+
+        if (!room) {
+            console.log(`[Room Create Early] Room ${roomId} as ${requestedGameType}`);
+            let selectedQuestions = [];
+            let huroofGrid = null;
+
+            if (requestedGameType === 'jeopardy') {
+                selectedQuestions = selectJeopardyQuestions(questionsPerCategory);
+            } else if (requestedGameType === 'huroof') {
+                huroofGrid = [];
+                for (let i = 0; i < 25; i++) {
+                    huroofGrid.push({
+                        id: i,
+                        letter: ARABIC_LETTERS[i % ARABIC_LETTERS.length],
+                        ownerId: null
+                    });
+                }
+            }
+
+            rooms.set(roomId, {
+                id: roomId,
+                players: [],
+                gameStatus: 'lobby',
+                gameType: requestedGameType,
+                questions: selectedQuestions.map(q => ({ ...q })),
+                huroofGrid: huroofGrid,
+                questionsPerCategory: questionsPerCategory,
+                activeQuestion: null,
+                selectedCategory: null,
+                currentPlayerIndex: 0,
+                timer: 0,
+                attempts: [],
+                feedback: null,
+                winner: null,
+                correctAnswer: null,
+                buzzedPlayerId: null,
+                roundCount: requestedGameType === 'bin_o_walad' ? questionsPerCategory : 0,
+                currentRound: 0,
+                usedLetters: [],
+                currentLetter: null,
+                roundSubmissions: {},
+                roundResults: []
+            });
+
+            // Note: We don't join the socket to the room yet, 
+            // but we can emit to the individual socket that the room is ready
+            socket.emit('room_data', rooms.get(roomId));
+        }
+    });
+
     socket.on('get_room_status', (roomId) => {
         const room = rooms.get(roomId);
         if (room) {

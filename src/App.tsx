@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore, socket } from './store/useGameStore';
 import HuroofGame from './components/HuroofGame';
@@ -56,8 +56,11 @@ const App: React.FC = () => {
     winner,
     resetRoom,
     isConnected,
-    roundResults
+    roundResults,
+    createRoom
   } = useGameStore();
+
+  const [isCreator, setIsCreator] = useState(false);
 
   const isMyTurn = players[currentPlayerIndex]?.id === myId;
   const activePlayer = players[currentPlayerIndex];
@@ -132,11 +135,10 @@ const App: React.FC = () => {
     audio.play().catch(e => console.error("Audio play failed:", e));
   };
 
-  const setGameTypeLocal = useGameStore(state => (state as any).setGameType);
   const finalizeCreateRoom = (type: 'jeopardy' | 'huroof' | 'bin_o_walad') => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    setGameTypeLocal(type);
-    setRoomId(code);
+    setIsCreator(true);
+    createRoom(code, type, qCount);
   };
 
   const generateInviteLink = () => {
@@ -179,10 +181,10 @@ const App: React.FC = () => {
 
   const getRoomStatus = useGameStore(state => state.getRoomStatus);
   useEffect(() => {
-    if (roomId && !hasJoined) {
+    if (roomId && !hasJoined && isConnected) {
       getRoomStatus(roomId);
     }
-  }, [roomId, hasJoined, getRoomStatus]);
+  }, [roomId, hasJoined, getRoomStatus, isConnected]);
 
   const categories = useMemo(() => {
     const cats: Record<string, any[]> = {};
@@ -273,7 +275,7 @@ const App: React.FC = () => {
                     {gameType === 'jeopardy' ? 'عدد الأسئلة لكل فئة' : 'عدد الجولات'}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                    {players[0]?.id === myId ? (
+                    {(players[0]?.id === myId || isCreator) ? (
                       <>
                         <button onClick={() => handleQCountChange(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>-</button>
                         <span style={{ fontSize: '18px', fontWeight: 'bold', width: '30px' }}>{qCount}</span>
@@ -326,7 +328,7 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {players[0]?.id === myId ? (
+              {(players[0]?.id === myId || isCreator) ? (
                 <button
                   disabled={!hasJoined || players.length === 0}
                   onClick={() => roomId && startGame(roomId)}

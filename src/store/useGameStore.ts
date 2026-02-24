@@ -39,7 +39,7 @@ interface GameState {
 
     // Actions
     setRoomId: (id: string) => void;
-    setGameType: (type: 'jeopardy' | 'huroof') => void;
+    setGameType: (type: 'jeopardy' | 'huroof' | 'bin_o_walad') => void;
     addPlayer: (name: string, roomId: string, questionsPerCategory?: number) => void;
     startGame: (roomId: string) => void;
     pickCategory: (roomId: string, category: string) => void;
@@ -53,6 +53,7 @@ interface GameState {
     resetRoom: () => void;
     submitRoundBinOWalad: (roomId: string, inputs: Record<string, string>) => void;
     getRoomStatus: (roomId: string) => void;
+    createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad', qCount: number) => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
@@ -190,6 +191,11 @@ export const useGameStore = create<GameState>((set) => {
 
         getRoomStatus: (roomId: string) => {
             socket.emit('get_room_status', roomId);
+        },
+
+        createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad', questionsPerCategory: number) => {
+            socket.emit('create_room', { roomId, gameType, questionsPerCategory });
+            set({ roomId, gameType, questionsPerCategory });
         }
     };
 });
