@@ -52,6 +52,7 @@ interface GameState {
     resetTimer: (seconds: number) => void;
     resetRoom: () => void;
     submitRoundBinOWalad: (roomId: string, inputs: Record<string, string>) => void;
+    getRoomStatus: (roomId: string) => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
@@ -185,6 +186,10 @@ export const useGameStore = create<GameState>((set) => {
 
         submitRoundBinOWalad: (roomId, inputs) => {
             socket.emit('submit_round_bin_o_walad', { roomId, inputs });
+        },
+
+        getRoomStatus: (roomId: string) => {
+            socket.emit('get_room_status', roomId);
         }
     };
 });

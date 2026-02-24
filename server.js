@@ -249,6 +249,13 @@ io.on('connection', (socket) => {
         console.log(`[Join] Player ${playerName} joined room ${roomId} (Game: ${gameType})`);
     });
 
+    socket.on('get_room_status', (roomId) => {
+        const room = rooms.get(roomId);
+        if (room) {
+            socket.emit('room_data', room);
+        }
+    });
+
     socket.on('update_settings', ({ roomId, questionsPerCategory }) => {
         const room = rooms.get(roomId);
         if (room && room.players[0]?.id === socket.id) {

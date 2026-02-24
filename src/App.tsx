@@ -175,6 +175,15 @@ const App: React.FC = () => {
     }
   }, [gameStatus, winner]);
 
+  const hasJoined = useMemo(() => players.some(p => p.id === myId), [players, myId]);
+
+  const getRoomStatus = useGameStore(state => state.getRoomStatus);
+  useEffect(() => {
+    if (roomId && !hasJoined) {
+      getRoomStatus(roomId);
+    }
+  }, [roomId, hasJoined, getRoomStatus]);
+
   const categories = useMemo(() => {
     const cats: Record<string, any[]> = {};
     if (!questions) return cats;
@@ -188,7 +197,6 @@ const App: React.FC = () => {
     return cats;
   }, [questions]);
 
-  const hasJoined = useMemo(() => players.some(p => p.id === myId), [players, myId]);
 
   // UI RENDERING STARTS HERE
 
