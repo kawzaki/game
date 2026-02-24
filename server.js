@@ -115,7 +115,7 @@ function checkHuroofWinner(grid, team) {
 // Helper for smart answer checking
 function isCorrectAnswer(input, correct) {
     if (!input || !correct) return false;
-    return input.trim().toLowerCase() === correct.trim().toLowerCase();
+    return normalizeArabic(input) === normalizeArabic(correct);
 }
 
 // Helper for Arabic normalization
