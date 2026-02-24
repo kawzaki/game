@@ -41,9 +41,9 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
 
             <div className="huroof-board-view">
                 <div className="huroof-honeycomb">
-                    {/* Row 0: Top Blue Boundary */}
-                    <div className="honeycomb-row">
-                        {[1, 2, 3, 4, 5].map(i => (
+                    {/* Row 0: Top Blue Boundary (6 items, staggered) */}
+                    <div className="honeycomb-row staggered">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
                             <div key={`top-${i}`} className="huroof-hexagon boundary blue" />
                         ))}
                     </div>
@@ -72,9 +72,9 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
                         </div>
                     ))}
 
-                    {/* Row 6: Bottom Blue Boundary */}
-                    <div className="honeycomb-row">
-                        {[1, 2, 3, 4, 5].map(i => (
+                    {/* Row 6: Bottom Blue Boundary (6 items, staggered) */}
+                    <div className="honeycomb-row staggered">
+                        {[1, 2, 3, 4, 5, 6].map(i => (
                             <div key={`bottom-${i}`} className="huroof-hexagon boundary blue" />
                         ))}
                     </div>
