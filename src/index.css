@@ -766,10 +766,15 @@ body {
   margin-top: 0;
 }
 
-/* Stagger even rows to create the honeycomb effect */
+/* Stagger alternating rows to create the honeycomb effect */
 .honeycomb-row.staggered {
-  transform: translateX(41px);
-  /* Half width (40px) + tiny margin */
+  transform: translateX(40px);
+  /* Half width of 80px hexagon */
+}
+
+/* Specific shift for blue boundary rows as requested */
+.honeycomb-row.blue-boundary {
+  transform: translateX(-60px);
 }
 
 .huroof-hexagon {

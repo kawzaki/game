@@ -41,16 +41,16 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
 
             <div className="huroof-board-view">
                 <div className="huroof-honeycomb">
-                    {/* Row 0: Top Blue Boundary (6 items, UNSTAGGERED to move left) */}
-                    <div className="honeycomb-row">
+                    {/* Row 0: Top Blue Boundary (Shifted 60px left via CSS) */}
+                    <div className="honeycomb-row blue-boundary">
                         {[1, 2, 3, 4, 5, 6].map(i => (
                             <div key={`top-${i}`} className="huroof-hexagon boundary blue" />
                         ))}
                     </div>
 
                     {[0, 1, 2, 3, 4].map(rowIndex => (
-                        // We flip the stagger: Even row indices (0, 2, 4) are now STAGGERED.
-                        <div key={`row-${rowIndex}`} className={`honeycomb-row ${rowIndex % 2 === 0 ? 'staggered' : ''}`}>
+                        // Standard alternating pattern: index 1 and 3 (rows 2 and 4) are staggered
+                        <div key={`row-${rowIndex}`} className={`honeycomb-row ${rowIndex % 2 === 1 ? 'staggered' : ''}`}>
                             {/* Left Red Boundary */}
                             <div className="huroof-hexagon boundary red" />
 
@@ -73,8 +73,8 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
                         </div>
                     ))}
 
-                    {/* Row 6: Bottom Blue Boundary (6 items, UNSTAGGERED) */}
-                    <div className="honeycomb-row">
+                    {/* Row 6: Bottom Blue Boundary (Shifted 60px left via CSS) */}
+                    <div className="honeycomb-row blue-boundary">
                         {[1, 2, 3, 4, 5, 6].map(i => (
                             <div key={`bottom-${i}`} className="huroof-hexagon boundary blue" />
                         ))}
