@@ -495,7 +495,10 @@ const App: React.FC = () => {
               <Trophy size={80} color="var(--accent-gold)" />
               <div className="winner-name">{winner.name}</div>
               <div className="winner-score">{winner.score.toLocaleString()}</div>
-              <button className="btn-gold" style={{ marginTop: '20px' }} onClick={() => resetRoom()}>العودة للرئيسية</button>
+              <button className="btn-gold" style={{ marginTop: '20px' }} onClick={() => {
+                resetRoom();
+                window.history.replaceState({}, '', window.location.pathname);
+              }}>العودة للرئيسية</button>
             </motion.div>
           </div>
         )}
