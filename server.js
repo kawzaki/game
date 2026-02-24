@@ -359,8 +359,8 @@ io.on('connection', (socket) => {
                 const rawAnswer = sub ? sub[catKey] : "";
                 const normalized = normalizeArabic(rawAnswer);
 
-                // Basic validation: must start with the correct letter
-                if (normalized && rawAnswer.trim().startsWith(letter)) {
+                // Basic validation: must start with the correct letter and be at least 2 characters long
+                if (normalized && rawAnswer.trim().startsWith(letter) && rawAnswer.trim().length > 1) {
                     answers[normalized] = (answers[normalized] || 0) + 1;
                 } else {
                     // Invalid or empty
@@ -373,7 +373,7 @@ io.on('connection', (socket) => {
                 const normalized = normalizeArabic(rawAnswer);
                 let score = 0;
 
-                if (normalized && rawAnswer.trim().startsWith(letter)) {
+                if (normalized && rawAnswer.trim().startsWith(letter) && rawAnswer.trim().length > 1) {
                     if (answers[normalized] === 1) {
                         score = 10;
                     } else {
