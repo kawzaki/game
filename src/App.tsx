@@ -512,8 +512,31 @@ const App: React.FC = () => {
         )}
 
         {gameStatus === 'game_over' && winner && (
-          <div className="game-over-container" style={{ maxHeight: '100vh', overflowY: 'auto', padding: '20px' }}>
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="winner-card" style={{ maxWidth: '600px', width: '100%' }}>
+          <div className="game-over-container" style={{ maxHeight: '100vh', overflowY: 'auto', padding: '20px', position: 'relative' }}>
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="winner-card" style={{ maxWidth: '600px', width: '100%', position: 'relative' }}>
+              <button
+                onClick={() => {
+                  resetRoom();
+                  window.history.replaceState({}, '', window.location.pathname);
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '15px',
+                  right: '15px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '14px'
+                }}
+              >
+                <Home size={20} />
+                <span>الرئيسية</span>
+              </button>
+
               <Trophy size={80} color="var(--accent-gold)" />
               <div className="winner-name">{winner.name}</div>
               <div className="winner-score">{winner.score.toLocaleString()}</div>
