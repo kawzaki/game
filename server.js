@@ -514,45 +514,98 @@ io.on('connection', (socket) => {
                 room.selectedCategory = category;
                 room.gameStatus = 'selecting_value';
             } else if (room.gameType === 'huroof') {
-                // In Huroof, category is the letter. Pick a question starting with that letter or random if not found.
-                const matchingQuestions = questionPool.filter(q =>
-                    (q.question && q.question.trim().startsWith(category)) ||
-                    (q.answer && q.answer.trim().startsWith(category))
-                );
-                const pool = matchingQuestions.length > 0 ? matchingQuestions : questionPool;
-                const question = pool[Math.floor(Math.random() * pool.length)];
+                const isLuck = Math.random() < 0.1;
+                const player = room.players.find(p => p.id === socket.id);
 
-                // Ensure all options start with the same letter for Huroof mode
-                let huroofOptions = [];
-                const correctAnswer = question.answer;
+                if (isLuck && player) {
+                    const rewards = [
+                        { msg: "تبريكاتنا! ربحت الخلية فوراً مع 200 عملة!", multiplier: 2, claim: true },
+                        { msg: "أوه لا! خسرت 100 عملة ولم تحصل على الخلية!", multiplier: -1, claim: false },
+                        { msg: "حظ سعيد! ربحت الخلية فوراً مع 100 عملة!", multiplier: 1, claim: true },
+                        { msg: "يا للهول! تم خصم نصف رصيدك الحالي!", effect: 'halve', claim: false },
+                        { msg: "يا لك من محظوظ! ربحت الخلية وتم مضاعفة رصيدك الحالي!", effect: 'double', claim: true },
+                        { msg: "لا ربح ولا خسارة هذه المرة، والخلية لم تُملك.", multiplier: 0, claim: false }
+                    ];
+                    const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
 
-                // Get other answers from the pool that start with the same letter
-                const sameLetterAnswers = [...new Set(questionPool
-                    .filter(q => q.answer && q.answer.trim().startsWith(category) && q.answer.trim() !== correctAnswer.trim())
-                    .map(q => q.answer.trim())
-                )];
+                    if (randomReward.multiplier !== undefined) {
+                        player.score += (100 * randomReward.multiplier);
+                    } else if (randomReward.effect === 'halve') {
+                        player.score = Math.floor(player.score / 2);
+                    } else if (randomReward.effect === 'double') {
+                        player.score = player.score * 2;
+                    }
 
-                if (sameLetterAnswers.length >= 3) {
-                    // Pick 3 random wrong answers starting with the same letter
-                    const shuffledWrong = sameLetterAnswers.sort(() => 0.5 - Math.random());
-                    huroofOptions = [correctAnswer, ...shuffledWrong.slice(0, 3)];
+                    if (randomReward.claim) {
+                        // Claim the letter in the grid for the team
+                        room.huroofGrid = room.huroofGrid.map(g =>
+                            g.letter === category && g.ownerId === null ? { ...g, ownerId: socket.id, ownerTeam: player.team } : g
+                        );
+                    }
+
+                    room.feedback = {
+                        type: 'luck',
+                        message: `حظ: ${randomReward.msg}`,
+                        reward: randomReward
+                    };
+
+                    room.activeQuestion = {
+                        id: `luck-${Date.now()}`,
+                        category: "حظ",
+                        question: randomReward.msg,
+                        value: 100,
+                        isAnswered: true
+                    };
+                    room.correctAnswer = null;
+                    room.selectedCategory = category;
+                    room.gameStatus = 'question';
+
+                    // Check for team win if claimed
+                    if (randomReward.claim && checkHuroofWinner(room.huroofGrid, player.team)) {
+                        endGame(room, io, roomId, null, player.team);
+                        return;
+                    }
                 } else {
-                    // Fallback: Use original options but try to filter them or keep as is
-                    huroofOptions = [...question.options];
+                    // In Huroof, category is the letter. Pick a question starting with that letter or random if not found.
+                    const matchingQuestions = questionPool.filter(q =>
+                        (q.question && q.question.trim().startsWith(category)) ||
+                        (q.answer && q.answer.trim().startsWith(category))
+                    );
+                    const pool = matchingQuestions.length > 0 ? matchingQuestions : questionPool;
+                    const question = pool[Math.floor(Math.random() * pool.length)];
+
+                    // Ensure all options start with the same letter for Huroof mode
+                    let huroofOptions = [];
+                    const correctAnswer = question.answer;
+
+                    // Get other answers from the pool that start with the same letter
+                    const sameLetterAnswers = [...new Set(questionPool
+                        .filter(q => q.answer && q.answer.trim().startsWith(category) && q.answer.trim() !== correctAnswer.trim())
+                        .map(q => q.answer.trim())
+                    )];
+
+                    if (sameLetterAnswers.length >= 3) {
+                        // Pick 3 random wrong answers starting with the same letter
+                        const shuffledWrong = sameLetterAnswers.sort(() => 0.5 - Math.random());
+                        huroofOptions = [correctAnswer, ...shuffledWrong.slice(0, 3)];
+                    } else {
+                        // Fallback: Use original options but try to filter them or keep as is
+                        huroofOptions = [...question.options];
+                    }
+
+                    const shuffledOptions = huroofOptions.sort(() => 0.5 - Math.random());
+                    const safeQuestion = { ...question, options: shuffledOptions, value: 100 }; // Huroof constant value
+                    delete safeQuestion.answer;
+
+                    room.activeQuestion = safeQuestion;
+                    room.correctAnswer = correctAnswer;
+                    room.selectedCategory = category; // Store the letter here
+                    room.gameStatus = 'question';
+                    room.timer = 15;
+                    room.attempts = [];
+                    room.feedback = null;
+                    room.buzzedPlayerId = null;
                 }
-
-                const shuffledOptions = huroofOptions.sort(() => 0.5 - Math.random());
-                const safeQuestion = { ...question, options: shuffledOptions, value: 100 }; // Huroof constant value
-                delete safeQuestion.answer;
-
-                room.activeQuestion = safeQuestion;
-                room.correctAnswer = correctAnswer;
-                room.selectedCategory = category; // Store the letter here
-                room.gameStatus = 'question';
-                room.timer = 15;
-                room.attempts = [];
-                room.feedback = null;
-                room.buzzedPlayerId = null;
             }
             io.to(roomId).emit('room_data', room);
         }
