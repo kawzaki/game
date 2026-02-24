@@ -774,7 +774,7 @@ body {
 
 /* Specific shift for blue boundary rows as requested */
 .honeycomb-row.blue-boundary {
-  transform: translateX(-60px);
+  transform: translateX(0px);
 }
 
 .huroof-hexagon {
