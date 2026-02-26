@@ -15,8 +15,10 @@ import {
   Layout,
   Type,
   Coins,
-  Share2
+  Share2,
+  QrCode
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const BIN_O_WALAD_CATEGORIES = [
@@ -63,6 +65,7 @@ const App: React.FC = () => {
   } = useGameStore();
 
   const [isCreator, setIsCreator] = useState(false);
+  const [showQR, setShowQR] = useState(false);
 
   const isMyTurn = players[currentPlayerIndex]?.id === myId;
   const activePlayer = players[currentPlayerIndex];
@@ -316,10 +319,30 @@ const App: React.FC = () => {
                 </>
               )}
 
-              <button onClick={shareInviteLink} style={{ background: 'transparent', border: '1px solid #ccc', padding: '12px', borderRadius: '12px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <Share2 size={18} />
-                <span>مشاركة رابط الدعوة</span>
-              </button>
+              <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                <button onClick={shareInviteLink} style={{ background: 'transparent', border: '1px solid #ccc', padding: '12px', borderRadius: '12px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <Share2 size={18} />
+                  <span>مشاركة رابط الدعوة</span>
+                </button>
+                <button onClick={() => setShowQR(true)} style={{ background: 'transparent', border: '1px solid #ccc', padding: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '80px' }}>
+                  <QrCode size={18} />
+                  <span style={{ fontSize: '12px', fontWeight: 'bold' }}>QR</span>
+                </button>
+              </div>
+
+              <AnimatePresence>
+                {showQR && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowQR(false)}>
+                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="modal-content" style={{ background: 'white', padding: '24px', borderRadius: '16px', textAlign: 'center', maxWidth: '300px', width: '100%' }} onClick={e => e.stopPropagation()}>
+                      <h3 style={{ marginBottom: '16px' }}>رمز الدعوة للغرفة {roomId}</h3>
+                      <div style={{ background: 'white', padding: '16px', borderRadius: '12px', display: 'inline-block' }}>
+                        <QRCodeSVG value={generateInviteLink()} size={200} />
+                      </div>
+                      <button onClick={() => setShowQR(false)} className="btn-primary-battle" style={{ marginTop: '20px', width: '100%' }}>إغلاق</button>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {players.length > 0 && (
                 <div style={{ marginTop: '20px' }}>
