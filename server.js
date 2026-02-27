@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 
 // Pre-load questions for all rooms
 const questionPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
+const khaleejiWordsPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/khaleejiWords.json'), 'utf8'));
 
 const ARABIC_LETTERS = [
     'أ', 'ب', 'ت', 'ث', 'ج',
@@ -232,6 +233,23 @@ io.on('connection', (socket) => {
                         ownerId: null
                     });
                 }
+            } else if (requestedGameType === 'word_meaning') {
+                const shuffledWords = [...khaleejiWordsPool].sort(() => Math.random() - 0.5);
+                const pickedWords = shuffledWords.slice(0, questionsPerCategory);
+                const allMeanings = khaleejiWordsPool.map(w => w.meaning);
+                selectedQuestions = pickedWords.map(w => {
+                    const wrongMeanings = allMeanings.filter(m => m !== w.meaning).sort(() => Math.random() - 0.5).slice(0, 3);
+                    const options = [w.meaning, ...wrongMeanings].sort(() => Math.random() - 0.5);
+                    return {
+                        id: `wm-${Date.now()}-${Math.random()}`,
+                        category: "معاني الكلمات",
+                        value: 100,
+                        question: w.word,
+                        answer: w.meaning,
+                        options: options,
+                        isAnswered: false
+                    };
+                });
             }
 
             rooms.set(roomId, {
@@ -252,7 +270,7 @@ io.on('connection', (socket) => {
                 correctAnswer: null,
                 buzzedPlayerId: null,
                 // Bent o Walad specific
-                roundCount: requestedGameType === 'bin_o_walad' ? questionsPerCategory : 0,
+                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning') ? questionsPerCategory : 0,
                 currentRound: 0,
                 usedLetters: [],
                 currentLetter: null,
@@ -297,6 +315,23 @@ io.on('connection', (socket) => {
                         ownerId: null
                     });
                 }
+            } else if (requestedGameType === 'word_meaning') {
+                const shuffledWords = [...khaleejiWordsPool].sort(() => Math.random() - 0.5);
+                const pickedWords = shuffledWords.slice(0, questionsPerCategory);
+                const allMeanings = khaleejiWordsPool.map(w => w.meaning);
+                selectedQuestions = pickedWords.map(w => {
+                    const wrongMeanings = allMeanings.filter(m => m !== w.meaning).sort(() => Math.random() - 0.5).slice(0, 3);
+                    const options = [w.meaning, ...wrongMeanings].sort(() => Math.random() - 0.5);
+                    return {
+                        id: `wm-${Date.now()}-${Math.random()}`,
+                        category: "معاني الكلمات",
+                        value: 100,
+                        question: w.word,
+                        answer: w.meaning,
+                        options: options,
+                        isAnswered: false
+                    };
+                });
             }
 
             rooms.set(roomId, {
@@ -316,7 +351,7 @@ io.on('connection', (socket) => {
                 winner: null,
                 correctAnswer: null,
                 buzzedPlayerId: null,
-                roundCount: requestedGameType === 'bin_o_walad' ? questionsPerCategory : 0,
+                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning') ? questionsPerCategory : 0,
                 currentRound: 0,
                 usedLetters: [],
                 currentLetter: null,
@@ -383,6 +418,20 @@ io.on('connection', (socket) => {
                     } else {
                         clearInterval(countdownInterval);
                         startBinOWaladRound(room, io, roomId);
+                    }
+                }, 1000);
+            } else if (room.gameType === 'word_meaning') {
+                room.gameStatus = 'countdown';
+                room.timer = 5;
+                room.currentRound = 1;
+
+                const countdownInterval = setInterval(() => {
+                    if (room.timer > 0) {
+                        room.timer--;
+                        io.to(roomId).emit('room_data', room);
+                    } else {
+                        clearInterval(countdownInterval);
+                        startWordMeaningRound(room, io, roomId);
                     }
                 }, 1000);
             } else {
@@ -501,6 +550,77 @@ io.on('connection', (socket) => {
                 room.timer = 0;
             }
             io.to(roomId).emit('room_data', room);
+        }
+    });
+
+    function startWordMeaningRound(room, io, roomId) {
+        if (room.currentRound > room.roundCount) {
+            endGame(room, io, roomId);
+            return;
+        }
+
+        const q = room.questions[room.currentRound - 1];
+
+        const safeQuestion = { ...q };
+        delete safeQuestion.answer;
+        room.activeQuestion = safeQuestion;
+        room.correctAnswer = q.answer;
+
+        room.gameStatus = 'word_meaning_active';
+        room.timer = 15;
+        room.roundSubmissions = {};
+        room.feedback = null;
+
+        io.to(roomId).emit('room_data', room);
+
+        const roundInterval = setInterval(() => {
+            if (room.timer > 0 && room.gameStatus === 'word_meaning_active') {
+                room.timer--;
+                io.to(roomId).emit('room_data', room);
+            } else {
+                clearInterval(roundInterval);
+                if (room.gameStatus === 'word_meaning_active') {
+                    scoreWordMeaningRound(room, io, roomId);
+                }
+            }
+        }, 1000);
+    }
+
+    function scoreWordMeaningRound(room, io, roomId) {
+        room.gameStatus = 'word_meaning_scoring';
+        const q = room.questions[room.currentRound - 1];
+
+        room.players.forEach(p => {
+            const answer = room.roundSubmissions[p.id];
+            if (answer === q.answer) {
+                p.score += 100;
+            }
+        });
+
+        room.feedback = {
+            type: 'info',
+            message: `الإجابة الصحيحة هي: ${q.answer}`,
+            answer: q.answer
+        };
+
+        io.to(roomId).emit('room_data', room);
+
+        setTimeout(() => {
+            room.currentRound++;
+            room.feedback = null;
+            room.activeQuestion = null;
+            startWordMeaningRound(room, io, roomId);
+        }, 5000); // 5 seconds wait to show score
+    }
+
+    socket.on('submit_word_meaning_answer', ({ roomId, answer }) => {
+        const room = rooms.get(roomId);
+        if (room && room.gameStatus === 'word_meaning_active') {
+            room.roundSubmissions[socket.id] = answer;
+
+            if (Object.keys(room.roundSubmissions).length === room.players.length) {
+                room.timer = 0;
+            }
         }
     });
 

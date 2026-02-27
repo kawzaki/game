@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useGameStore, socket } from './store/useGameStore';
 import HuroofGame from './components/HuroofGame';
 import BentOWalad from './components/BentOWalad';
+import WordMeaningGame from './components/WordMeaningGame';
 import confetti from 'canvas-confetti';
 import {
   Timer as TimerIcon,
@@ -16,7 +17,8 @@ import {
   Type,
   Coins,
   Share2,
-  QrCode
+  QrCode,
+  BookOpen
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -140,7 +142,7 @@ const App: React.FC = () => {
     audio.play().catch(e => console.error("Audio play failed:", e));
   };
 
-  const finalizeCreateRoom = (type: 'jeopardy' | 'huroof' | 'bin_o_walad') => {
+  const finalizeCreateRoom = (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning') => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     setIsCreator(true);
     createRoom(code, type, qCount);
@@ -152,7 +154,7 @@ const App: React.FC = () => {
 
   const shareInviteLink = async () => {
     const link = generateInviteLink();
-    const gameName = gameType === 'jeopardy' ? 'تحدي الأسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : 'بنت وولد';
+    const gameName = gameType === 'jeopardy' ? 'تحدي الأسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : gameType === 'word_meaning' ? 'معاني الكلمات' : 'بنت وولد';
 
     if (navigator.share) {
       try {
@@ -240,6 +242,10 @@ const App: React.FC = () => {
             <Layout size={24} />
             تحدي بنت وولد (Classic)
           </button>
+          <button className="btn-primary-battle" style={{ background: '#8b5cf6', color: '#fff' }} onClick={() => finalizeCreateRoom('word_meaning')}>
+            <BookOpen size={24} />
+            تحدي معاني الكلمات
+          </button>
         </div>
 
         <div className="join-section">
@@ -278,10 +284,10 @@ const App: React.FC = () => {
               ) : (
                 <>
                   <div style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                    نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'تحدي الاسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : 'تحدي بنت وولد'}</strong>
+                    نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'تحدي الاسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : gameType === 'word_meaning' ? 'معاني الكلمات' : 'تحدي بنت وولد'}</strong>
                   </div>
 
-                  {(gameType === 'jeopardy' || gameType === 'bin_o_walad') && (
+                  {(gameType === 'jeopardy' || gameType === 'bin_o_walad' || gameType === 'word_meaning') && (
                     <div style={{ marginBottom: '16px', background: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
                       <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold' }}>
                         {gameType === 'jeopardy' ? 'عدد الأسئلة لكل فئة' : 'عدد الجولات'}
@@ -483,6 +489,8 @@ const App: React.FC = () => {
           </>
         ) : gameType === 'bin_o_walad' ? (
           <BentOWalad roomId={roomId || ''} />
+        ) : gameType === 'word_meaning' ? (
+          <WordMeaningGame roomId={roomId || ''} />
         ) : (
           /* HUROOF BOARD */
           <HuroofGame roomId={roomId || ''} />
