@@ -567,8 +567,9 @@ io.on('connection', (socket) => {
         room.correctAnswer = q.answer;
 
         room.gameStatus = 'word_meaning_active';
-        room.timer = 15;
+        room.timer = 10;
         room.roundSubmissions = {};
+        room.wordMeaningFeedback = {};
         room.feedback = null;
 
         io.to(roomId).emit('room_data', room);
@@ -616,7 +617,13 @@ io.on('connection', (socket) => {
     socket.on('submit_word_meaning_answer', ({ roomId, answer }) => {
         const room = rooms.get(roomId);
         if (room && room.gameStatus === 'word_meaning_active') {
+            const q = room.questions[room.currentRound - 1];
             room.roundSubmissions[socket.id] = answer;
+
+            if (!room.wordMeaningFeedback) room.wordMeaningFeedback = {};
+            room.wordMeaningFeedback[socket.id] = { answer, isCorrect: answer === q.answer };
+
+            io.to(roomId).emit('room_data', room);
 
             if (Object.keys(room.roundSubmissions).length === room.players.length) {
                 room.timer = 0;

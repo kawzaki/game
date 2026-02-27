@@ -240,7 +240,7 @@ const App: React.FC = () => {
           </button>
           <button className="btn-primary-battle" style={{ background: '#10b981', color: '#fff' }} onClick={() => finalizeCreateRoom('bin_o_walad')}>
             <Layout size={24} />
-            تحدي بنت وولد (Classic)
+            تحدي بنت وولد
           </button>
           <button className="btn-primary-battle" style={{ background: '#8b5cf6', color: '#fff' }} onClick={() => finalizeCreateRoom('word_meaning')}>
             <BookOpen size={24} />

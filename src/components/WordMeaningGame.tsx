@@ -15,7 +15,9 @@ const WordMeaningGame: React.FC<WordMeaningProps> = ({ roomId }) => {
         submitWordMeaningAnswer,
         currentRound,
         roundCount,
-        feedback
+        feedback,
+        myId,
+        wordMeaningFeedback
     } = useGameStore();
 
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -51,6 +53,7 @@ const WordMeaningGame: React.FC<WordMeaningProps> = ({ roomId }) => {
 
     if (gameStatus === 'word_meaning_active' || gameStatus === 'word_meaning_scoring') {
         const isScoring = gameStatus === 'word_meaning_scoring';
+        const myFeed = myId ? wordMeaningFeedback?.[myId] : null;
 
         return (
             <div className="word-meaning-container" style={{ padding: '10px', maxWidth: '600px', margin: '0 auto' }}>
@@ -89,8 +92,8 @@ const WordMeaningGame: React.FC<WordMeaningProps> = ({ roomId }) => {
                         <AnimatePresence>
                             {activeQuestion.options.map((opt: string, idx: number) => {
                                 const isSelected = selectedAnswer === opt;
-                                const isCorrect = isScoring && feedback?.answer === opt;
-                                const isWrong = isScoring && isSelected && feedback?.answer !== opt;
+                                const isCorrect = isScoring ? feedback?.answer === opt : (myFeed?.answer === opt && myFeed?.isCorrect);
+                                const isWrong = isScoring ? (isSelected && feedback?.answer !== opt) : (myFeed?.answer === opt && !myFeed?.isCorrect);
 
                                 let bgColor = '#ffffff';
                                 let borderColor = '#cbd5e1';
@@ -108,6 +111,16 @@ const WordMeaningGame: React.FC<WordMeaningProps> = ({ roomId }) => {
                                         textColor = '#991b1b';
                                     } else {
                                         itemOpacity = 0.6;
+                                    }
+                                } else if (myFeed && myFeed.answer === opt) {
+                                    if (isCorrect) {
+                                        bgColor = '#ecfdf5';
+                                        borderColor = '#10b981';
+                                        textColor = '#065f46';
+                                    } else if (isWrong) {
+                                        bgColor = '#fef2f2';
+                                        borderColor = '#ef4444';
+                                        textColor = '#991b1b';
                                     }
                                 } else if (isSelected) {
                                     bgColor = '#fef3c7';
@@ -139,8 +152,8 @@ const WordMeaningGame: React.FC<WordMeaningProps> = ({ roomId }) => {
                                         }}
                                     >
                                         <span>{opt}</span>
-                                        {isScoring && isCorrect && <Check size={24} color="#10b981" />}
-                                        {isScoring && isWrong && <X size={24} color="#ef4444" />}
+                                        {(isScoring && isCorrect) || (!isScoring && myFeed && myFeed.answer === opt && isCorrect) ? <Check size={24} color="#10b981" /> : null}
+                                        {(isScoring && isWrong) || (!isScoring && myFeed && myFeed.answer === opt && isWrong) ? <X size={24} color="#ef4444" /> : null}
                                     </motion.button>
                                 );
                             })}
