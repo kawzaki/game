@@ -694,16 +694,17 @@ io.on('connection', (socket) => {
                     }
                 } else {
                     // In Huroof, category is the letter. Pick a question starting with that letter or random if not found.
-                    const matchingQuestions = questionPool.filter(q =>
+                    const validPool = questionPool.filter(q => q.answer && q.options);
+                    const matchingQuestions = validPool.filter(q =>
                         (q.question && q.question.trim().startsWith(category)) ||
                         (q.answer && q.answer.trim().startsWith(category))
                     );
-                    const pool = matchingQuestions.length > 0 ? matchingQuestions : questionPool;
+                    const pool = matchingQuestions.length > 0 ? matchingQuestions : validPool;
                     const question = pool[Math.floor(Math.random() * pool.length)];
 
                     // Ensure all options start with the same letter for Huroof mode
                     let huroofOptions = [];
-                    const correctAnswer = question.answer;
+                    const correctAnswer = question.answer || "";
 
                     // Get other answers from the pool that start with the same letter
                     const sameLetterAnswers = [...new Set(questionPool
