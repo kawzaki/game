@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Pre-load questions for all rooms
-const questionPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
+let questionPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
 const khaleejiWordsPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/khaleejiWords.json'), 'utf8'));
 
 const ARABIC_LETTERS = [
@@ -39,12 +39,67 @@ function selectJeopardyQuestions(questionsPerCategory) {
 
 const app = express();
 app.use(cors());
+app.use(express.json());
+
+// --- Admin API Routes ---
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'password';
+const ADMIN_TOKEN = 'mock-admin-token-123';
+
+const requireAuth = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader === `Bearer ${ADMIN_TOKEN}`) {
+        next();
+    } else {
+        res.status(401).json({ error: 'Unauthorized' });
+    }
+};
+
+app.post('/api/admin/login', (req, res) => {
+    const { username, password } = req.body;
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        res.json({ token: ADMIN_TOKEN });
+    } else {
+        res.status(401).json({ error: 'Invalid credentials' });
+    }
+});
+
+app.get('/api/admin/questions', requireAuth, (req, res) => {
+    res.json(questionPool);
+});
+
+app.post('/api/admin/questions', requireAuth, (req, res) => {
+    const newQuestion = { ...req.body, id: `q-${Date.now()}`, isAnswered: false };
+    questionPool.push(newQuestion);
+    fs.writeFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), JSON.stringify(questionPool, null, 2), 'utf8');
+    res.json(newQuestion);
+});
+
+app.put('/api/admin/questions/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const index = questionPool.findIndex(q => q.id === id);
+    if (index !== -1) {
+        questionPool[index] = { ...questionPool[index], ...req.body };
+        fs.writeFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), JSON.stringify(questionPool, null, 2), 'utf8');
+        res.json(questionPool[index]);
+    } else {
+        res.status(404).json({ error: 'Question not found' });
+    }
+});
+
+app.delete('/api/admin/questions/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    questionPool = questionPool.filter(q => q.id !== id);
+    fs.writeFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), JSON.stringify(questionPool, null, 2), 'utf8');
+    res.json({ success: true });
+});
+// -----------------------
 
 // Serve static files from the build folder
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Fallback for SPA routing
-app.get(/^(?!\/socket\.io).*/, (req, res) => {
+app.get(/^(?!\/socket\.io|\/api).*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
