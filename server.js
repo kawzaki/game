@@ -504,6 +504,9 @@ io.on('connection', (socket) => {
             } else if (room.gameType === 'siba') {
                 room.gameStatus = 'siba_active';
                 room.sibaPhase = 'placement';
+                room.sibaTurn = room.players[0]?.id || null;
+                room.sibaPiecesPlaced = {};
+                room.sibaBoard = Array(9).fill(null);
             } else {
                 room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
             }
