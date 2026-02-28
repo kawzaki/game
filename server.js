@@ -24,7 +24,9 @@ const ARABIC_LETTERS = [
 
 function selectJeopardyQuestions(questionsPerCategory) {
     const selectedQuestions = [];
-    const shuffledPool = [...questionPool].sort(() => Math.random() - 0.5);
+    // Filter out the "الحروف" category specifically used for Huroof game
+    const jeopardyPool = questionPool.filter(q => q.category !== 'الحروف');
+    const shuffledPool = [...jeopardyPool].sort(() => Math.random() - 0.5);
     const categoryCounts = {};
 
     shuffledPool.forEach(q => {
