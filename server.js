@@ -276,7 +276,8 @@ io.on('connection', (socket) => {
                 currentLetter: null,
                 roundSubmissions: {}, // roomId -> { roundIndex -> { playerName -> { girl, boy, thing, food, animal, location } } }
                 roundResults: [],
-                creatorSocketId: socket.id
+                creatorSocketId: socket.id,
+                huroofHistory: []
             });
         }
 
@@ -357,7 +358,8 @@ io.on('connection', (socket) => {
                 currentLetter: null,
                 roundSubmissions: {},
                 roundResults: [],
-                creatorSocketId: socket.id
+                creatorSocketId: socket.id,
+                huroofHistory: []
             });
 
             // Note: We don't join the socket to the room yet, 
@@ -670,6 +672,14 @@ io.on('connection', (socket) => {
                         );
                     }
 
+                    room.huroofHistory.push({
+                        letter: category,
+                        pickedBy: player.name,
+                        question: randomReward.msg,
+                        correctAnswer: "-",
+                        answeredBy: "حظ"
+                    });
+
                     room.feedback = {
                         type: 'luck',
                         message: `حظ: ${randomReward.msg}`,
@@ -733,6 +743,14 @@ io.on('connection', (socket) => {
                     room.attempts = [];
                     room.feedback = null;
                     room.buzzedPlayerId = null;
+
+                    room.huroofHistory.push({
+                        letter: category,
+                        pickedBy: room.players.find(p => p.id === socket.id)?.name || "Unknown",
+                        question: safeQuestion.question,
+                        correctAnswer: correctAnswer,
+                        answeredBy: null // Will be filled when answered
+                    });
                 }
             }
             io.to(roomId).emit('room_data', room);
@@ -831,6 +849,10 @@ io.on('connection', (socket) => {
                         q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
                     );
                 } else if (room.gameType === 'huroof') {
+                    if (room.huroofHistory && room.huroofHistory.length > 0) {
+                        room.huroofHistory[room.huroofHistory.length - 1].answeredBy = player?.name || "Unknown";
+                    }
+
                     // Claim the letter in the grid for the team
                     room.huroofGrid = room.huroofGrid.map(g =>
                         g.letter === room.selectedCategory && g.ownerId === null ? { ...g, ownerId: socket.id, ownerTeam: player.team } : g
@@ -854,9 +876,14 @@ io.on('connection', (socket) => {
                         message: `عذراً، المحاولات انتهت والإجابات خاطئة.`,
                         answer: room.correctAnswer
                     };
-                    room.questions = room.questions.map(q =>
-                        q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
-                    );
+                    if (room.gameType === 'huroof' && room.huroofHistory && room.huroofHistory.length > 0) {
+                        room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "لا أحد";
+                    }
+                    if (room.gameType === 'jeopardy') {
+                        room.questions = room.questions.map(q =>
+                            q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
+                        );
+                    }
                 } else {
                     room.feedback = { type: 'wrong', message: `خطأ! ${player?.name} فقد نقاطاً. بإمكان الآخرين المحاولة الآن!` };
                     room.timer = 10;
@@ -880,6 +907,9 @@ io.on('connection', (socket) => {
                         q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q
                     );
                 } else if (room.gameType === 'huroof') {
+                    if (room.huroofHistory && room.huroofHistory.length > 0) {
+                        room.huroofHistory[room.huroofHistory.length - 1].answeredBy = player?.name || "Unknown";
+                    }
                     room.huroofGrid = room.huroofGrid.map(g =>
                         g.letter === room.selectedCategory && g.ownerId === null ? { ...g, ownerId: socket.id, ownerTeam: player.team } : g
                     );
@@ -895,6 +925,9 @@ io.on('connection', (socket) => {
                     message: `انتهى الوقت! لم يتم الإجابة على السؤال.`,
                     answer: room.correctAnswer
                 };
+                if (room.gameType === 'huroof' && room.huroofHistory && room.huroofHistory.length > 0) {
+                    room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "لا أحد";
+                }
                 if (room.gameType === 'jeopardy') {
                     room.questions = room.questions.map(q =>
                         q.id === room.activeQuestion.id ? { ...q, isAnswered: true } : q

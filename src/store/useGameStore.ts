@@ -38,6 +38,7 @@ interface GameState {
     roundCount: number;
     roundResults: any[];
     roomDataLoading: boolean;
+    huroofHistory: any[];
 
     // Actions
     setRoomId: (id: string) => void;
@@ -86,6 +87,7 @@ export const useGameStore = create<GameState>((set) => {
             currentRound: data.currentRound,
             roundCount: data.roundCount,
             roundResults: data.roundResults || [],
+            huroofHistory: data.huroofHistory || [],
             myId: socket.id || null,
             isConnected: true,
             roomDataLoading: false
@@ -128,6 +130,7 @@ export const useGameStore = create<GameState>((set) => {
         currentRound: 0,
         roundCount: 10,
         roundResults: [],
+        huroofHistory: [],
         roomDataLoading: false,
 
         setRoomId: (id) => set({ roomId: id }),
@@ -188,7 +191,8 @@ export const useGameStore = create<GameState>((set) => {
             winner: null,
             currentLetter: null,
             currentRound: 0,
-            roundResults: []
+            roundResults: [],
+            huroofHistory: []
         }),
 
         submitRoundBinOWalad: (roomId, inputs) => {

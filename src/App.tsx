@@ -627,6 +627,36 @@ const App: React.FC = () => {
                 </div>
               )}
 
+              {gameType === 'huroof' && useGameStore.getState().huroofHistory && useGameStore.getState().huroofHistory.length > 0 && (
+                <div style={{ marginTop: '30px', width: '100%', textAlign: 'right' }}>
+                  <h3 style={{ marginBottom: '16px', borderBottom: '2px solid #eee', paddingBottom: '8px' }}>سجل الحروف</h3>
+                  <div style={{ overflowX: 'auto', background: '#f8fafc', borderRadius: '12px', padding: '8px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'center' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid #cbd5e1', background: '#e2e8f0' }}>
+                          <th style={{ padding: '8px' }}>الحرف</th>
+                          <th style={{ padding: '8px' }}>من اختار</th>
+                          <th style={{ padding: '8px' }}>السؤال</th>
+                          <th style={{ padding: '8px' }}>الإجابة الصحيحة</th>
+                          <th style={{ padding: '8px' }}>من أجاب</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {useGameStore.getState().huroofHistory.map((item: any, idx: number) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '6px 8px', fontWeight: 'bold' }}>{item.letter}</td>
+                            <td style={{ padding: '6px 8px' }}>{item.pickedBy}</td>
+                            <td style={{ padding: '6px 8px' }}>{item.question}</td>
+                            <td style={{ padding: '6px 8px', color: '#10b981', fontWeight: 'bold' }}>{item.correctAnswer}</td>
+                            <td style={{ padding: '6px 8px', fontWeight: 'bold', color: item.answeredBy === 'لا أحد' ? '#ef4444' : '#3b82f6' }}>{item.answeredBy || '...'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
               <button className="btn-gold" style={{ marginTop: '30px' }} onClick={() => {
                 resetRoom();
                 window.history.replaceState({}, '', window.location.pathname);
