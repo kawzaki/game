@@ -913,7 +913,24 @@ io.on('connection', (socket) => {
             room.buzzedPlayerId = null;
 
             if (room.players.length > 0) {
-                room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
+                if (room.gameType === 'huroof' && room.players.length > 1) {
+                    const currentPlayer = room.players[room.currentPlayerIndex];
+                    let nextIndex = (room.currentPlayerIndex + 1) % room.players.length;
+
+                    // Keep looking for a player on the opposite team
+                    // Fallback to simple modulo if somehow all players are on the same team
+                    let foundOpposite = false;
+                    for (let i = 0; i < room.players.length; i++) {
+                        if (room.players[nextIndex].team !== currentPlayer.team) {
+                            foundOpposite = true;
+                            break;
+                        }
+                        nextIndex = (nextIndex + 1) % room.players.length;
+                    }
+                    room.currentPlayerIndex = nextIndex;
+                } else {
+                    room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
+                }
             }
 
             room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
