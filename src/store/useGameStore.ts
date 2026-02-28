@@ -32,17 +32,21 @@ interface GameState {
     winner: { name: string; score: number; isForfeit?: boolean; winningTeam?: 'red' | 'blue' } | null;
     playerName: string | null;
     questionsPerCategory: number;
-    gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning';
+    gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba';
     currentLetter: string | null;
     currentRound: number;
     roundCount: number;
     roundResults: any[];
     roomDataLoading: boolean;
     huroofHistory: any[];
+    sibaBoard?: (string | null)[];
+    sibaPhase?: 'setup' | 'placement' | 'movement';
+    sibaPiecesPlaced?: Record<string, number>;
+    sibaTurn?: string; // Player ID
 
     // Actions
     setRoomId: (id: string) => void;
-    setGameType: (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning') => void;
+    setGameType: (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba') => void;
     addPlayer: (name: string, roomId: string, questionsPerCategory?: number) => void;
     startGame: (roomId: string) => void;
     pickCategory: (roomId: string, category: string) => void;
@@ -56,7 +60,7 @@ interface GameState {
     resetRoom: () => void;
     submitRoundBinOWalad: (roomId: string, inputs: Record<string, string>) => void;
     getRoomStatus: (roomId: string) => void;
-    createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning', qCount: number) => void;
+    createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba', qCount: number) => void;
     submitWordMeaningAnswer: (roomId: string, answer: string) => void;
 }
 
@@ -88,6 +92,10 @@ export const useGameStore = create<GameState>((set) => {
             roundCount: data.roundCount,
             roundResults: data.roundResults || [],
             huroofHistory: data.huroofHistory || [],
+            sibaBoard: data.sibaBoard,
+            sibaPhase: data.sibaPhase,
+            sibaPiecesPlaced: data.sibaPiecesPlaced,
+            sibaTurn: data.sibaTurn,
             myId: socket.id || null,
             isConnected: true,
             roomDataLoading: false
@@ -132,6 +140,10 @@ export const useGameStore = create<GameState>((set) => {
         roundResults: [],
         huroofHistory: [],
         roomDataLoading: false,
+        sibaBoard: Array(9).fill(null),
+        sibaPhase: 'setup',
+        sibaPiecesPlaced: {},
+        sibaTurn: undefined,
 
         setRoomId: (id) => set({ roomId: id }),
 
@@ -192,7 +204,11 @@ export const useGameStore = create<GameState>((set) => {
             currentLetter: null,
             currentRound: 0,
             roundResults: [],
-            huroofHistory: []
+            huroofHistory: [],
+            sibaBoard: Array(9).fill(null),
+            sibaPhase: 'setup',
+            sibaPiecesPlaced: {},
+            sibaTurn: undefined
         }),
 
         submitRoundBinOWalad: (roomId, inputs) => {
@@ -204,7 +220,7 @@ export const useGameStore = create<GameState>((set) => {
             socket.emit('get_room_status', roomId);
         },
 
-        createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning', questionsPerCategory: number) => {
+        createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba', questionsPerCategory: number) => {
             socket.emit('create_room', { roomId, gameType, questionsPerCategory });
             set({ roomId, gameType, questionsPerCategory });
         },

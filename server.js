@@ -334,7 +334,11 @@ io.on('connection', (socket) => {
                 roundSubmissions: {}, // roomId -> { roundIndex -> { playerName -> { girl, boy, thing, food, animal, location } } }
                 roundResults: [],
                 creatorSocketId: socket.id,
-                huroofHistory: []
+                huroofHistory: [],
+                sibaBoard: Array(9).fill(null),
+                sibaPhase: 'setup',
+                sibaPiecesPlaced: {},
+                sibaTurn: null
             });
         }
 
@@ -416,7 +420,11 @@ io.on('connection', (socket) => {
                 roundSubmissions: {},
                 roundResults: [],
                 creatorSocketId: socket.id,
-                huroofHistory: []
+                huroofHistory: [],
+                sibaBoard: Array(9).fill(null),
+                sibaPhase: 'setup',
+                sibaPiecesPlaced: {},
+                sibaTurn: null
             });
 
             // Note: We don't join the socket to the room yet, 
@@ -1040,6 +1048,104 @@ io.on('connection', (socket) => {
         if (room && room.gameStatus !== 'game_over') {
             endGame(room, io, roomId, socket.id);
         }
+    });
+
+    socket.on('siba_action', ({ roomId, action }) => {
+        const room = rooms.get(roomId);
+        if (!room || room.gameType !== 'siba' || room.gameStatus === 'game_over') return;
+
+        const player = room.players.find(p => p.id === socket.id);
+        if (!player) return;
+
+        // Ensure 2 players are present
+        if (room.players.length < 2) return;
+
+        // Initialize Siba Turn First Move
+        if (!room.sibaTurn) {
+            room.sibaTurn = room.players[0].id;
+        }
+
+        // Only allow action if it's player's turn
+        if (room.sibaTurn !== socket.id) return;
+
+        const { type, from, to } = action;
+
+        // Initialize tracking if empty
+        if (!room.sibaPiecesPlaced[socket.id]) {
+            room.sibaPiecesPlaced[socket.id] = 0;
+        }
+
+        const winLines = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]             // Diagonals
+        ];
+
+        const checkWin = (board) => {
+            for (let line of winLines) {
+                const [a, b, c] = line;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    return board[a];
+                }
+            }
+            return null;
+        };
+
+        if (room.sibaPhase === 'setup') {
+            room.sibaPhase = 'placement';
+        }
+
+        if (room.sibaPhase === 'placement' && type === 'place') {
+            if (room.sibaPiecesPlaced[socket.id] >= 3) return; // Max 3
+            if (room.sibaBoard[to] !== null) return; // Spot taken
+
+            room.sibaBoard[to] = socket.id;
+            room.sibaPiecesPlaced[socket.id]++;
+
+            // Check if both players have placed 3 pieces
+            const p1 = room.players[0]?.id;
+            const p2 = room.players[1]?.id;
+            if ((room.sibaPiecesPlaced[p1] || 0) === 3 && (room.sibaPiecesPlaced[p2] || 0) === 3) {
+                room.sibaPhase = 'movement';
+            }
+        } else if (room.sibaPhase === 'movement' && type === 'move') {
+            if (room.sibaBoard[from] !== socket.id) return; // Not their piece
+            if (room.sibaBoard[to] !== null) return; // Target spot taken
+
+            const adjacencies = {
+                0: [1, 3, 4],
+                1: [0, 2, 4],
+                2: [1, 4, 5],
+                3: [0, 4, 6],
+                4: [0, 1, 2, 3, 5, 6, 7, 8],
+                5: [2, 4, 8],
+                6: [3, 4, 7],
+                7: [6, 4, 8],
+                8: [5, 4, 7]
+            };
+
+            if (!adjacencies[from].includes(to)) return; // Invalid move
+
+            room.sibaBoard[from] = null;
+            room.sibaBoard[to] = socket.id;
+        } else {
+            return; // Invalid phase/action combination
+        }
+
+        // Check for Win
+        const winnerId = checkWin(room.sibaBoard);
+        if (winnerId) {
+            const winnerPlayer = room.players.find(p => p.id === winnerId);
+            winnerPlayer.score += 100; // Give points
+            endGame(room, io, roomId, null, null); // Will use highest score
+            return; // endGame handles the broadcast
+        }
+
+        // Pass turn to next player
+        room.currentPlayerIndex = (room.currentPlayerIndex + 1) % room.players.length;
+        room.sibaTurn = room.players[room.currentPlayerIndex].id;
+
+        io.to(roomId).emit('room_data', room);
     });
 
     socket.on('disconnect', () => {
