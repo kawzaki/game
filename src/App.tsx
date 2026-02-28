@@ -70,6 +70,7 @@ const App: React.FC = () => {
 
   const [isCreator, setIsCreator] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   const isMyTurn = players[currentPlayerIndex]?.id === myId;
   const activePlayer = players[currentPlayerIndex];
@@ -208,6 +209,17 @@ const App: React.FC = () => {
     return cats;
   }, [questions]);
 
+
+  const getGameInstructions = (type: string) => {
+    switch (type) {
+      case 'jeopardy': return "تحدي الأسئلة: يختار اللاعب الفئة وقيمة السؤال. للإجابة يجب الضغط على الزر أسرع من الخصم. الفائز هو من يجمع أكبر عدد من النقاط.";
+      case 'huroof': return "لعبة الحروف: تبدأ من الخلية المركزية. أجب بشكل صحيح لتلوين الخلية بلون فريقك وانتقل للخلية المجاورة. الهدف هو توصيل خط كامل لجهات اللوحة.";
+      case 'bin_o_walad': return "بنت وولد: ستظهر رسالة بحرف معين. يجب عليك ملء الفئات المطلوبة بكلمات تبدأ بهذا الحرف وبأسرع وقت.";
+      case 'word_meaning': return "معاني الكلمات: سيظهر لك كلمة ومعاني متعددة. اختر المعنى الصحيح. كلما أجبت أسرع، زادت نقاطك التي تكسبها.";
+      case 'siba': return "لعبة الصبة: لعبة تكتيكية لشخصين. تتكون من مرحلة وضع 3 قطع ثم تحريكها. الهدف وضع 3 قطع في خط مستقيم.";
+      default: return "";
+    }
+  };
 
   // UI RENDERING STARTS HERE
 
@@ -381,10 +393,42 @@ const App: React.FC = () => {
                   ابدأ اللعبة!
                 </button>
               ) : (
-                <div style={{ marginTop: '20px', padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: '14px' }}>
-                  بانتظار المضيف لبدء اللعبة...
+                <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 1, delay: 0 }} style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--brand-yellow)' }} />
+                    <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--brand-yellow)' }} />
+                    <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--brand-yellow)' }} />
+                  </div>
+                  <div style={{ color: '#64748b', fontSize: '14px', fontWeight: 'bold' }}>
+                    بانتظار المضيف لبدء اللعبة...
+                  </div>
                 </div>
               )}
+
+              <button
+                onClick={() => setShowHowToPlay(true)}
+                style={{ marginTop: '16px', background: '#f1f5f9', border: 'none', padding: '10px 16px', borderRadius: '20px', color: '#3b82f6', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%' }}
+              >
+                <BookOpen size={18} />
+                كيفية اللعب
+              </button>
+
+              <AnimatePresence>
+                {showHowToPlay && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 4000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: 'rgba(0,0,0,0.6)' }} onClick={() => setShowHowToPlay(false)}>
+                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="modal-content" style={{ background: 'white', padding: '24px', borderRadius: '16px', textAlign: 'center', maxWidth: '350px', width: '100%' }} onClick={e => e.stopPropagation()}>
+                      <div style={{ background: '#e0f2fe', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#0284c7' }}>
+                        <BookOpen size={30} />
+                      </div>
+                      <h3 style={{ marginBottom: '16px', fontSize: '20px' }}>كيفية اللعب</h3>
+                      <p style={{ fontSize: '16px', color: '#475569', lineHeight: '1.6', marginBottom: '24px' }}>
+                        {getGameInstructions(gameType || '')}
+                      </p>
+                      <button onClick={() => setShowHowToPlay(false)} className="btn-primary-battle" style={{ width: '100%' }}>حسناً، فهمت</button>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <button onClick={() => {
                 setRoomId('');

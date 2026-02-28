@@ -665,9 +665,17 @@ io.on('connection', (socket) => {
         const q = room.questions[room.currentRound - 1];
 
         room.players.forEach(p => {
-            const answer = room.roundSubmissions[p.id];
-            if (answer === q.answer) {
-                p.score += 100;
+            const submission = room.roundSubmissions[p.id];
+            if (submission && submission.answer === q.answer) {
+                // Base 50 + up to 50 for speed (5 points per second left)
+                const speedBonus = submission.timeLeft * 5;
+                const totalPoints = 50 + speedBonus;
+                p.score += totalPoints;
+
+                // Send back the points earned for the UI to display
+                if (room.wordMeaningFeedback[p.id]) {
+                    room.wordMeaningFeedback[p.id].pointsEarned = totalPoints;
+                }
             }
         });
 
@@ -691,7 +699,7 @@ io.on('connection', (socket) => {
         const room = rooms.get(roomId);
         if (room && room.gameStatus === 'word_meaning_active') {
             const q = room.questions[room.currentRound - 1];
-            room.roundSubmissions[socket.id] = answer;
+            room.roundSubmissions[socket.id] = { answer, timeLeft: room.timer };
 
             if (!room.wordMeaningFeedback) room.wordMeaningFeedback = {};
             room.wordMeaningFeedback[socket.id] = { answer, isCorrect: answer === q.answer };

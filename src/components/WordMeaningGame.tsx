@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Check, X } from 'lucide-react';
@@ -20,18 +20,12 @@ const WordMeaningGame: React.FC<WordMeaningProps> = ({ roomId }) => {
         wordMeaningFeedback
     } = useGameStore();
 
-    const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-
-    // Reset selected answer when a new round starts
-    useEffect(() => {
-        if (gameStatus === 'word_meaning_active') {
-            setSelectedAnswer(null);
-        }
-    }, [gameStatus, activeQuestion]);
+    // Use global feedback directly to determine selected answer
+    const myFeed = myId ? wordMeaningFeedback?.[myId] : null;
+    const submittedAnswer = myFeed?.answer || null;
 
     const handleSelectOption = (opt: string) => {
-        if (selectedAnswer || gameStatus !== 'word_meaning_active') return;
-        setSelectedAnswer(opt);
+        if (submittedAnswer || gameStatus !== 'word_meaning_active') return;
         submitWordMeaningAnswer(roomId, opt);
     };
 
@@ -53,7 +47,6 @@ const WordMeaningGame: React.FC<WordMeaningProps> = ({ roomId }) => {
 
     if (gameStatus === 'word_meaning_active' || gameStatus === 'word_meaning_scoring') {
         const isScoring = gameStatus === 'word_meaning_scoring';
-        const myFeed = myId ? wordMeaningFeedback?.[myId] : null;
 
         return (
             <div className="word-meaning-container" style={{ padding: '10px', maxWidth: '600px', margin: '0 auto' }}>
@@ -91,7 +84,7 @@ const WordMeaningGame: React.FC<WordMeaningProps> = ({ roomId }) => {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
                         <AnimatePresence>
                             {activeQuestion.options.map((opt: string, idx: number) => {
-                                const isSelected = selectedAnswer === opt;
+                                const isSelected = submittedAnswer === opt;
                                 const isCorrect = isScoring ? feedback?.answer === opt : (myFeed?.answer === opt && myFeed?.isCorrect);
                                 const isWrong = isScoring ? (isSelected && feedback?.answer !== opt) : (myFeed?.answer === opt && !myFeed?.isCorrect);
 
@@ -130,9 +123,9 @@ const WordMeaningGame: React.FC<WordMeaningProps> = ({ roomId }) => {
                                 return (
                                     <motion.button
                                         key={idx}
-                                        whileTap={!isScoring && !selectedAnswer ? { scale: 0.98 } : {}}
+                                        whileTap={!isScoring && !submittedAnswer ? { scale: 0.98 } : {}}
                                         onClick={() => handleSelectOption(opt)}
-                                        disabled={!!selectedAnswer || isScoring}
+                                        disabled={!!submittedAnswer || isScoring}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: itemOpacity, y: 0 }}
                                         transition={{ delay: idx * 0.1 }}
@@ -147,7 +140,7 @@ const WordMeaningGame: React.FC<WordMeaningProps> = ({ roomId }) => {
                                             display: 'flex',
                                             justifyContent: 'space-between',
                                             alignItems: 'center',
-                                            cursor: (selectedAnswer || isScoring) ? 'default' : 'pointer',
+                                            cursor: (submittedAnswer || isScoring) ? 'default' : 'pointer',
                                             transition: 'all 0.2s ease',
                                         }}
                                     >
@@ -165,9 +158,9 @@ const WordMeaningGame: React.FC<WordMeaningProps> = ({ roomId }) => {
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        style={{ marginTop: '30px', textAlign: 'center', fontSize: '18px', fontWeight: 'bold', color: selectedAnswer === feedback.answer ? '#10b981' : '#ef4444' }}
+                        style={{ marginTop: '30px', textAlign: 'center', fontSize: '18px', fontWeight: 'bold', color: submittedAnswer === feedback.answer ? '#10b981' : '#ef4444' }}
                     >
-                        {selectedAnswer === feedback.answer ? 'إجابة صحيحة! +100 نقطة' : (selectedAnswer ? 'إجابة خاطئة!' : 'لم يتم اختيار إجابة!')}
+                        {submittedAnswer === feedback.answer ? `إجابة صحيحة! +${myFeed?.pointsEarned || 50} نقطة` : (submittedAnswer ? 'إجابة خاطئة!' : 'لم يتم اختيار إجابة!')}
                     </motion.div>
                 )}
             </div>
