@@ -27,7 +27,7 @@ interface GameState {
     isConnected: boolean;
     feedback: { type: 'correct' | 'wrong' | 'all_wrong' | 'luck'; message: string; answer?: string; reward?: any } | null;
     wordMeaningFeedback?: Record<string, { answer: string; isCorrect: boolean }>;
-    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'selecting_letter' | 'question' | 'game_over' | 'countdown' | 'round_active' | 'round_scoring' | 'word_meaning_active' | 'word_meaning_scoring';
+    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'selecting_letter' | 'question' | 'game_over' | 'countdown' | 'round_active' | 'round_scoring' | 'word_meaning_active' | 'word_meaning_scoring' | 'siba_active';
     timer: number;
     winner: { name: string; score: number; isForfeit?: boolean; winningTeam?: 'red' | 'blue' } | null;
     playerName: string | null;

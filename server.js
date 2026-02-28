@@ -501,6 +501,9 @@ io.on('connection', (socket) => {
                         startWordMeaningRound(room, io, roomId);
                     }
                 }, 1000);
+            } else if (room.gameType === 'siba') {
+                room.gameStatus = 'siba_active';
+                room.sibaPhase = 'placement';
             } else {
                 room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
             }
