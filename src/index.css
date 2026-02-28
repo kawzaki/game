@@ -748,14 +748,14 @@ body {
 
 @media (max-width: 640px) {
   :root {
-    --hex-width: 46px;
-    --hex-height: 52px;
-    --hex-row-offset: -13px;
-    --hex-stagger: 23px;
+    --hex-width: 40px;
+    --hex-height: 46px;
+    --hex-row-offset: -11px;
+    --hex-stagger: 20px;
     --hex-border: 2px;
-    --hex-font-size: 18px;
-    --board-padding: 12px;
-    --board-radius: 20px;
+    --hex-font-size: 16px;
+    --board-padding: 8px;
+    --board-radius: 16px;
   }
 }
 
