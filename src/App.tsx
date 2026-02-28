@@ -541,7 +541,16 @@ const App: React.FC = () => {
                         ))}
                       </div>
                     ) : (
-                      <div style={{ fontSize: '18px' }}>{players.find(p => p.id === buzzedPlayerId)?.name} يجيب الآن...</div>
+                      <>
+                        <div style={{ fontSize: '18px' }}>{players.find(p => p.id === buzzedPlayerId)?.name} يجيب الآن...</div>
+                        {gameType === 'huroof' && activeQuestion.options && (
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', opacity: 0.6, pointerEvents: 'none' }}>
+                            {activeQuestion.options.map((opt, idx) => (
+                              <button key={idx} disabled style={{ padding: '16px', borderRadius: '12px', border: '2px solid #ddd', fontWeight: 'bold', background: '#f8fafc', color: '#94a3b8' }}>{opt}</button>
+                            ))}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
