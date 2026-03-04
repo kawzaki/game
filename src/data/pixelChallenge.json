@@ -1,7 +1,31 @@
 [
     {
         "id": "pc-1",
-        "question": "ماذا يوجد في هذه الصورة؟",
+        "question": "ما هو هذا الشعار؟",
+        "answer": "آبل",
+        "options": [
+            "آبل",
+            "مايكروسوفت",
+            "سامسونج",
+            "هواوي"
+        ],
+        "imageUrl": "/images/pc/apple.png"
+    },
+    {
+        "id": "pc-2",
+        "question": "ما هي هذه العملة الرقمية؟",
+        "answer": "البيتكوين",
+        "options": [
+            "البيتكوين",
+            "إيثيريوم",
+            "دولار",
+            "يورو"
+        ],
+        "imageUrl": "/images/pc/bitcoin.png"
+    },
+    {
+        "id": "pc-3",
+        "question": "ما هذا المعلم التاريخي في باريس؟",
         "answer": "برج إيفل",
         "options": [
             "برج إيفل",
@@ -12,80 +36,68 @@
         "imageUrl": "/images/pc/eiffel_tower.png"
     },
     {
-        "id": "pc-2",
-        "question": "تعرف على هذا المعلم الشهير",
-        "answer": "الأهرامات",
-        "options": [
-            "الأهرامات",
-            "البتراء",
-            "سور الصين العظيم",
-            "الكولوسيوم"
-        ],
-        "imageUrl": "/images/pc/pyramids.png"
-    },
-    {
-        "id": "pc-3",
-        "question": "ما هو هذا الحيوان؟",
-        "answer": "الباندا",
-        "options": [
-            "الباندا",
-            "الكوالا",
-            "الدب القطبي",
-            "الكنغر"
-        ],
-        "imageUrl": "/images/pc/panda.png"
-    },
-    {
         "id": "pc-4",
-        "question": "ما هي هذه الفاكهة؟",
-        "answer": "المانجو",
+        "question": "ما هي هذه العلامة التجارية للسيارات؟",
+        "answer": "فيراري",
         "options": [
-            "المانجو",
-            "البرتقال",
-            "الأناناس",
-            "البطيخ"
+            "فيراري",
+            "لامبورجيني",
+            "بورش",
+            "بي إم دبليو"
         ],
-        "imageUrl": "/images/pc/mango.png"
+        "imageUrl": "/images/pc/ferrari.png"
     },
     {
         "id": "pc-5",
-        "question": "تعرف على هذا الشعار",
-        "answer": "آبل",
+        "question": "ما هي هذه الرياضة العالمية؟",
+        "answer": "كرة القدم",
         "options": [
-            "آبل",
-            "سامسونج",
-            "مايكروسوفت",
-            "جوجل"
+            "كرة القدم",
+            "كرة السلة",
+            "التنس",
+            "البيسبول"
         ],
-        "imageUrl": "/images/pc/apple.png"
+        "imageUrl": "/images/pc/football.png"
     },
     {
         "id": "pc-6",
-        "question": "ما هي هذه العملة؟",
-        "answer": "البيتكوين",
-        "options": [
-            "البيتكوين",
-            "الإيثيريوم",
-            "الدولار",
-            "الريال"
-        ],
-        "imageUrl": "/images/pc/bitcoin.png"
-    },
-    {
-        "id": "pc-7",
-        "question": "تعرف على هذا الحيوان المفترس",
+        "question": "ما هذا الحيوان الملقب بملك الغابة؟",
         "answer": "الأسد",
         "options": [
             "الأسد",
             "النمر",
             "الفهد",
-            "الضبع"
+            "الذئب"
         ],
         "imageUrl": "/images/pc/lion.png"
     },
     {
+        "id": "pc-7",
+        "question": "ما هي هذه الفاكهة الاستوائية؟",
+        "answer": "المانجو",
+        "options": [
+            "المانجو",
+            "الخوخ",
+            "المشمش",
+            "البرتقال"
+        ],
+        "imageUrl": "/images/pc/mango.png"
+    },
+    {
         "id": "pc-8",
-        "question": "ما هذا الطبق الشهير؟",
+        "question": "ما هذا الحيوان المحب للخيزران؟",
+        "answer": "الباندا",
+        "options": [
+            "الباندا",
+            "الدب القطبي",
+            "الكانغرو",
+            "الكوالا"
+        ],
+        "imageUrl": "/images/pc/panda.png"
+    },
+    {
+        "id": "pc-9",
+        "question": "ما هو هذا الطعام الإيطالي الشهير؟",
         "answer": "بيتزا",
         "options": [
             "بيتزا",
@@ -96,28 +108,16 @@
         "imageUrl": "/images/pc/pizza.png"
     },
     {
-        "id": "pc-9",
-        "question": "ما هي هذه الرياضة؟",
-        "answer": "كرة القدم",
-        "options": [
-            "كرة القدم",
-            "كرة السلة",
-            "التنس",
-            "الكريكت"
-        ],
-        "imageUrl": "/images/pc/football.png"
-    },
-    {
         "id": "pc-10",
-        "question": "تعرف على هذه السيارة الرياضية",
-        "answer": "فيراري",
+        "question": "ما هذه المعالم التاريخية في مصر؟",
+        "answer": "الأهرامات",
         "options": [
-            "فيراري",
-            "لامبورغيني",
-            "مرسيدس",
-            "بي إم دبليو"
+            "الأهرامات",
+            "أبو الهول",
+            "الكرنك",
+            "معبد فيلة"
         ],
-        "imageUrl": "/images/pc/ferrari.png"
+        "imageUrl": "/images/pc/pyramids.png"
     },
     {
         "id": "pc-11",
@@ -126,117 +126,261 @@
         "options": [
             "برج خليفة",
             "برج العرب",
-            "المسجد الحرام",
-            "برج المملكة"
+            "أبراج البيت",
+            "برج سي إن"
         ],
-        "imageUrl": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&q=80&w=1080"
+        "imageUrl": "/images/pc/burj_khalifa.png"
     },
     {
         "id": "pc-12",
-        "question": "ما هو هذا الكوكب؟",
+        "question": "ما هذا الكوكب ذو الحلقات؟",
         "answer": "زحل",
         "options": [
             "زحل",
-            "المريخ",
             "المشتري",
-            "الأرض"
+            "المريخ",
+            "نبتون"
         ],
-        "imageUrl": "https://images.unsplash.com/photo-1614732414444-096e5f1122d5?auto=format&fit=crop&q=80&w=1080"
+        "imageUrl": "/images/pc/saturn.png"
     },
     {
         "id": "pc-13",
-        "question": "تعرف على شخصية الألعاب هذه",
-        "answer": "سوبر ماريو",
-        "options": [
-            "سوبر ماريو",
-            "سونيك",
-            "بيكاتشو",
-            "باك مان"
-        ],
-        "imageUrl": "https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?auto=format&fit=crop&q=80&w=1080"
-    },
-    {
-        "id": "pc-14",
-        "question": "ما هذا المعلم التاريخي؟",
+        "question": "ما هذا المعلم التاريخي في الهند؟",
         "answer": "تاج محل",
         "options": [
             "تاج محل",
-            "البتراء",
-            "ماتشو بيتشو",
-            "أنغكور وات"
+            "قطب منار",
+            "القلعة الحمراء",
+            "جامع فيصل"
         ],
-        "imageUrl": "https://images.unsplash.com/photo-1548013146-72479768bbaa?auto=format&fit=crop&q=80&w=1080"
+        "imageUrl": "/images/pc/taj_mahal.png"
     },
     {
-        "id": "pc-15",
-        "question": "تعرف على هذا الشعار العالمي",
-        "answer": "أمازون",
-        "options": [
-            "أمازون",
-            "فيسبوك",
-            "نيتفليكس",
-            "تويتر"
-        ],
-        "imageUrl": "https://images.unsplash.com/photo-1523474253046-7cd2ad0b162b?auto=format&fit=crop&q=80&w=1080"
-    },
-    {
-        "id": "pc-16",
-        "question": "ما هو هذا المعلم الشهير؟",
+        "id": "pc-14",
+        "question": "ما هذا المعلم الأسترالي الشهير؟",
         "answer": "دار أوبرا سيدني",
         "options": [
             "دار أوبرا سيدني",
-            "جسر البرج",
-            "جسر بروكلين",
-            "ساحة التايمز"
+            "جسر هاربور",
+            "برج سكاى",
+            "متحف تيت"
         ],
-        "imageUrl": "https://images.unsplash.com/photo-1523413651479-597eb2da0ad6?auto=format&fit=crop&q=80&w=1080"
+        "imageUrl": "/images/pc/sydney_opera_house.png"
     },
     {
-        "id": "pc-17",
-        "question": "تعرف على هذا المعلم الأثري",
+        "id": "pc-15",
+        "question": "ما هذا المعلم الروماني القديم؟",
         "answer": "الكولوسيوم",
         "options": [
             "الكولوسيوم",
-            "البارثينون",
-            "ستونهنج",
-            "قصر الحمراء"
+            "المنتدى الروماني",
+            "بانثيون",
+            "نافورة تريفي"
         ],
-        "imageUrl": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=1080"
+        "imageUrl": "/images/pc/colosseum.png"
     },
     {
-        "id": "pc-18",
-        "question": "ما هذا النصب التذكاري؟",
+        "id": "pc-16",
+        "question": "ما هذا المعلم الأمريكي الشهير؟",
         "answer": "تمثال الحرية",
         "options": [
             "تمثال الحرية",
-            "تمثال المسيح الفادي",
-            "أبو الهول",
-            "نافورة لوتس"
+            "مبنى الإمباير ستيت",
+            "البيت الأبيض",
+            "نصب لينكون"
         ],
-        "imageUrl": "https://images.unsplash.com/photo-1605130284535-11dd9eedc58a?auto=format&fit=crop&q=80&w=1080"
+        "imageUrl": "/images/pc/statue_of_liberty.png"
     },
     {
-        "id": "pc-19",
-        "question": "ما هذا الجسر الشهير؟",
+        "id": "pc-17",
+        "question": "ما هذا الجسر الشهير في سان فرانسيسكو؟",
         "answer": "جسر البوابة الذهبية",
         "options": [
             "جسر البوابة الذهبية",
+            "جسر بروكلين",
             "جسر لندن",
-            "جسر ريالتو",
-            "جسر فيرناندو"
+            "جسر تاي هو"
         ],
-        "imageUrl": "https://images.unsplash.com/photo-1449034446853-66c86144b0ad?auto=format&fit=crop&q=80&w=1080"
+        "imageUrl": "/images/pc/golden_gate_bridge.png"
     },
     {
-        "id": "pc-20",
-        "question": "تعرف على هذا المعلم العظيم",
+        "id": "pc-18",
+        "question": "ما هذا المعلم الصيني العظيم؟",
         "answer": "سور الصين العظيم",
         "options": [
             "سور الصين العظيم",
-            "سور برلين",
-            "قلعة حلب",
-            "مدائن صالح"
+            "المدينة المحرمة",
+            "جيش التراكوتا",
+            "قصر الصيف"
         ],
-        "imageUrl": "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&q=80&w=1080"
+        "imageUrl": "/images/pc/great_wall_china.png"
+    },
+    {
+        "id": "pc-19",
+        "question": "ما هو هذا الحيوان الأليف الشهير؟",
+        "answer": "القطة",
+        "options": [
+            "القطة",
+            "الكلب",
+            "الأرنب",
+            "الهامستر"
+        ],
+        "imageUrl": "/images/pc/cat.png"
+    },
+    {
+        "id": "pc-20",
+        "question": "ما هو هذا البرج الشهير في لندن؟",
+        "answer": "ساعة بيج بن",
+        "options": [
+            "ساعة بيج بن",
+            "برج إيفل",
+            "برج خليفة",
+            "برج سي إن"
+        ],
+        "imageUrl": "/images/pc/big_ben.png"
+    },
+    {
+        "id": "pc-21",
+        "question": "ما هذا الكائن الأليف؟",
+        "answer": "كلب",
+        "options": [
+            "كلب",
+            "ذئب",
+            "ثعلب",
+            "نمر"
+        ],
+        "imageUrl": "/images/pc/dog.png"
+    },
+    {
+        "id": "pc-22",
+        "question": "ما هذا المشروب الصباحي المفضل؟",
+        "answer": "قهوة",
+        "options": [
+            "قهوة",
+            "شاي",
+            "عصير",
+            "حليب"
+        ],
+        "imageUrl": "/images/pc/coffee.png"
+    },
+    {
+        "id": "pc-23",
+        "question": "ما هذه الآلة الموسيقية؟",
+        "answer": "جيتار",
+        "options": [
+            "جيتار",
+            "بيانو",
+            "كمان",
+            "عود"
+        ],
+        "imageUrl": "/images/pc/guitar.png"
+    },
+    {
+        "id": "pc-24",
+        "question": "ما هذه الوجبة السريعة الشهيرة؟",
+        "answer": "هامبرغر",
+        "options": [
+            "هامبرغر",
+            "بيتزا",
+            "شاورما",
+            "سوشي"
+        ],
+        "imageUrl": "/images/pc/hamburger.png"
+    },
+    {
+        "id": "pc-25",
+        "question": "ما هذا الشيء الذي نقرأه؟",
+        "answer": "كتاب",
+        "options": [
+            "كتاب",
+            "مجلة",
+            "كمبيوتر",
+            "هاتف"
+        ],
+        "imageUrl": "/images/pc/book.png"
+    },
+    {
+        "id": "pc-26",
+        "question": "ما هذه الأداة للتصوير؟",
+        "answer": "كاميرا",
+        "options": [
+            "كاميرا",
+            "منظار",
+            "تلسكوب",
+            "مجهر"
+        ],
+        "imageUrl": "/images/pc/camera.png"
+    },
+    {
+        "id": "pc-27",
+        "question": "ما هذه الوسيلة للنقل على السكك؟",
+        "answer": "قطار",
+        "options": [
+            "قطار",
+            "حافلة",
+            "طائرة",
+            "سفينة"
+        ],
+        "imageUrl": "/images/pc/train.png"
+    },
+    {
+        "id": "pc-28",
+        "question": "ما هذا الشيء الذي نلبسه في المعصم؟",
+        "answer": "ساعة",
+        "options": [
+            "ساعة",
+            "سوار",
+            "خاتم",
+            "نظارة"
+        ],
+        "imageUrl": "/images/pc/watch.png"
+    },
+    {
+        "id": "pc-29",
+        "question": "ما هذه الوسيلة للتنقل بدواسات؟",
+        "answer": "دراجة هوائية",
+        "options": [
+            "دراجة هوائية",
+            "دراجة نارية",
+            "سيارة",
+            "سكوتر"
+        ],
+        "imageUrl": "/images/pc/bicycle.png"
+    },
+    {
+        "id": "pc-30",
+        "question": "ما هذا المكان لقضاء العطلات؟",
+        "answer": "شاطئ البحر",
+        "options": [
+            "شاطئ البحر",
+            "جبل",
+            "غابة",
+            "صحراء"
+        ],
+        "imageUrl": "/images/pc/beach.png"
+    },
+    {
+        "id": "pc-31",
+        "question": "من هو بطل هذه اللعبة الشهيرة؟",
+        "answer": "سوبر ماريو",
+        "options": [
+            "سوبر ماريو",
+            "لويجي",
+            "سونيك",
+            "لينك"
+        ],
+        "imageUrl": "/images/pc/super_mario.png"
+    },
+    {
+        "id": "pc-32",
+        "question": "ما هو هذا الشعار الشهير؟",
+        "answer": "أمازون",
+        "options": [
+            "أمازون",
+            "إيباي",
+            "نمشي",
+            "نون"
+        ],
+        "imageUrl": "/images/pc/amazon.png"
     }
 ]
