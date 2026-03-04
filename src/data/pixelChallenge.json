@@ -177,6 +177,66 @@
             "نيتفليكس",
             "تويتر"
         ],
-        "imageUrl": "https://images.unsplash.com/photo-1517646331032-9e8563c520a1?auto=format&fit=crop&q=80&w=1080"
+        "imageUrl": "https://images.unsplash.com/photo-1523474253046-7cd2ad0b162b?auto=format&fit=crop&q=80&w=1080"
+    },
+    {
+        "id": "pc-16",
+        "question": "ما هو هذا المعلم الشهير؟",
+        "answer": "دار أوبرا سيدني",
+        "options": [
+            "دار أوبرا سيدني",
+            "جسر البرج",
+            "جسر بروكلين",
+            "ساحة التايمز"
+        ],
+        "imageUrl": "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&q=80&w=1080"
+    },
+    {
+        "id": "pc-17",
+        "question": "تعرف على هذا المعلم الأثري",
+        "answer": "الكولوسيوم",
+        "options": [
+            "الكولوسيوم",
+            "البارثينون",
+            "ستونهنج",
+            "قصر الحمراء"
+        ],
+        "imageUrl": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=1080"
+    },
+    {
+        "id": "pc-18",
+        "question": "ما هذا النصب التذكاري؟",
+        "answer": "تمثال الحرية",
+        "options": [
+            "تمثال الحرية",
+            "تمثال المسيح الفادي",
+            "أبو الهول",
+            "نافورة لوتس"
+        ],
+        "imageUrl": "https://images.unsplash.com/photo-1605130284535-11dd9eedc58a?auto=format&fit=crop&q=80&w=1080"
+    },
+    {
+        "id": "pc-19",
+        "question": "ما هذا الجسر الشهير؟",
+        "answer": "جسر البوابة الذهبية",
+        "options": [
+            "جسر البوابة الذهبية",
+            "جسر لندن",
+            "جسر ريالتو",
+            "جسر فيرناندو"
+        ],
+        "imageUrl": "https://images.unsplash.com/photo-1449034446853-66c86144b0ad?auto=format&fit=crop&q=80&w=1080"
+    },
+    {
+        "id": "pc-20",
+        "question": "تعرف على هذا المعلم العظيم",
+        "answer": "سور الصين العظيم",
+        "options": [
+            "سور الصين العظيم",
+            "سور برلين",
+            "قلعة حلب",
+            "مدائن صالح"
+        ],
+        "imageUrl": "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&q=80&w=1080"
     }
 ]

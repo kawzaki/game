@@ -315,7 +315,8 @@ io.on('connection', (socket) => {
                 });
             } else if (requestedGameType === 'pixel_challenge') {
                 const shuffled = [...pixelChallengePool].sort(() => Math.random() - 0.5);
-                selectedQuestions = shuffled.slice(0, questionsPerCategory);
+                // Select 15 questions (10 main + 5 buffer for tie-breakers)
+                selectedQuestions = shuffled.slice(0, 15);
             }
 
             rooms.set(roomId, {
@@ -405,7 +406,8 @@ io.on('connection', (socket) => {
                 });
             } else if (requestedGameType === 'pixel_challenge') {
                 const shuffled = [...pixelChallengePool].sort(() => Math.random() - 0.5);
-                selectedQuestions = shuffled.slice(0, questionsPerCategory);
+                // Select 15 questions (10 main + 5 buffer for tie-breakers)
+                selectedQuestions = shuffled.slice(0, 15);
             }
 
             rooms.set(roomId, {
@@ -739,27 +741,38 @@ io.on('connection', (socket) => {
     });
 
     function startPixelChallengeRound(room, io, roomId) {
-        console.log(`[Pixel Challenge] Starting Round ${room.currentRound}/${room.roundCount} in room ${roomId}`);
-        if (room.currentRound > room.roundCount) {
-            console.log(`[Pixel Challenge] Round ${room.currentRound} > ${room.roundCount}, ending game.`);
+        console.log(`[Pixel Challenge] Starting Round ${room.currentRound}/${room.roundCount || 10} in room ${roomId}`);
+
+        // Base round limit is 10, but we have up to 15 for tie-breakers
+        const maxRounds = 15;
+        const baseRounds = room.questionsPerCategory || 10;
+
+        if (room.currentRound > maxRounds || (room.currentRound > baseRounds && !room.isTieBreaker)) {
+            console.log(`[Pixel Challenge] Ending game: currentRound ${room.currentRound}, baseRounds ${baseRounds}, isTieBreaker ${room.isTieBreaker}`);
             endGame(room, io, roomId);
             return;
         }
 
-        if (!room.questions || room.questions.length === 0) {
-            console.error(`[Pixel Challenge] Error: No questions in room ${roomId}!`);
+        if (!room.questions || !room.questions[room.currentRound - 1]) {
+            console.error(`[Pixel Challenge] Error: No question for round ${room.currentRound} in room ${roomId}!`);
             endGame(room, io, roomId);
             return;
         }
 
         const q = room.questions[room.currentRound - 1];
-        room.activeQuestion = { ...q };
+        // Shuffle options for each round
+        const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+
+        room.activeQuestion = {
+            ...q,
+            options: shuffledOptions
+        };
         delete room.activeQuestion.answer;
 
         room.gameStatus = 'pixel_active';
-        room.timer = 13; // 13 seconds for pixel challenge
+        room.timer = 13;
         room.roundSubmissions = {};
-        room.wordMeaningFeedback = {}; // Reusing feedback structure
+        room.wordMeaningFeedback = {};
         room.feedback = null;
 
         io.to(roomId).emit('room_data', room);
@@ -784,7 +797,6 @@ io.on('connection', (socket) => {
         room.players.forEach(p => {
             const submission = room.roundSubmissions[p.id];
             if (submission && submission.answer === q.answer) {
-                // Scoring: Base 50 + linear bonus for time
                 const timeLeft = submission.timeLeft;
                 const totalPoints = 50 + (timeLeft * 5);
                 p.score += totalPoints;
@@ -795,9 +807,7 @@ io.on('connection', (socket) => {
             }
         });
 
-        // Restore answer so clients can see it in scoring phase
         room.activeQuestion.answer = q.answer;
-
         room.feedback = {
             type: 'info',
             message: `الإجابة الصحيحة هي: ${q.answer}`,
@@ -808,6 +818,35 @@ io.on('connection', (socket) => {
 
         setTimeout(() => {
             room.currentRound++;
+
+            // Logic to handle 10-round limit and tie-breakers
+            const baseRounds = room.questionsPerCategory || 10;
+            const maxRounds = 15;
+
+            if (room.currentRound > baseRounds) {
+                // Check if there's a tie for first place
+                const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
+                const isTie = sortedPlayers.length > 1 && sortedPlayers[0].score === sortedPlayers[1].score;
+
+                if (isTie && room.currentRound <= maxRounds) {
+                    room.isTieBreaker = true;
+                    console.log(`[Pixel Challenge] Tie detected! Round ${room.currentRound} starts as tie-breaker.`);
+                } else if (room.isTieBreaker && !isTie) {
+                    // Tie has been broken!
+                    console.log(`[Pixel Challenge] Tie broken at round ${room.currentRound - 1}!`);
+                    endGame(room, io, roomId);
+                    return;
+                } else if (room.currentRound > maxRounds) {
+                    // Reached absolute limit
+                    endGame(room, io, roomId);
+                    return;
+                } else if (!room.isTieBreaker) {
+                    // Normal end of 10 rounds
+                    endGame(room, io, roomId);
+                    return;
+                }
+            }
+
             room.feedback = null;
             room.activeQuestion = null;
             startPixelChallengeRound(room, io, roomId);
