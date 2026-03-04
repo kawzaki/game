@@ -200,6 +200,7 @@ const App: React.FC = () => {
     const cats: Record<string, any[]> = {};
     if (!questions) return cats;
     questions.forEach((q: any) => {
+      if (gameType === 'jeopardy' && q.category === 'الحروف') return;
       if (!cats[q.category]) cats[q.category] = [];
       cats[q.category].push(q);
     });
@@ -453,7 +454,7 @@ const App: React.FC = () => {
 
   // GAME BOARD RENDERING (Jeopardy or Huroof)
   return (
-    <div className="game-wrapper" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', paddingBottom: '200px' }}>
+    <div className="game-wrapper" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', paddingBottom: '80px' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #eee', background: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Trophy size={18} style={{ color: 'var(--accent-gold)' }} />
@@ -513,8 +514,8 @@ const App: React.FC = () => {
                   </div>
                 </div>
                 <h3 style={{ textAlign: 'center', marginBottom: '24px' }}>{selectedCategory}</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '12px' }}>
-                  {[100, 200, 300, 400, 500].map((val) => {
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                  {[100, 200, 300, 400, 500, 600].map((val) => {
                     const catQuestions = categories[selectedCategory || ''] || [];
                     const answeredCount = catQuestions.filter(q => q.value === val && q.isAnswered).length;
                     const totalForValue = catQuestions.filter(q => q.value === val).length;
@@ -525,14 +526,14 @@ const App: React.FC = () => {
                         key={val}
                         className={`value-button ${isFullyAnswered ? 'tile-answered' : ''} ${!isMyTurn ? 'tile-disabled' : ''}`}
                         onClick={() => !isFullyAnswered && handlePickValue(val)}
-                        style={{ height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                        style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                       >
-                        <Coins size={20} />
-                        <span style={{ fontWeight: 900 }}>{val}</span>
+                        <Coins size={28} />
+                        <span style={{ fontWeight: 900, fontSize: '24px' }}>{val}</span>
                       </motion.button>
                     );
                   })}
-                  <button className="btn-back-ghost" onClick={() => useGameStore.setState({ gameStatus: 'selecting_category', selectedCategory: null })}>رجوع</button>
+                  <button className="btn-back-ghost" onClick={() => useGameStore.setState({ gameStatus: 'selecting_category', selectedCategory: null })} style={{ gridColumn: 'span 2' }}>رجوع</button>
                 </div>
               </div>
             )}
