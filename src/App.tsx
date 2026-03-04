@@ -131,17 +131,31 @@ const App: React.FC = () => {
   }, [i18n.language]);
 
   useEffect(() => {
+    if (feedback) {
+      if (feedback.type === 'correct' || feedback.type === 'luck') playSound('correct');
+      if (feedback.type === 'wrong') playSound('wrong');
+    }
+  }, [feedback]);
+
+  useEffect(() => {
     let interval: any;
     if (gameStatus === 'question' && timer > 0) {
       interval = setInterval(() => tickTimer(), 1000);
     } else if (timer === 0 && gameStatus === 'question') {
+      playSound('timeout');
       if (roomId) answerQuestion(roomId, false);
     }
     return () => clearInterval(interval);
   }, [gameStatus, timer, roomId, answerQuestion, tickTimer]);
 
-  const playBuzzerSound = () => {
-    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/1084/1084-preview.mp3');
+  const playSound = (type: 'buzzer' | 'correct' | 'wrong' | 'timeout') => {
+    const sounds = {
+      buzzer: 'https://assets.mixkit.co/active_storage/sfx/1084/1084-preview.mp3',
+      correct: 'https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3',
+      wrong: 'https://assets.mixkit.co/active_storage/sfx/2016/2016-preview.mp3',
+      timeout: 'https://assets.mixkit.co/active_storage/sfx/2658/2658-preview.mp3'
+    };
+    const audio = new Audio(sounds[type]);
     audio.play().catch(e => console.error("Audio play failed:", e));
   };
 
@@ -578,10 +592,16 @@ const App: React.FC = () => {
                   <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '12px' }}>حاولت بالفعل، انتظر الآخرين...</div>
                 ) : !buzzedPlayerId ? (
                   <motion.button
-                    whileTap={{ scale: 0.92, y: 4 }}
-                    onClick={() => roomId && (playBuzzerSound(), buzz(roomId))}
+                    whileTap={{ scale: 0.9, backgroundColor: '#f59e0b' }}
+                    onClick={() => {
+                      if (roomId) {
+                        playSound('buzzer');
+                        // 100ms delay for visual/sound feedback before server call
+                        setTimeout(() => buzz(roomId), 100);
+                      }
+                    }}
                     className="btn-primary-battle"
-                    style={{ height: '80px', fontSize: '32px' }}
+                    style={{ height: '80px', fontSize: '32px', transition: 'all 0.1s' }}
                   >
                     إجابة!
                   </motion.button>
