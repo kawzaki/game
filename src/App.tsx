@@ -148,12 +148,14 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [gameStatus, timer, roomId, answerQuestion, tickTimer]);
 
-  const playSound = (type: 'buzzer' | 'correct' | 'wrong' | 'timeout') => {
+  const playSound = (type: 'buzzer' | 'correct' | 'wrong' | 'timeout' | 'game_over_win' | 'game_over_lose') => {
     const sounds = {
       buzzer: 'https://assets.mixkit.co/active_storage/sfx/1084/1084-preview.mp3',
-      correct: 'https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3',
-      wrong: 'https://assets.mixkit.co/active_storage/sfx/2016/2016-preview.mp3',
-      timeout: 'https://assets.mixkit.co/active_storage/sfx/2658/2658-preview.mp3'
+      correct: 'https://www.myinstants.com/media/sounds/correct.mp3',
+      wrong: 'https://www.myinstants.com/media/sounds/wrong-answer-buzzer.mp3',
+      timeout: 'https://assets.mixkit.co/active_storage/sfx/2658/2658-preview.mp3',
+      game_over_win: 'https://www.myinstants.com/media/sounds/award-winners-fanfare_SXgBSYC.mp3',
+      game_over_lose: 'https://www.myinstants.com/media/sounds/wah-wah-sound-effect.mp3'
     };
     const audio = new Audio(sounds[type]);
     audio.play().catch(e => console.error("Audio play failed:", e));
@@ -192,6 +194,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (gameStatus === 'game_over' && winner) {
+      if (winner.name === playerName) {
+        playSound('game_over_win');
+      } else {
+        playSound('game_over_lose');
+      }
       confetti({
         particleCount: 150,
         spread: 70,
@@ -199,7 +206,7 @@ const App: React.FC = () => {
         colors: ['#a3844a', '#D4AF37', '#FFD700']
       });
     }
-  }, [gameStatus, winner]);
+  }, [gameStatus, winner, myId]);
 
   const hasJoined = useMemo(() => players.some(p => p.id === myId), [players, myId]);
 
