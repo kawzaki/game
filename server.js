@@ -448,9 +448,14 @@ io.on('connection', (socket) => {
     });
 
     socket.on('get_room_status', (roomId) => {
+        console.log(`[Status Request] Room: ${roomId}`);
         const room = rooms.get(roomId);
         if (room) {
             socket.emit('room_data', room);
+        } else {
+            console.log(`[Status Request] Room ${roomId} not found.`);
+            // Emit a "not found" state or empty room so client stops loading
+            socket.emit('room_data', { id: roomId, players: [], gameStatus: 'lobby', gameType: 'jeopardy', notFound: true });
         }
     });
 
