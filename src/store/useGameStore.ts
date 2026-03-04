@@ -11,6 +11,7 @@ interface Question {
     answer: string;
     options: string[];
     isAnswered: boolean;
+    imageUrl?: string;
 }
 
 interface GameState {
@@ -27,12 +28,12 @@ interface GameState {
     isConnected: boolean;
     feedback: { type: 'correct' | 'wrong' | 'all_wrong' | 'luck'; message: string; answer?: string; reward?: any } | null;
     wordMeaningFeedback?: Record<string, { answer: string; isCorrect: boolean; pointsEarned?: number }>;
-    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'selecting_letter' | 'question' | 'game_over' | 'countdown' | 'round_active' | 'round_scoring' | 'word_meaning_active' | 'word_meaning_scoring' | 'siba_active';
+    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'selecting_letter' | 'question' | 'game_over' | 'countdown' | 'round_active' | 'round_scoring' | 'word_meaning_active' | 'word_meaning_scoring' | 'siba_active' | 'pixel_active' | 'pixel_scoring';
     timer: number;
     winner: { name: string; score: number; isForfeit?: boolean; winningTeam?: 'red' | 'blue' } | null;
     playerName: string | null;
     questionsPerCategory: number;
-    gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba';
+    gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge';
     currentLetter: string | null;
     currentRound: number;
     roundCount: number;
@@ -46,7 +47,7 @@ interface GameState {
 
     // Actions
     setRoomId: (id: string) => void;
-    setGameType: (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba') => void;
+    setGameType: (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge') => void;
     addPlayer: (name: string, roomId: string, questionsPerCategory?: number) => void;
     startGame: (roomId: string) => void;
     pickCategory: (roomId: string, category: string) => void;
@@ -60,8 +61,9 @@ interface GameState {
     resetRoom: () => void;
     submitRoundBinOWalad: (roomId: string, inputs: Record<string, string>) => void;
     getRoomStatus: (roomId: string) => void;
-    createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba', qCount: number) => void;
+    createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge', qCount: number) => void;
     submitWordMeaningAnswer: (roomId: string, answer: string) => void;
+    submitPixelAnswer: (roomId: string, answer: string) => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
@@ -220,13 +222,16 @@ export const useGameStore = create<GameState>((set) => {
             socket.emit('get_room_status', roomId);
         },
 
-        createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba', questionsPerCategory: number) => {
+        createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge', questionsPerCategory: number) => {
             socket.emit('create_room', { roomId, gameType, questionsPerCategory });
             set({ roomId, gameType, questionsPerCategory });
         },
 
         submitWordMeaningAnswer: (roomId, answer) => {
             socket.emit('submit_word_meaning_answer', { roomId, answer });
+        },
+        submitPixelAnswer: (roomId, answer) => {
+            socket.emit('submit_pixel_answer', { roomId, answer });
         }
     };
 });

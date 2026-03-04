@@ -5,6 +5,7 @@ import HuroofGame from './components/HuroofGame';
 import BentOWalad from './components/BentOWalad';
 import WordMeaningGame from './components/WordMeaningGame';
 import SibaGame from './components/SibaGame';
+import PixelChallenge from './components/PixelChallenge';
 import confetti from 'canvas-confetti';
 import {
   Timer as TimerIcon,
@@ -19,7 +20,8 @@ import {
   Coins,
   Share2,
   QrCode,
-  BookOpen
+  BookOpen,
+  Image as ImageIcon
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -161,7 +163,7 @@ const App: React.FC = () => {
     audio.play().catch(e => console.error("Audio play failed:", e));
   };
 
-  const finalizeCreateRoom = (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba') => {
+  const finalizeCreateRoom = (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge') => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     setIsCreator(true);
     createRoom(code, type, qCount);
@@ -173,7 +175,7 @@ const App: React.FC = () => {
 
   const shareInviteLink = async () => {
     const link = generateInviteLink();
-    const gameName = gameType === 'jeopardy' ? 'تحدي الأسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : gameType === 'word_meaning' ? 'معاني الكلمات' : gameType === 'siba' ? 'لعبة الصبة' : 'بنت وولد';
+    const gameName = gameType === 'jeopardy' ? 'تحدي الأسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : gameType === 'word_meaning' ? 'معاني الكلمات' : gameType === 'siba' ? 'لعبة الصبة' : gameType === 'pixel_challenge' ? 'تحدي الصور' : 'بنت وولد';
 
     if (navigator.share) {
       try {
@@ -239,6 +241,7 @@ const App: React.FC = () => {
       case 'bin_o_walad': return "بنت وولد: ستظهر رسالة بحرف معين. يجب عليك ملء الفئات المطلوبة بكلمات تبدأ بهذا الحرف وبأسرع وقت.";
       case 'word_meaning': return "معاني الكلمات: سيظهر لك كلمة ومعاني متعددة. اختر المعنى الصحيح. كلما أجبت أسرع، زادت نقاطك التي تكسبها.";
       case 'siba': return "لعبة الصبة: لعبة تكتيكية لشخصين. تتكون من مرحلة وضع 3 قطع ثم تحريكها. الهدف وضع 3 قطع في خط مستقيم.";
+      case 'pixel_challenge': return "تحدي الصور: تظهر صورة مشوشة وتتضح تدريجياً. أسرع بالتعرف عليها لاختيار الإجابة الصحيحة وكسب نقاط أكثر.";
       default: return "";
     }
   };
@@ -286,6 +289,10 @@ const App: React.FC = () => {
             <Layout size={24} />
             لعبة الصبة
           </button>
+          <button className="btn-primary-battle" style={{ background: '#ec4899', color: '#fff' }} onClick={() => finalizeCreateRoom('pixel_challenge')}>
+            <ImageIcon size={24} />
+            تحدي الصور
+          </button>
         </div>
 
         <div className="join-section">
@@ -324,13 +331,13 @@ const App: React.FC = () => {
               ) : (
                 <>
                   <div style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                    نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'تحدي الاسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : gameType === 'word_meaning' ? 'معاني الكلمات' : gameType === 'siba' ? 'لعبة الصبة' : 'تحدي بنت وولد'}</strong>
+                    نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'تحدي الاسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : gameType === 'word_meaning' ? 'معاني الكلمات' : gameType === 'siba' ? 'لعبة الصبة' : gameType === 'pixel_challenge' ? 'تحدي الصور' : 'تحدي بنت وولد'}</strong>
                   </div>
 
-                  {(players[0]?.id === myId || isCreator) && (gameType === 'jeopardy' || gameType === 'bin_o_walad' || gameType === 'word_meaning') && (
+                  {(players[0]?.id === myId || isCreator) && (gameType === 'jeopardy' || gameType === 'bin_o_walad' || gameType === 'word_meaning' || gameType === 'pixel_challenge') && (
                     <div style={{ marginBottom: '16px', background: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
                       <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold' }}>
-                        {gameType === 'jeopardy' ? 'عدد الأسئلة لكل فئة' : 'عدد الجولات'}
+                        {(gameType === 'jeopardy') ? 'عدد الأسئلة لكل فئة' : 'عدد الجولات'}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
                         <button onClick={() => handleQCountChange(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>-</button>
@@ -557,6 +564,8 @@ const App: React.FC = () => {
           <BentOWalad roomId={roomId || ''} />
         ) : gameType === 'word_meaning' ? (
           <WordMeaningGame roomId={roomId || ''} />
+        ) : gameType === 'pixel_challenge' ? (
+          <PixelChallenge roomId={roomId || ''} />
         ) : gameType === 'siba' ? (
           <SibaGame />
         ) : (

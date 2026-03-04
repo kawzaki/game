@@ -1,0 +1,182 @@
+[
+    {
+        "id": "pc-1",
+        "question": "ماذا يوجد في هذه الصورة؟",
+        "answer": "برج إيفل",
+        "options": [
+            "برج إيفل",
+            "برج خليفة",
+            "ساعة بيج بن",
+            "تمثال الحرية"
+        ],
+        "imageUrl": "/images/pc/eiffel_tower.png"
+    },
+    {
+        "id": "pc-2",
+        "question": "تعرف على هذا المعلم الشهير",
+        "answer": "الأهرامات",
+        "options": [
+            "الأهرامات",
+            "البتراء",
+            "سور الصين العظيم",
+            "الكولوسيوم"
+        ],
+        "imageUrl": "/images/pc/pyramids.png"
+    },
+    {
+        "id": "pc-3",
+        "question": "ما هو هذا الحيوان؟",
+        "answer": "الباندا",
+        "options": [
+            "الباندا",
+            "الكوالا",
+            "الدب القطبي",
+            "الكنغر"
+        ],
+        "imageUrl": "/images/pc/panda.png"
+    },
+    {
+        "id": "pc-4",
+        "question": "ما هي هذه الفاكهة؟",
+        "answer": "المانجو",
+        "options": [
+            "المانجو",
+            "البرتقال",
+            "الأناناس",
+            "البطيخ"
+        ],
+        "imageUrl": "/images/pc/mango.png"
+    },
+    {
+        "id": "pc-5",
+        "question": "تعرف على هذا الشعار",
+        "answer": "آبل",
+        "options": [
+            "آبل",
+            "سامسونج",
+            "مايكروسوفت",
+            "جوجل"
+        ],
+        "imageUrl": "/images/pc/apple.png"
+    },
+    {
+        "id": "pc-6",
+        "question": "ما هي هذه العملة؟",
+        "answer": "البيتكوين",
+        "options": [
+            "البيتكوين",
+            "الإيثيريوم",
+            "الدولار",
+            "الريال"
+        ],
+        "imageUrl": "/images/pc/bitcoin.png"
+    },
+    {
+        "id": "pc-7",
+        "question": "تعرف على هذا الحيوان المفترس",
+        "answer": "الأسد",
+        "options": [
+            "الأسد",
+            "النمر",
+            "الفهد",
+            "الضبع"
+        ],
+        "imageUrl": "/images/pc/lion.png"
+    },
+    {
+        "id": "pc-8",
+        "question": "ما هذا الطبق الشهير؟",
+        "answer": "بيتزا",
+        "options": [
+            "بيتزا",
+            "برجر",
+            "باستا",
+            "سوشي"
+        ],
+        "imageUrl": "/images/pc/pizza.png"
+    },
+    {
+        "id": "pc-9",
+        "question": "ما هي هذه الرياضة؟",
+        "answer": "كرة القدم",
+        "options": [
+            "كرة القدم",
+            "كرة السلة",
+            "التنس",
+            "الكريكت"
+        ],
+        "imageUrl": "/images/pc/football.png"
+    },
+    {
+        "id": "pc-10",
+        "question": "تعرف على هذه السيارة الرياضية",
+        "answer": "فيراري",
+        "options": [
+            "فيراري",
+            "لامبورغيني",
+            "مرسيدس",
+            "بي إم دبليو"
+        ],
+        "imageUrl": "/images/pc/ferrari.png"
+    },
+    {
+        "id": "pc-11",
+        "question": "ما هذا المعلم العربي الشهير؟",
+        "answer": "برج خليفة",
+        "options": [
+            "برج خليفة",
+            "برج العرب",
+            "المسجد الحرام",
+            "برج المملكة"
+        ],
+        "imageUrl": "https://images.unsplash.com/photo-1549918864-48ac978761a4?auto=format&fit=crop&q=80&w=1080"
+    },
+    {
+        "id": "pc-12",
+        "question": "ما هو هذا الكوكب؟",
+        "answer": "زحل",
+        "options": [
+            "زحل",
+            "المريخ",
+            "المشتري",
+            "الأرض"
+        ],
+        "imageUrl": "https://images.unsplash.com/photo-1614732414444-096e5f1122d5?auto=format&fit=crop&q=80&w=1080"
+    },
+    {
+        "id": "pc-13",
+        "question": "تعرف على شخصية الألعاب هذه",
+        "answer": "سوبر ماريو",
+        "options": [
+            "سوبر ماريو",
+            "سونيك",
+            "بيكاتشو",
+            "باك مان"
+        ],
+        "imageUrl": "https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?auto=format&fit=crop&q=80&w=1080"
+    },
+    {
+        "id": "pc-14",
+        "question": "ما هذا المعلم التاريخي؟",
+        "answer": "تاج محل",
+        "options": [
+            "تاج محل",
+            "البتراء",
+            "ماتشو بيتشو",
+            "أنغكور وات"
+        ],
+        "imageUrl": "https://images.unsplash.com/photo-1564507592333-c60657eaa0ae?auto=format&fit=crop&q=80&w=1080"
+    },
+    {
+        "id": "pc-15",
+        "question": "تعرف على هذا الشعار العالمي",
+        "answer": "أمازون",
+        "options": [
+            "أمازون",
+            "فيسبوك",
+            "نيتفليكس",
+            "تويتر"
+        ],
+        "imageUrl": "https://images.unsplash.com/photo-1517646331032-9e8563c520a1?auto=format&fit=crop&q=80&w=1080"
+    }
+]

@@ -12,6 +12,12 @@ const __dirname = path.dirname(__filename);
 // Pre-load questions for all rooms
 let questionPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
 const khaleejiWordsPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/khaleejiWords.json'), 'utf8'));
+let pixelChallengePool = [];
+try {
+    pixelChallengePool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/pixelChallenge.json'), 'utf8'));
+} catch (e) {
+    console.error("Error loading pixelChallenge.json:", e.message);
+}
 
 const ARABIC_LETTERS = [
     'أ', 'ب', 'ت', 'ث', 'ج',
@@ -307,6 +313,9 @@ io.on('connection', (socket) => {
                         isAnswered: false
                     };
                 });
+            } else if (requestedGameType === 'pixel_challenge') {
+                const shuffled = [...pixelChallengePool].sort(() => Math.random() - 0.5);
+                selectedQuestions = shuffled.slice(0, questionsPerCategory);
             }
 
             rooms.set(roomId, {
@@ -327,7 +336,7 @@ io.on('connection', (socket) => {
                 correctAnswer: null,
                 buzzedPlayerId: null,
                 // Bent o Walad specific
-                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning') ? questionsPerCategory : 0,
+                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge') ? (questionsPerCategory || 10) : 0,
                 currentRound: 0,
                 usedLetters: [],
                 currentLetter: null,
@@ -394,6 +403,9 @@ io.on('connection', (socket) => {
                         isAnswered: false
                     };
                 });
+            } else if (requestedGameType === 'pixel_challenge') {
+                const shuffled = [...pixelChallengePool].sort(() => Math.random() - 0.5);
+                selectedQuestions = shuffled.slice(0, questionsPerCategory);
             }
 
             rooms.set(roomId, {
@@ -413,7 +425,7 @@ io.on('connection', (socket) => {
                 winner: null,
                 correctAnswer: null,
                 buzzedPlayerId: null,
-                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning') ? questionsPerCategory : 0,
+                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge') ? (questionsPerCategory || 10) : 0,
                 currentRound: 0,
                 usedLetters: [],
                 currentLetter: null,
@@ -444,7 +456,7 @@ io.on('connection', (socket) => {
         const room = rooms.get(roomId);
         if (room && (room.players[0]?.id === socket.id || room.creatorSocketId === socket.id)) {
             room.questionsPerCategory = questionsPerCategory;
-            if (room.gameType === 'bin_o_walad') {
+            if (room.gameType === 'bin_o_walad' || room.gameType === 'pixel_challenge') {
                 room.roundCount = questionsPerCategory;
             } else if (room.gameType === 'jeopardy') {
                 // For Jeopardy, we might need to re-select questions, 
@@ -499,6 +511,20 @@ io.on('connection', (socket) => {
                     } else {
                         clearInterval(countdownInterval);
                         startWordMeaningRound(room, io, roomId);
+                    }
+                }, 1000);
+            } else if (room.gameType === 'pixel_challenge') {
+                room.gameStatus = 'countdown';
+                room.timer = 3;
+                room.currentRound = 1;
+
+                const countdownInterval = setInterval(() => {
+                    if (room.timer > 0) {
+                        room.timer--;
+                        io.to(roomId).emit('room_data', room);
+                    } else {
+                        clearInterval(countdownInterval);
+                        startPixelChallengeRound(room, io, roomId);
                     }
                 }, 1000);
             } else if (room.gameType === 'siba') {
@@ -698,6 +724,99 @@ io.on('connection', (socket) => {
     socket.on('submit_word_meaning_answer', ({ roomId, answer }) => {
         const room = rooms.get(roomId);
         if (room && room.gameStatus === 'word_meaning_active') {
+            const q = room.questions[room.currentRound - 1];
+            room.roundSubmissions[socket.id] = { answer, timeLeft: room.timer };
+
+            if (!room.wordMeaningFeedback) room.wordMeaningFeedback = {};
+            room.wordMeaningFeedback[socket.id] = { answer, isCorrect: answer === q.answer };
+
+            io.to(roomId).emit('room_data', room);
+
+            if (Object.keys(room.roundSubmissions).length === room.players.length) {
+                room.timer = 0;
+            }
+        }
+    });
+
+    function startPixelChallengeRound(room, io, roomId) {
+        console.log(`[Pixel Challenge] Starting Round ${room.currentRound}/${room.roundCount} in room ${roomId}`);
+        if (room.currentRound > room.roundCount) {
+            console.log(`[Pixel Challenge] Round ${room.currentRound} > ${room.roundCount}, ending game.`);
+            endGame(room, io, roomId);
+            return;
+        }
+
+        if (!room.questions || room.questions.length === 0) {
+            console.error(`[Pixel Challenge] Error: No questions in room ${roomId}!`);
+            endGame(room, io, roomId);
+            return;
+        }
+
+        const q = room.questions[room.currentRound - 1];
+        room.activeQuestion = { ...q };
+        delete room.activeQuestion.answer;
+
+        room.gameStatus = 'pixel_active';
+        room.timer = 13; // 13 seconds for pixel challenge
+        room.roundSubmissions = {};
+        room.wordMeaningFeedback = {}; // Reusing feedback structure
+        room.feedback = null;
+
+        io.to(roomId).emit('room_data', room);
+
+        const roundInterval = setInterval(() => {
+            if (room.timer > 0 && room.gameStatus === 'pixel_active') {
+                room.timer--;
+                io.to(roomId).emit('room_data', room);
+            } else {
+                clearInterval(roundInterval);
+                if (room.gameStatus === 'pixel_active') {
+                    scorePixelChallengeRound(room, io, roomId);
+                }
+            }
+        }, 1000);
+    }
+
+    function scorePixelChallengeRound(room, io, roomId) {
+        room.gameStatus = 'pixel_scoring';
+        const q = room.questions[room.currentRound - 1];
+
+        room.players.forEach(p => {
+            const submission = room.roundSubmissions[p.id];
+            if (submission && submission.answer === q.answer) {
+                // Scoring: Base 50 + linear bonus for time
+                const timeLeft = submission.timeLeft;
+                const totalPoints = 50 + (timeLeft * 5);
+                p.score += totalPoints;
+
+                if (room.wordMeaningFeedback[p.id]) {
+                    room.wordMeaningFeedback[p.id].pointsEarned = totalPoints;
+                }
+            }
+        });
+
+        // Restore answer so clients can see it in scoring phase
+        room.activeQuestion.answer = q.answer;
+
+        room.feedback = {
+            type: 'info',
+            message: `الإجابة الصحيحة هي: ${q.answer}`,
+            answer: q.answer
+        };
+
+        io.to(roomId).emit('room_data', room);
+
+        setTimeout(() => {
+            room.currentRound++;
+            room.feedback = null;
+            room.activeQuestion = null;
+            startPixelChallengeRound(room, io, roomId);
+        }, 5000);
+    }
+
+    socket.on('submit_pixel_answer', ({ roomId, answer }) => {
+        const room = rooms.get(roomId);
+        if (room && room.gameStatus === 'pixel_active') {
             const q = room.questions[room.currentRound - 1];
             room.roundSubmissions[socket.id] = { answer, timeLeft: room.timer };
 
