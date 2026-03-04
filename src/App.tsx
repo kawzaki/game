@@ -327,21 +327,15 @@ const App: React.FC = () => {
                     نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'تحدي الاسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : gameType === 'word_meaning' ? 'معاني الكلمات' : gameType === 'siba' ? 'لعبة الصبة' : 'تحدي بنت وولد'}</strong>
                   </div>
 
-                  {(gameType === 'jeopardy' || gameType === 'bin_o_walad' || gameType === 'word_meaning') && (
+                  {(players[0]?.id === myId || isCreator) && (gameType === 'jeopardy' || gameType === 'bin_o_walad' || gameType === 'word_meaning') && (
                     <div style={{ marginBottom: '16px', background: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
                       <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold' }}>
                         {gameType === 'jeopardy' ? 'عدد الأسئلة لكل فئة' : 'عدد الجولات'}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                        {(players[0]?.id === myId || isCreator) ? (
-                          <>
-                            <button onClick={() => handleQCountChange(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>-</button>
-                            <span style={{ fontSize: '18px', fontWeight: 'bold', width: '30px' }}>{qCount}</span>
-                            <button onClick={() => handleQCountChange(Math.min(50, qCount + 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>+</button>
-                          </>
-                        ) : (
-                          <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{qCount}</span>
-                        )}
+                        <button onClick={() => handleQCountChange(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>-</button>
+                        <span style={{ fontSize: '18px', fontWeight: 'bold', width: '30px' }}>{qCount}</span>
+                        <button onClick={() => handleQCountChange(Math.min(50, qCount + 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>+</button>
                       </div>
                     </div>
                   )}
