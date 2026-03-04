@@ -608,24 +608,32 @@ const App: React.FC = () => {
                   </motion.button>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {buzzedPlayerId === myId ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        {activeQuestion.options.map((opt, idx) => (
-                          <button key={idx} onClick={() => roomId && submitAnswer(roomId, opt)} style={{ padding: '16px', borderRadius: '12px', border: '2px solid #ddd', fontWeight: 'bold' }}>{opt}</button>
-                        ))}
-                      </div>
-                    ) : (
-                      <>
-                        <div style={{ fontSize: '18px' }}>{players.find(p => p.id === buzzedPlayerId)?.name} يجيب الآن...</div>
-                        {gameType === 'huroof' && activeQuestion.options && (
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', opacity: 0.6, pointerEvents: 'none' }}>
-                            {activeQuestion.options.map((opt, idx) => (
-                              <button key={idx} disabled style={{ padding: '16px', borderRadius: '12px', border: '2px solid #ddd', fontWeight: 'bold', background: '#f8fafc', color: '#94a3b8' }}>{opt}</button>
-                            ))}
-                          </div>
-                        )}
-                      </>
-                    )}
+                    <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
+                      {buzzedPlayerId === myId ? 'أجب الآن!' : `${players.find(p => p.id === buzzedPlayerId)?.name} يجيب الآن...`}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      {activeQuestion.options.map((opt, idx) => {
+                        const isAnswering = buzzedPlayerId === myId;
+                        return (
+                          <button
+                            key={idx}
+                            disabled={!isAnswering}
+                            onClick={() => roomId && submitAnswer(roomId, opt)}
+                            style={{
+                              padding: '16px',
+                              borderRadius: '12px',
+                              border: isAnswering ? '2px solid var(--brand-yellow)' : '2px solid #ddd',
+                              background: isAnswering ? 'white' : '#f8fafc',
+                              fontWeight: 'bold',
+                              opacity: isAnswering ? 1 : 0.7,
+                              cursor: isAnswering ? 'pointer' : 'not-allowed'
+                            }}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
