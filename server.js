@@ -275,7 +275,8 @@ function endGame(room, io, roomId, forfeitingPlayerId = null, winningTeam = null
     room.winner = {
         name: winner.name,
         score: winner.score,
-        isForfeit: isForfeit
+        isForfeit: isForfeit,
+        winningTeam: winner.team // Ensure team is included for UI consistency
     };
     room.activeQuestion = null;
     room.feedback = null;
@@ -333,7 +334,7 @@ io.on('connection', (socket) => {
             } else if (requestedGameType === 'pixel_challenge') {
                 const shuffled = [...pixelChallengePool].sort(() => Math.random() - 0.5);
                 // Select 15 questions (10 main + 5 buffer for tie-breakers)
-                selectedQuestions = shuffled.slice(0, 15);
+                selectedQuestions = shuffled.slice(0, questionsPerCategory + 5);
             }
 
             rooms.set(roomId, {
@@ -425,7 +426,7 @@ io.on('connection', (socket) => {
             } else if (requestedGameType === 'pixel_challenge') {
                 const shuffled = [...pixelChallengePool].sort(() => Math.random() - 0.5);
                 // Select 15 questions (10 main + 5 buffer for tie-breakers)
-                selectedQuestions = shuffled.slice(0, 15);
+                selectedQuestions = shuffled.slice(0, questionsPerCategory + 5);
             }
 
             rooms.set(roomId, {

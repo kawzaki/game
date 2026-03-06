@@ -651,8 +651,8 @@ const App: React.FC = () => {
         )}
 
         {gameStatus === 'game_over' && winner && (
-          <div className="game-over-container" style={{ maxHeight: '100vh', overflowY: 'auto', padding: '20px', position: 'relative' }}>
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="winner-card" style={{ maxWidth: '600px', width: '100%', position: 'relative' }}>
+          <div className="game-over-overlay" style={{ position: 'fixed', inset: 0, zIndex: 5000, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(8px)' }}>
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="winner-card" style={{ maxWidth: '500px', width: '100%', position: 'relative', background: 'white', padding: '40px 20px', borderRadius: '32px', textAlign: 'center' }}>
               <button
                 onClick={() => {
                   resetRoom();
