@@ -223,14 +223,22 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
                     })}
                 </div>
 
-                {/* Timer Bar - Below Options, only visible when image loads */}
-                <div style={{ padding: '0 4px', opacity: (imageLoaded && timer > 0) ? 1 : 0, transition: 'opacity 0.3s ease', marginTop: '10px' }}>
+                {/* Timer Bar - Absolute centered at bottom */}
+                <div style={{
+                    position: 'absolute',
+                    bottom: '15px',
+                    left: '20px',
+                    right: '20px',
+                    opacity: (imageLoaded && timer > 0) ? 1 : 0,
+                    transition: 'opacity 0.3s ease',
+                    zIndex: 25
+                }}>
                     <div style={{
                         height: '6px',
-                        background: 'rgba(255,255,255,0.1)',
+                        background: 'rgba(255,255,255,0.2)',
                         borderRadius: '10px',
                         overflow: 'hidden',
-                        position: 'relative'
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                     }}>
                         <motion.div
                             initial={{ width: '100%' }}
@@ -241,7 +249,6 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
                             transition={{ duration: 1, ease: "linear" }}
                             style={{
                                 height: '100%',
-                                boxShadow: '0 0 10px rgba(255,255,255,0.3)'
                             }}
                         />
                     </div>
