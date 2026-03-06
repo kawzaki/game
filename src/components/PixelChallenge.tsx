@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Image as ImageIcon } from 'lucide-react';
 
 interface PixelChallengeProps {
@@ -11,7 +11,6 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
     const {
         activeQuestion,
         timer,
-        players,
         submitPixelAnswer,
         wordMeaningFeedback,
         gameStatus,
@@ -83,6 +82,7 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
     }
 
 
+    const myFeedback = wordMeaningFeedback?.[myId || ''];
     const progress = (13 - timer) / 13;
     const pixelSize = gameStatus === 'pixel_scoring' ? 0 : Math.max(0, Math.floor(12 * (1 - progress)));
 
@@ -112,25 +112,35 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
                 border: '4px solid white',
                 background: '#000'
             }}>
+                <img
+                    src={activeQuestion.imageUrl}
+                    alt="Mystery"
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        filter: `blur(${pixelSize}px)`,
+                        transition: 'filter 0.5s linear'
+                    }}
+                />
+
+                {/* Light Shimmer Effect - Reduced to 50% frequency, Top-to-Bottom */}
                 <motion.div
-                    key={pixelSize}
-                    initial={{ scale: 1 }}
-                    animate={pixelSize > 0 ? { scale: [1, 1.05, 1] } : { scale: 1 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                    style={{ width: '100%', height: '100%' }}
-                >
-                    <img
-                        src={activeQuestion.imageUrl}
-                        alt="Mystery"
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            filter: `blur(${pixelSize}px)`,
-                            transition: 'filter 0.5s linear'
-                        }}
-                    />
-                </motion.div>
+                    key={`shimmer-${pixelSize}`}
+                    initial={{ y: '-100%', skewY: -10 }}
+                    animate={(pixelSize > 0 && Math.floor(progress * 13) % 2 === 0) ? { y: '200%' } : {}}
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '50%',
+                        background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.3), transparent)',
+                        zIndex: 10,
+                        pointerEvents: 'none'
+                    }}
+                />
 
                 {/* Options Overlay on Image */}
                 <div style={{
@@ -198,31 +208,72 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
                     })}
                 </div>
 
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', gap: '8px' }}>
-                {players.map((p) => {
-                    const fb = wordMeaningFeedback?.[p.id];
-                    return (
-                        <div
-                            key={p.id}
+                {/* Countdown Timer Bar */}
+                <div style={{
+                    position: 'absolute',
+                    bottom: '20px',
+                    left: '20px',
+                    right: '20px',
+                    height: '6px',
+                    background: 'rgba(255,255,255,0.1)',
+                    borderRadius: '3px',
+                    overflow: 'hidden',
+                    zIndex: 20,
+                    opacity: gameStatus === 'pixel_active' ? 1 : 0,
+                    transition: 'opacity 0.3s'
+                }}>
+                    <motion.div
+                        initial={{ width: '100%' }}
+                        animate={{
+                            width: `${Math.max(0, timer / 13) * 100}%`,
+                            background: timer > 7 ? '#10b981' : timer > 3 ? '#f59e0b' : '#ef4444'
+                        }}
+                        transition={{ duration: 1, ease: "linear" }}
+                        style={{
+                            height: '100%',
+                            boxShadow: '0 0 10px rgba(255,255,255,0.3)'
+                        }}
+                    />
+                </div>
+                <AnimatePresence>
+                    {(gameStatus === 'pixel_scoring' || (timer === 0 && gameStatus === 'pixel_active')) && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
                             style={{
-                                padding: '8px',
-                                borderRadius: '12px',
-                                textAlign: 'center',
-                                border: '1px solid',
-                                borderColor: fb ? (fb.isCorrect ? '#bbf7d0' : '#fecaca') : 'rgba(255,255,255,0.1)',
-                                background: fb ? (fb.isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)') : 'rgba(0,0,0,0.2)',
-                                color: fb ? (fb.isCorrect ? '#10b981' : '#ef4444') : '#94a3b8',
-                                backdropFilter: 'blur(5px)'
+                                position: 'absolute',
+                                inset: 0,
+                                background: 'transparent',
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                justifyContent: 'flex-start',
+                                padding: '20px',
+                                zIndex: 30,
+                                pointerEvents: 'none'
                             }}
                         >
-                            <div style={{ fontWeight: 900, fontSize: '9px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
-                            <div style={{ fontSize: '14px', fontWeight: 900 }}>{fb ? (fb.isCorrect ? '✓' : '✗') : '...'}</div>
-                        </div>
-                    );
-                })}
+                            <motion.div
+                                initial={{ scale: 0.5, x: -20 }}
+                                animate={{ scale: 1, x: 0 }}
+                                style={{
+                                    color: '#fff',
+                                    textShadow: '0 2px 8px rgba(0,0,0,0.9)',
+                                    background: 'rgba(0,0,0,0.5)',
+                                    padding: '8px 16px',
+                                    borderRadius: '16px',
+                                    backdropFilter: 'blur(4px)'
+                                }}
+                            >
+                                <div style={{ fontSize: '18px', fontWeight: 900, lineHeight: 1 }}>
+                                    {myFeedback?.pointsEarned || 0}
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
+
+
         </div>
     );
 };
