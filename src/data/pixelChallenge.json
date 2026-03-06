@@ -362,14 +362,14 @@
     {
         "id": "pc-31",
         "question": "ما هذا الجهاز؟",
-        "answer": "سماعاة أذن",
+        "answer": "سماعات أذن",
         "options": [
             "سماعات أذن",
             "مسجل",
             "ايباد",
             "تلفزيون"
         ],
-        "imageUrl": "/images/pc/super_mario.png",
+        "imageUrl": "/images/pc/headphones.png",
         "category": "تحديث الصور",
         "value": 100
     },
