@@ -334,6 +334,15 @@ const App: React.FC = () => {
                     نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'تحدي الاسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : gameType === 'word_meaning' ? 'معاني الكلمات' : gameType === 'siba' ? 'لعبة الصبة' : gameType === 'pixel_challenge' ? 'تحدي الصور' : 'تحدي بنت وولد'}</strong>
                   </div>
 
+                  <input
+                    type="text"
+                    placeholder="أدخل اسمك ..."
+                    className="join-input"
+                    style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', width: '100%', marginBottom: '12px' }}
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                  />
+
                   {(players[0]?.id === myId || isCreator) && (gameType === 'jeopardy' || gameType === 'bin_o_walad' || gameType === 'word_meaning' || gameType === 'pixel_challenge') && (
                     <div style={{ marginBottom: '16px', background: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
                       <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold' }}>
@@ -347,14 +356,6 @@ const App: React.FC = () => {
                     </div>
                   )}
 
-                  <input
-                    type="text"
-                    placeholder="أدخل اسمك ..."
-                    className="join-input"
-                    style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', width: '100%', marginBottom: '12px' }}
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                  />
                   <button
                     disabled={!playerName || hasJoined}
                     onClick={() => roomId && addPlayer(playerName, roomId, qCount)}
