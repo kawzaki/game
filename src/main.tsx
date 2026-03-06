@@ -6,7 +6,7 @@ import './index.css'
 import './i18n' // Import i18n configuration
 
 const MainRouter = () => {
-  const path = window.location.pathname;
+  const path = window.location.pathname.replace(/\/$/, ''); // Remove trailing slash
   if (path === '/admin') {
     return <Admin />;
   }

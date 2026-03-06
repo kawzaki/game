@@ -361,15 +361,17 @@
     },
     {
         "id": "pc-31",
-        "question": "من هو بطل هذه اللعبة الشهيرة؟",
-        "answer": "سوبر ماريو",
+        "question": "ما هذا الجهاز؟",
+        "answer": "سماعاة أذن",
         "options": [
-            "سوبر ماريو",
-            "لويجي",
-            "سونيك",
-            "لينك"
+            "سماعات أذن",
+            "مسجل",
+            "ايباد",
+            "تلفزيون"
         ],
-        "imageUrl": "/images/pc/super_mario.png"
+        "imageUrl": "/images/pc/super_mario.png",
+        "category": "تحديث الصور",
+        "value": 100
     },
     {
         "id": "pc-32",
@@ -382,5 +384,125 @@
             "نون"
         ],
         "imageUrl": "/images/pc/amazon.png"
+    },
+    {
+        "id": "pc-33",
+        "question": "ما هو أعلى جبل في العالم؟",
+        "answer": "جبل إيفرست",
+        "options": [
+            "جبل إيفرست",
+            "جبل كليمنجارو",
+            "جبال الأنديز",
+            "جبال الألب"
+        ],
+        "imageUrl": "/images/pc/mount_everest.png"
+    },
+    {
+        "id": "pc-34",
+        "question": "ما هو هذا الطعام الياباني الشهير؟",
+        "answer": "سوشي",
+        "options": [
+            "سوشي",
+            "ساشيمي",
+            "رامين",
+            "نودلز"
+        ],
+        "imageUrl": "/images/pc/sushi.png"
+    },
+    {
+        "id": "pc-35",
+        "question": "ما هذه المركبة التي تسافر للفضاء؟",
+        "answer": "مركبة فضائية",
+        "options": [
+            "مركبة فضائية",
+            "قمر صناعي",
+            "طائرة نفاثة",
+            "صاروخ"
+        ],
+        "imageUrl": "/images/pc/spaceship.png"
+    },
+    {
+        "id": "pc-36",
+        "question": "ما هي خدمة البث هذه؟",
+        "answer": "نتفليكس",
+        "options": [
+            "نتفليكس",
+            "يوتيوب",
+            "شاهد",
+            "ديزني بلس"
+        ],
+        "imageUrl": "/images/pc/netflix.png"
+    },
+    {
+        "id": "pc-37",
+        "question": "ما هو هذا الحيوان البحري الذكي؟",
+        "answer": "دلفين",
+        "options": [
+            "دلفين",
+            "حوت",
+            "سمكة قرش",
+            "فقمة"
+        ],
+        "imageUrl": "/images/pc/dolphin.png"
+    },
+    {
+        "id": "pc-38",
+        "question": "ما هذا المعلم المائل في إيطاليا؟",
+        "answer": "برج بيزا المائل",
+        "options": [
+            "برج بيزا المائل",
+            "برج إيفل",
+            "برج خليفة",
+            "برج لومبارد"
+        ],
+        "imageUrl": "/images/pc/pisa_tower.png"
+    },
+    {
+        "id": "pc-39",
+        "question": "ما هو شعار شركة السيارات الكهربائية هذه؟",
+        "answer": "تيسلا",
+        "options": [
+            "تيسلا",
+            "لوسيد",
+            "ريفيان",
+            "بي إم دبليو"
+        ],
+        "imageUrl": "/images/pc/tesla.png"
+    },
+    {
+        "id": "pc-40",
+        "question": "ما هي منصة التواصل هذه؟",
+        "answer": "إنستغرام",
+        "options": [
+            "إنستغرام",
+            "فيسبوك",
+            "سنابت شات",
+            "تويتر"
+        ],
+        "imageUrl": "/images/pc/instagram.png"
+    },
+    {
+        "id": "pc-41",
+        "question": "ما هو هذا الحجر الكريم الثمين؟",
+        "answer": "ألماس",
+        "options": [
+            "ألماس",
+            "ياقوت",
+            "زمرد",
+            "لؤلؤ"
+        ],
+        "imageUrl": "/images/pc/diamond.png"
+    },
+    {
+        "id": "pc-42",
+        "question": "ما هذه الوسيلة التي تطير في الهواء؟",
+        "answer": "منطاد",
+        "options": [
+            "منطاد",
+            "طائرة ورق",
+            "مظلة",
+            "هليكوبتر"
+        ],
+        "imageUrl": "/images/pc/hot_air_balloon.png"
     }
 ]

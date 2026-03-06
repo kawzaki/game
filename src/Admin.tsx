@@ -9,8 +9,10 @@ export default function Admin() {
     const [loginError, setLoginError] = useState('');
 
     const [questions, setQuestions] = useState<any[]>([]);
+    const [pixelQuestions, setPixelQuestions] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState<'jeopardy' | 'pixel'>('jeopardy');
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingQuestion, setEditingQuestion] = useState<any>(null);
@@ -25,8 +27,28 @@ export default function Admin() {
     useEffect(() => {
         if (token) {
             fetchQuestions();
+            fetchPixelQuestions();
         }
     }, [token]);
+
+    const fetchPixelQuestions = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/admin/pixel-challenge', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.status === 401) {
+                handleLogout();
+                return;
+            }
+            const data = await res.json();
+            setPixelQuestions(data);
+        } catch (e) {
+            console.error("Failed to fetch pixel questions", e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchQuestions = async () => {
         setLoading(true);
@@ -117,7 +139,10 @@ export default function Admin() {
             options: formData.options ? formData.options.split(',').map(s => s.trim()).filter(Boolean) : []
         };
 
-        const url = editingQuestion ? `/api/admin/questions/${editingQuestion.id}` : '/api/admin/questions';
+        const isPixel = editingQuestion?.id?.startsWith('pc-');
+        const url = isPixel
+            ? `/api/admin/pixel-challenge/${editingQuestion.id}`
+            : (editingQuestion ? `/api/admin/questions/${editingQuestion.id}` : '/api/admin/questions');
         const method = editingQuestion ? 'PUT' : 'POST';
 
         try {
@@ -131,7 +156,8 @@ export default function Admin() {
             });
             if (res.ok) {
                 setIsModalOpen(false);
-                fetchQuestions();
+                if (isPixel) fetchPixelQuestions();
+                else fetchQuestions();
             } else if (res.status === 401) {
                 handleLogout();
             } else {
@@ -199,73 +225,130 @@ export default function Admin() {
                 </div>
 
                 <div style={{ background: '#fff', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-                    <div style={{ padding: '20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                        <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
-                            <Search size={18} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-                            <input
-                                type="text"
-                                placeholder="بحث في الأسئلة، الأقسام، الإجابات..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ width: '100%', padding: '10px 40px 10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', background: '#f8fafc' }}
-                            />
-                        </div>
-                        <button onClick={handleAddClick} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: '#10b981', color: '#fff', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
-                            <Plus size={18} /> إضافة سؤال جديد
+                    <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0' }}>
+                        <button
+                            onClick={() => setActiveTab('jeopardy')}
+                            style={{ padding: '16px 24px', border: 'none', background: activeTab === 'jeopardy' ? '#fff' : '#f8fafc', borderBottom: activeTab === 'jeopardy' ? '2px solid #0f172a' : 'none', fontWeight: 900, color: activeTab === 'jeopardy' ? '#0f172a' : '#64748b', cursor: 'pointer' }}
+                        >
+                            تحدي الأسئلة
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('pixel')}
+                            style={{ padding: '16px 24px', border: 'none', background: activeTab === 'pixel' ? '#fff' : '#f8fafc', borderBottom: activeTab === 'pixel' ? '2px solid #0f172a' : 'none', fontWeight: 900, color: activeTab === 'pixel' ? '#0f172a' : '#64748b', cursor: 'pointer' }}
+                        >
+                            تحدي الصور (Pixel Challenge)
                         </button>
                     </div>
 
-                    <div style={{ overflowX: 'auto', maxHeight: 'calc(100vh - 250px)' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
-                            <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', zIndex: 10 }}>
-                                <tr>
-                                    <th style={{ padding: '16px', color: '#64748b', fontSize: '13px', borderBottom: '1px solid #e2e8f0' }}>القسم</th>
-                                    <th style={{ padding: '16px', color: '#64748b', fontSize: '13px', borderBottom: '1px solid #e2e8f0' }}>النقاط</th>
-                                    <th style={{ padding: '16px', color: '#64748b', fontSize: '13px', borderBottom: '1px solid #e2e8f0' }}>السؤال</th>
-                                    <th style={{ padding: '16px', color: '#64748b', fontSize: '13px', borderBottom: '1px solid #e2e8f0' }}>الإجابة</th>
-                                    <th style={{ padding: '16px', color: '#64748b', fontSize: '13px', borderBottom: '1px solid #e2e8f0' }}>إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>جاري التحميل...</td>
-                                    </tr>
-                                ) : filteredQuestions.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>لا توجد أسئلة</td>
-                                    </tr>
-                                ) : (
-                                    filteredQuestions.map((q) => (
-                                        <tr key={q.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                            <td style={{ padding: '16px', fontWeight: 'bold' }}><span style={{ background: '#e0e7ff', color: '#4f46e5', padding: '4px 8px', borderRadius: '6px', fontSize: '12px' }}>{q.category}</span></td>
-                                            <td style={{ padding: '16px', fontWeight: 'bold', color: '#f59e0b' }}>{q.value}</td>
-                                            <td style={{ padding: '16px', maxWidth: '300px' }}>
-                                                <div style={{ fontWeight: 'bold', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{q.question}</div>
-                                                {q.type === 'luck' && <span style={{ background: '#fef3c7', color: '#d97706', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>حظ</span>}
-                                            </td>
-                                            <td style={{ padding: '16px', maxWidth: '200px' }}>
-                                                <div style={{ color: '#10b981', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{q.answer || '-'}</div>
-                                                {q.options && q.options.length > 0 && (
-                                                    <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>خيارات: {q.options.join('، ')}</div>
-                                                )}
-                                            </td>
-                                            <td style={{ padding: '16px' }}>
-                                                <div style={{ display: 'flex', gap: '8px' }}>
-                                                    <button onClick={() => handleEditClick(q)} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', padding: '4px' }} title="تعديل">
-                                                        <Edit2 size={16} />
-                                                    </button>
-                                                    <button onClick={() => handleDeleteClick(q.id, q.question)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }} title="حذف">
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
-                                            </td>
+                    {activeTab === 'jeopardy' ? (
+                        <>
+                            <div style={{ padding: '20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                                <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
+                                    <Search size={18} color="#94a3b8" style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                                    <input
+                                        type="text"
+                                        placeholder="بحث في الأسئلة، الأقسام، الإجابات..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        style={{ width: '100%', padding: '10px 40px 10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', background: '#f8fafc' }}
+                                    />
+                                </div>
+                                <button onClick={handleAddClick} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: '#10b981', color: '#fff', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+                                    <Plus size={18} /> إضافة سؤال جديد
+                                </button>
+                            </div>
+
+                            <div style={{ overflowX: 'auto', maxHeight: 'calc(100vh - 350px)' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
+                                    <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', zIndex: 10 }}>
+                                        <tr>
+                                            <th style={{ padding: '16px', color: '#64748b', fontSize: '13px', borderBottom: '1px solid #e2e8f0' }}>القسم</th>
+                                            <th style={{ padding: '16px', color: '#64748b', fontSize: '13px', borderBottom: '1px solid #e2e8f0' }}>النقاط</th>
+                                            <th style={{ padding: '16px', color: '#64748b', fontSize: '13px', borderBottom: '1px solid #e2e8f0' }}>السؤال</th>
+                                            <th style={{ padding: '16px', color: '#64748b', fontSize: '13px', borderBottom: '1px solid #e2e8f0' }}>الإجابة</th>
+                                            <th style={{ padding: '16px', color: '#64748b', fontSize: '13px', borderBottom: '1px solid #e2e8f0' }}>إجراءات</th>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </thead>
+                                    <tbody>
+                                        {loading ? (
+                                            <tr>
+                                                <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>جاري التحميل...</td>
+                                            </tr>
+                                        ) : filteredQuestions.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>لا توجد أسئلة</td>
+                                            </tr>
+                                        ) : (
+                                            filteredQuestions.map((q) => (
+                                                <tr key={q.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                                    <td style={{ padding: '16px', fontWeight: 'bold' }}><span style={{ background: '#e0e7ff', color: '#4f46e5', padding: '4px 8px', borderRadius: '6px', fontSize: '12px' }}>{q.category}</span></td>
+                                                    <td style={{ padding: '16px', fontWeight: 'bold', color: '#f59e0b' }}>{q.value}</td>
+                                                    <td style={{ padding: '16px', maxWidth: '300px' }}>
+                                                        <div style={{ fontWeight: 'bold', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{q.question}</div>
+                                                        {q.type === 'luck' && <span style={{ background: '#fef3c7', color: '#d97706', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>حظ</span>}
+                                                    </td>
+                                                    <td style={{ padding: '16px', maxWidth: '200px' }}>
+                                                        <div style={{ color: '#10b981', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{q.answer || '-'}</div>
+                                                        {q.options && q.options.length > 0 && (
+                                                            <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>خيارات: {q.options.join('، ')}</div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ padding: '16px' }}>
+                                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                                            <button onClick={() => handleEditClick(q)} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', padding: '4px' }} title="تعديل">
+                                                                <Edit2 size={16} />
+                                                            </button>
+                                                            <button onClick={() => handleDeleteClick(q.id, q.question)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }} title="حذف">
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{ padding: '20px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                                {pixelQuestions.map((q) => (
+                                    <div key={q.id} style={{ background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                                        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                                            <img
+                                                src={q.imageUrl}
+                                                alt={q.answer}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Missing+Image';
+                                                }}
+                                            />
+                                            <div style={{ position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(16, 185, 129, 0.9)', color: '#fff', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 900 }}>
+                                                {q.answer}
+                                            </div>
+                                        </div>
+                                        <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 900, color: '#0f172a' }}>{q.question}</h4>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '16px' }}>
+                                                {q.options.map((opt: string, i: number) => (
+                                                    <span key={i} style={{ background: opt === q.answer ? '#dcfce7' : '#fff', color: opt === q.answer ? '#166534' : '#64748b', fontSize: '11px', padding: '2px 8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                                                        {opt}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <button
+                                                onClick={() => handleEditClick(q)}
+                                                style={{ marginTop: 'auto', width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', color: '#0f172a', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                            >
+                                                <Edit2 size={14} /> تعديل البيانات
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

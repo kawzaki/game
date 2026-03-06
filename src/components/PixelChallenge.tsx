@@ -39,11 +39,12 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
 
     // Answer feedback sounds
     useEffect(() => {
+        if (gameStatus !== 'pixel_active') return;
         const myFeedback = wordMeaningFeedback?.[myId || ''];
         if (myFeedback) {
             playSound(myFeedback.isCorrect ? 'correct' : 'wrong');
         }
-    }, [wordMeaningFeedback, myId]);
+    }, [wordMeaningFeedback, myId, gameStatus]);
 
     // Reset local state when question changes
     useEffect(() => {

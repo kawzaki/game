@@ -101,7 +101,23 @@ app.delete('/api/admin/questions/:id', requireAuth, (req, res) => {
     fs.writeFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), JSON.stringify(questionPool, null, 2), 'utf8');
     res.json({ success: true });
 });
+app.get('/api/admin/pixel-challenge', requireAuth, (req, res) => {
+    res.json(pixelChallengePool);
+});
+
+app.put('/api/admin/pixel-challenge/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const index = pixelChallengePool.findIndex(q => q.id === id);
+    if (index !== -1) {
+        pixelChallengePool[index] = { ...pixelChallengePool[index], ...req.body };
+        fs.writeFileSync(path.join(__dirname, 'src/data/pixelChallenge.json'), JSON.stringify(pixelChallengePool, null, 4), 'utf8');
+        res.json(pixelChallengePool[index]);
+    } else {
+        res.status(404).json({ error: 'Question not found' });
+    }
+});
 // -----------------------
+
 
 // Serve static files from the build folder
 app.use(express.static(path.join(__dirname, 'dist')));
