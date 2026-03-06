@@ -287,7 +287,8 @@ io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
     socket.on('join_room', (data) => {
-        const { roomId, playerName, questionsPerCategory = 10, gameType } = data;
+        const { roomId, playerName, questionsPerCategory: rawQCount = 10, gameType } = data;
+        const questionsPerCategory = Number(rawQCount);
         const requestedGameType = gameType || 'jeopardy';
         socket.join(roomId);
 
@@ -353,7 +354,7 @@ io.on('connection', (socket) => {
                 correctAnswer: null,
                 buzzedPlayerId: null,
                 // Bent o Walad specific
-                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge') ? (questionsPerCategory || 10) : 0,
+                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge') ? questionsPerCategory : 0,
                 currentRound: 0,
                 usedLetters: [],
                 currentLetter: null,
@@ -383,7 +384,8 @@ io.on('connection', (socket) => {
         console.log(`[Join] Player ${playerName} joined room ${roomId} (Game: ${gameType})`);
     });
 
-    socket.on('create_room', ({ roomId, gameType, questionsPerCategory = 10 }) => {
+    socket.on('create_room', ({ roomId, gameType, questionsPerCategory: rawQCount = 10 }) => {
+        const questionsPerCategory = Number(rawQCount);
         const requestedGameType = gameType || 'jeopardy';
         let room = rooms.get(roomId);
 
@@ -443,7 +445,7 @@ io.on('connection', (socket) => {
                 winner: null,
                 correctAnswer: null,
                 buzzedPlayerId: null,
-                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge') ? (questionsPerCategory || 10) : 0,
+                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge') ? questionsPerCategory : 0,
                 currentRound: 0,
                 usedLetters: [],
                 currentLetter: null,
@@ -475,17 +477,23 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('update_settings', ({ roomId, questionsPerCategory }) => {
+    socket.on('update_settings', ({ roomId, questionsPerCategory: rawQCount }) => {
         const room = rooms.get(roomId);
         if (room && (room.players[0]?.id === socket.id || room.creatorSocketId === socket.id)) {
+            const questionsPerCategory = Number(rawQCount);
             room.questionsPerCategory = questionsPerCategory;
-            if (room.gameType === 'bin_o_walad' || room.gameType === 'pixel_challenge') {
+            if (room.gameType === 'bin_o_walad' || room.gameType === 'pixel_challenge' || room.gameType === 'word_meaning') {
                 room.roundCount = questionsPerCategory;
+
+                // For Pixel Challenge, re-select questions based on new count
+                if (room.gameType === 'pixel_challenge') {
+                    const shuffled = [...pixelChallengePool].sort(() => Math.random() - 0.5);
+                    room.questions = shuffled.slice(0, questionsPerCategory + 5);
+                }
             } else if (room.gameType === 'jeopardy') {
-                // For Jeopardy, we might need to re-select questions, 
-                // but usually this is set at creation. 
-                // However, let's just update the value for UI sync for now.
                 room.questionsPerCategory = questionsPerCategory;
+                // For Jeopardy, we should re-select questions
+                room.questions = selectJeopardyQuestions(questionsPerCategory);
             }
             io.to(roomId).emit('room_data', room);
         }
@@ -762,9 +770,9 @@ io.on('connection', (socket) => {
     });
 
     function startPixelChallengeRound(room, io, roomId) {
-        console.log(`[Pixel Challenge] Starting Round ${room.currentRound}/${room.roundCount || 10} in room ${roomId}`);
+        console.log(`[Pixel Challenge] Starting Round ${room.currentRound}/${room.roundCount} in room ${roomId}`);
 
-        const baseRounds = room.roundCount || 10;
+        const baseRounds = room.roundCount;
         const maxRounds = baseRounds + 5; // Allow for tie-breakers
 
         if (room.currentRound > maxRounds || (room.currentRound > baseRounds && !room.isTieBreaker)) {
@@ -843,7 +851,7 @@ io.on('connection', (socket) => {
             room.currentRound++;
 
             // Logic to handle round limit and tie-breakers
-            const baseRounds = room.roundCount || 10;
+            const baseRounds = room.roundCount;
             const maxRounds = baseRounds + 5;
 
             if (room.currentRound > baseRounds) {
@@ -864,7 +872,7 @@ io.on('connection', (socket) => {
                     endGame(room, io, roomId);
                     return;
                 } else if (!room.isTieBreaker) {
-                    // Normal end of 10 rounds
+                    // Normal end of rounds
                     endGame(room, io, roomId);
                     return;
                 }
