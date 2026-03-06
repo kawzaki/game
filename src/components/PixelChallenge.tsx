@@ -18,6 +18,7 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
     } = useGameStore();
 
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+    const [imageLoaded, setImageLoaded] = useState(false);
 
     const playSound = (type: 'countdown' | 'correct' | 'wrong') => {
         const sounds = {
@@ -48,7 +49,10 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
     // Reset local state when question changes
     useEffect(() => {
         setSelectedAnswer(null);
+        setImageLoaded(false);
     }, [activeQuestion?.id]);
+
+    if (gameStatus === 'game_over') return null;
 
     const handleAnswer = (answer: string) => {
         if (selectedAnswer || wordMeaningFeedback?.[myId || ''] || gameStatus !== 'pixel_active') return;
@@ -115,20 +119,28 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
                 <img
                     src={activeQuestion.imageUrl}
                     alt="Mystery"
+                    onLoad={() => setImageLoaded(true)}
                     style={{
                         width: '100%',
                         height: '100%',
                         objectFit: 'cover',
                         filter: `blur(${pixelSize}px)`,
-                        transition: 'filter 0.5s linear'
+                        transition: 'filter 0.5s linear',
+                        opacity: imageLoaded ? 1 : 0
                     }}
                 />
+
+                {!imageLoaded && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e2e8f0' }}>
+                        <div className="spinner" style={{ width: '30px', height: '30px', border: '3px solid #f3f3f3', borderTop: '3px solid var(--brand-yellow)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                    </div>
+                )}
 
                 {/* Light Shimmer Effect - Reduced to 50% frequency, Top-to-Bottom */}
                 <motion.div
                     key={`shimmer-${pixelSize}`}
                     initial={{ y: '-100%', skewY: -10 }}
-                    animate={(pixelSize > 0 && Math.floor(progress * 13) % 2 === 0) ? { y: '200%' } : {}}
+                    animate={(pixelSize > 0 && Math.floor(progress * 13) % 2 === 0 && imageLoaded) ? { y: '200%' } : {}}
                     transition={{ duration: 0.8, ease: "easeInOut" }}
                     style={{
                         position: 'absolute',
@@ -138,7 +150,8 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
                         height: '50%',
                         background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.3), transparent)',
                         zIndex: 10,
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
+                        display: imageLoaded ? 'block' : 'none'
                     }}
                 />
 
@@ -148,10 +161,12 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
                     bottom: '40px',
                     left: '20px',
                     right: '20px',
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
+                    display: 'flex',
+                    flexDirection: 'column',
                     gap: '12px',
                     zIndex: 20,
+                    opacity: imageLoaded ? 1 : 0,
+                    transition: 'opacity 0.3s ease',
                     pointerEvents: (gameStatus === 'pixel_scoring' || selectedAnswer) ? 'none' : 'auto'
                 }}>
                     {activeQuestion.options.map((option, idx) => {
@@ -208,32 +223,28 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
                     })}
                 </div>
 
-                {/* Countdown Timer Bar */}
-                <div style={{
-                    position: 'absolute',
-                    bottom: '20px',
-                    left: '20px',
-                    right: '20px',
-                    height: '6px',
-                    background: 'rgba(255,255,255,0.1)',
-                    borderRadius: '3px',
-                    overflow: 'hidden',
-                    zIndex: 20,
-                    opacity: gameStatus === 'pixel_active' ? 1 : 0,
-                    transition: 'opacity 0.3s'
-                }}>
-                    <motion.div
-                        initial={{ width: '100%' }}
-                        animate={{
-                            width: `${Math.max(0, timer / 13) * 100}%`,
-                            background: timer > 7 ? '#10b981' : timer > 3 ? '#f59e0b' : '#ef4444'
-                        }}
-                        transition={{ duration: 1, ease: "linear" }}
-                        style={{
-                            height: '100%',
-                            boxShadow: '0 0 10px rgba(255,255,255,0.3)'
-                        }}
-                    />
+                {/* Timer Bar - Below Options, only visible when image loads */}
+                <div style={{ padding: '0 4px', opacity: (imageLoaded && timer > 0) ? 1 : 0, transition: 'opacity 0.3s ease', marginTop: '10px' }}>
+                    <div style={{
+                        height: '6px',
+                        background: 'rgba(255,255,255,0.1)',
+                        borderRadius: '10px',
+                        overflow: 'hidden',
+                        position: 'relative'
+                    }}>
+                        <motion.div
+                            initial={{ width: '100%' }}
+                            animate={{
+                                width: `${Math.max(0, timer / 13) * 100}%`,
+                                background: timer > 7 ? '#10b981' : timer > 3 ? '#f59e0b' : '#ef4444'
+                            }}
+                            transition={{ duration: 1, ease: "linear" }}
+                            style={{
+                                height: '100%',
+                                boxShadow: '0 0 10px rgba(255,255,255,0.3)'
+                            }}
+                        />
+                    </div>
                 </div>
                 <AnimatePresence>
                     {(gameStatus === 'pixel_scoring' || (timer === 0 && gameStatus === 'pixel_active')) && (
@@ -274,7 +285,7 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
             </div>
 
 
-        </div>
+        </div >
     );
 };
 

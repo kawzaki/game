@@ -764,9 +764,8 @@ io.on('connection', (socket) => {
     function startPixelChallengeRound(room, io, roomId) {
         console.log(`[Pixel Challenge] Starting Round ${room.currentRound}/${room.roundCount || 10} in room ${roomId}`);
 
-        // Base round limit is 10, but we have up to 15 for tie-breakers
-        const maxRounds = 15;
-        const baseRounds = room.questionsPerCategory || 10;
+        const baseRounds = room.roundCount || 10;
+        const maxRounds = baseRounds + 5; // Allow for tie-breakers
 
         if (room.currentRound > maxRounds || (room.currentRound > baseRounds && !room.isTieBreaker)) {
             console.log(`[Pixel Challenge] Ending game: currentRound ${room.currentRound}, baseRounds ${baseRounds}, isTieBreaker ${room.isTieBreaker}`);
@@ -798,17 +797,20 @@ io.on('connection', (socket) => {
 
         io.to(roomId).emit('room_data', room);
 
-        const roundInterval = setInterval(() => {
-            if (room.timer > 0 && room.gameStatus === 'pixel_active') {
-                room.timer--;
-                io.to(roomId).emit('room_data', room);
-            } else {
-                clearInterval(roundInterval);
-                if (room.gameStatus === 'pixel_active') {
-                    scorePixelChallengeRound(room, io, roomId);
+        // Wait 1.5s before starting the timer to allow for image loading and transitions
+        setTimeout(() => {
+            const roundInterval = setInterval(() => {
+                if (room.timer > 0 && room.gameStatus === 'pixel_active') {
+                    room.timer--;
+                    io.to(roomId).emit('room_data', room);
+                } else {
+                    clearInterval(roundInterval);
+                    if (room.gameStatus === 'pixel_active') {
+                        scorePixelChallengeRound(room, io, roomId);
+                    }
                 }
-            }
-        }, 1000);
+            }, 1000);
+        }, 1500);
     }
 
     function scorePixelChallengeRound(room, io, roomId) {
@@ -840,9 +842,9 @@ io.on('connection', (socket) => {
         setTimeout(() => {
             room.currentRound++;
 
-            // Logic to handle 10-round limit and tie-breakers
-            const baseRounds = room.questionsPerCategory || 10;
-            const maxRounds = 15;
+            // Logic to handle round limit and tie-breakers
+            const baseRounds = room.roundCount || 10;
+            const maxRounds = baseRounds + 5;
 
             if (room.currentRound > baseRounds) {
                 // Check if there's a tie for first place
