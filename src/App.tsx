@@ -83,7 +83,7 @@ const App: React.FC = () => {
   const [qCount, setQCount] = React.useState(10);
   const handleQCountChange = (newCount: number) => {
     setQCount(newCount);
-    if (players[0]?.id === myId && roomId) {
+    if ((players[0]?.id === myId || isCreator) && roomId) {
       socket.emit('update_settings', { roomId, questionsPerCategory: newCount });
     }
   };

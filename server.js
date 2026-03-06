@@ -482,6 +482,7 @@ io.on('connection', (socket) => {
         const room = rooms.get(roomId);
         if (room && (room.players[0]?.id === socket.id || room.creatorSocketId === socket.id)) {
             const questionsPerCategory = Number(rawQCount);
+            console.log(`[Update Settings] Room: ${roomId}, New count: ${questionsPerCategory}`);
             room.questionsPerCategory = questionsPerCategory;
             if (room.gameType === 'bin_o_walad' || room.gameType === 'pixel_challenge' || room.gameType === 'word_meaning') {
                 room.roundCount = questionsPerCategory;
@@ -851,9 +852,9 @@ io.on('connection', (socket) => {
         setTimeout(() => {
             room.currentRound++;
 
-            console.log(`[Pixel Challenge] Round ${room.currentRound} finished. roundCount: ${room.roundCount}, questions: ${room.questions.length}`);
+            console.log(`[Pixel Challenge] Next Round candidate: ${room.currentRound}. roundCount: ${room.roundCount}, questions: ${room.questions.length}`);
 
-            if (room.currentRound >= room.roundCount || room.currentRound >= room.questions.length) {
+            if (room.currentRound > room.roundCount || room.currentRound > room.questions.length) {
                 // Check if there's a tie for first place
                 const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
                 const isTie = sortedPlayers.length > 1 && sortedPlayers[0].score === sortedPlayers[1].score;
