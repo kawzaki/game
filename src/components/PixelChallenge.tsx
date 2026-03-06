@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Timer, Image as ImageIcon } from 'lucide-react';
 
 interface PixelChallengeProps {
@@ -82,7 +82,7 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
         );
     }
 
-    const myFeedback = wordMeaningFeedback?.[myId || ''];
+
     const progress = (13 - timer) / 13;
     const pixelSize = gameStatus === 'pixel_scoring' ? 0 : Math.max(0, Math.floor(12 * (1 - progress)));
 
@@ -112,17 +112,25 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
                 border: '4px solid white',
                 background: '#000'
             }}>
-                <img
-                    src={activeQuestion.imageUrl}
-                    alt="Mystery"
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        filter: `blur(${pixelSize}px)`,
-                        transition: 'filter 0.5s linear'
-                    }}
-                />
+                <motion.div
+                    key={pixelSize}
+                    initial={{ scale: 1 }}
+                    animate={pixelSize > 0 ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    style={{ width: '100%', height: '100%' }}
+                >
+                    <img
+                        src={activeQuestion.imageUrl}
+                        alt="Mystery"
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            filter: `blur(${pixelSize}px)`,
+                            transition: 'filter 0.5s linear'
+                        }}
+                    />
+                </motion.div>
 
                 {/* Options Overlay on Image */}
                 <div style={{
@@ -190,42 +198,6 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
                     })}
                 </div>
 
-                <AnimatePresence>
-                    {(gameStatus === 'pixel_scoring' || (timer === 0 && gameStatus === 'pixel_active')) && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            style={{
-                                position: 'absolute',
-                                inset: 0,
-                                background: 'transparent',
-                                display: 'flex',
-                                alignItems: 'flex-start',
-                                justifyContent: 'flex-start',
-                                padding: '20px',
-                                zIndex: 30,
-                                pointerEvents: 'none'
-                            }}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.5, x: -20 }}
-                                animate={{ scale: 1, x: 0 }}
-                                style={{
-                                    color: '#fff',
-                                    textShadow: '0 2px 8px rgba(0,0,0,0.9)',
-                                    background: 'rgba(0,0,0,0.5)',
-                                    padding: '8px 16px',
-                                    borderRadius: '16px',
-                                    backdropFilter: 'blur(4px)'
-                                }}
-                            >
-                                <div style={{ fontSize: '18px', fontWeight: 900, lineHeight: 1 }}>
-                                    {myFeedback?.pointsEarned || 0}
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', gap: '8px' }}>
