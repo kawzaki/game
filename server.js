@@ -851,29 +851,21 @@ io.on('connection', (socket) => {
         setTimeout(() => {
             room.currentRound++;
 
-            // Logic to handle round limit and tie-breakers
-            const baseRounds = room.roundCount;
-            const maxRounds = baseRounds + 5;
+            console.log(`[Pixel Challenge] Round ${room.currentRound} finished. roundCount: ${room.roundCount}, questions: ${room.questions.length}`);
 
-            if (room.currentRound > baseRounds) {
+            if (room.currentRound >= room.roundCount || room.currentRound >= room.questions.length) {
                 // Check if there's a tie for first place
                 const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
                 const isTie = sortedPlayers.length > 1 && sortedPlayers[0].score === sortedPlayers[1].score;
 
-                if (isTie && room.currentRound <= maxRounds) {
+                const baseRounds = room.roundCount;
+                const maxRounds = room.questions.length;
+
+                if (isTie && room.currentRound < maxRounds) {
                     room.isTieBreaker = true;
-                    console.log(`[Pixel Challenge] Tie detected! Round ${room.currentRound} starts as tie-breaker.`);
-                } else if (room.isTieBreaker && !isTie) {
-                    // Tie has been broken!
-                    console.log(`[Pixel Challenge] Tie broken at round ${room.currentRound - 1}!`);
-                    endGame(room, io, roomId);
-                    return;
-                } else if (room.currentRound > maxRounds) {
-                    // Reached absolute limit
-                    endGame(room, io, roomId);
-                    return;
-                } else if (!room.isTieBreaker) {
-                    // Normal end of rounds
+                    console.log(`[Pixel Challenge] Tie detected! Round ${room.currentRound + 1} will be tie-breaker. (Total Qs: ${maxRounds})`);
+                } else {
+                    console.log(`[Pixel Challenge] Ending game. currentRound: ${room.currentRound}, isTie: ${isTie}`);
                     endGame(room, io, roomId);
                     return;
                 }
