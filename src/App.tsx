@@ -118,25 +118,7 @@ const App: React.FC = () => {
     }
   }, [questionsPerCategoryServer, players, myId]);
 
-  // 20-second lobby countdown — auto-starts game for host when timer hits 0
-  const [lobbyCountdown, setLobbyCountdown] = React.useState(20);
-  useEffect(() => {
-    const joined = useGameStore.getState().hasJoined;
-    if (!joined || players.length === 0 || gameStatus !== 'lobby') return;
-    setLobbyCountdown(20);
-    const interval = setInterval(() => {
-      setLobbyCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          const st = useGameStore.getState();
-          if ((isCreator || players[0]?.id === myId) && roomId && st.gameStatus === 'lobby') startGame(roomId);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [players.length, gameStatus]);
+
 
   const forfeit = () => {
     if (confirm('هل أنت متأكد من إنهاء اللعبة مبكراً؟')) {
@@ -247,6 +229,24 @@ const App: React.FC = () => {
   }, [gameStatus, winner, myId]);
 
   const hasJoined = useMemo(() => players.some(p => p.id === myId), [players, myId]);
+
+  // 20-second lobby countdown — auto-starts game for host when timer hits 0
+  const [lobbyCountdown, setLobbyCountdown] = React.useState(20);
+  useEffect(() => {
+    if (!hasJoined || players.length === 0 || gameStatus !== 'lobby') return;
+    setLobbyCountdown(20);
+    const interval = setInterval(() => {
+      setLobbyCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          if ((isCreator || players[0]?.id === myId) && roomId && gameStatus === 'lobby') startGame(roomId);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [hasJoined, players.length, gameStatus]);
 
   const getRoomStatus = useGameStore(state => state.getRoomStatus);
   useEffect(() => {

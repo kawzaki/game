@@ -39,6 +39,7 @@ interface GameState {
     roundCount: number;
     roundResults: any[];
     roomDataLoading: boolean;
+    hasJoined: boolean;
     huroofHistory: any[];
     sibaBoard?: (string | null)[];
     sibaPhase?: 'setup' | 'placement' | 'movement';
@@ -186,6 +187,7 @@ export const useGameStore = create<GameState>((set) => {
         roundResults: [],
         huroofHistory: [],
         roomDataLoading: false,
+        hasJoined: false,
         sibaBoard: Array(9).fill(null),
         sibaPhase: 'setup',
         sibaPiecesPlaced: {},
@@ -247,6 +249,7 @@ export const useGameStore = create<GameState>((set) => {
             players: [],
             currentPlayerIndex: 0,
             questions: [],
+            hasJoined: false,
             huroofGrid: null,
             activeQuestion: null,
             selectedCategory: null,
