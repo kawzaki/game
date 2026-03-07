@@ -1107,8 +1107,11 @@ io.on('connection', (socket) => {
                     room.gameStatus = 'question';
                     io.to(roomId).emit('room_data', room);
                 } else {
-                    const shuffledOptions = [...question.options].sort(() => 0.5 - Math.random());
-                    const safeQuestion = { ...question, options: shuffledOptions };
+                    let safeQuestion = { ...question };
+                    if (question.options) {
+                        const shuffledOptions = [...question.options].sort(() => 0.5 - Math.random());
+                        safeQuestion.options = shuffledOptions;
+                    }
                     delete safeQuestion.answer;
 
                     room.activeQuestion = safeQuestion;
