@@ -7,6 +7,7 @@ import WordMeaningGame from './components/WordMeaningGame';
 import SibaGame from './components/SibaGame';
 import PixelChallenge from './components/PixelChallenge';
 import DrawingChallenge from './components/DrawingChallenge';
+import { InstallPrompt } from './components/InstallPrompt';
 import confetti from 'canvas-confetti';
 import {
   Timer as TimerIcon,
@@ -909,6 +910,8 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
+      <InstallPrompt />
     </div>
   );
 };

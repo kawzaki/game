@@ -26,6 +26,15 @@ i18n
           correct: 'Correct!',
           incorrect: 'Incorrect!',
           time_up: 'Time is up!',
+          install_title: 'Add to Home Screen',
+          install_desc: 'Install the app for instant play and a better full-screen experience.',
+          install_btn: 'Install',
+          not_now: 'Not Now',
+          installing: 'Installing...',
+          install_success: 'Installed Successfully!',
+          install_success_desc: 'You can close the website and open the app from your home screen for the best experience.',
+          ios_install_title: 'Install on iOS',
+          ios_install_desc: 'Tap the share button below and select "Add to Home Screen" to install.',
         }
       },
       ar: {
@@ -42,6 +51,15 @@ i18n
           correct: 'إجابة صحيحة!',
           incorrect: 'إجابة خاطئة!',
           time_up: 'انتهى الوقت!',
+          install_title: 'إضافة إلى الشاشة الرئيسية',
+          install_desc: 'قم بتثبيت التطبيق للعب الفوري وتجربة أفضل على الشاشة الكاملة.',
+          install_btn: 'تثبيت',
+          not_now: 'ليس الآن',
+          installing: 'جاري التثبيت...',
+          install_success: 'تم التثبيت بنجاح!',
+          install_success_desc: 'يمكنك إغلاق الموقع وفتح التطبيق من الشاشة الرئيسية لتجربة أفضل.',
+          ios_install_title: 'التثبيت على iOS',
+          ios_install_desc: 'اضغط على زر المشاركة أدناه واختر "إضافة إلى الشاشة الرئيسية" للتثبيت.',
         }
       }
     }
