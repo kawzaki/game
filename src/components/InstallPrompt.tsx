@@ -19,9 +19,14 @@ export const InstallPrompt: React.FC = () => {
             setIsIOS(true);
         }
 
-        // Show prompt unconditionally 3 seconds after load (if not in standalone mode)
+        const lastPrompt = localStorage.getItem('lastInstallPromptTime');
+        const now = Date.now();
+        const ninetyDaysInMs = 90 * 24 * 60 * 60 * 1000; // 3 months in milliseconds
+        const isCooldownActive = lastPrompt && (now - parseInt(lastPrompt)) < ninetyDaysInMs;
+
+        // Show prompt unconditionally 3 seconds after load (if not in standalone mode and cooldown is off)
         const showInstallPromptTimer = setTimeout(() => {
-            if (!isStandalone) {
+            if (!isStandalone && !isCooldownActive) {
                 setShowPrompt(true);
             }
         }, 3000);
@@ -40,7 +45,7 @@ export const InstallPrompt: React.FC = () => {
         const handleScroll = () => {
             if (!hasTriggeredScroll && window.scrollY > 100) {
                 hasTriggeredScroll = true;
-                if (!isStandalone) {
+                if (!isStandalone && !isCooldownActive) {
                     setShowPrompt(true);
                 }
                 window.removeEventListener('scroll', handleScroll);
@@ -85,7 +90,7 @@ export const InstallPrompt: React.FC = () => {
 
         if (outcome === 'accepted') {
             setInstallState('success');
-            // We removed localStorage blocking as requested by the user
+            localStorage.setItem('lastInstallPromptTime', Date.now().toString());
             setTimeout(() => {
                 setShowPrompt(false);
             }, 5000); // Close automatically after success message
@@ -97,7 +102,7 @@ export const InstallPrompt: React.FC = () => {
 
     const handleDismiss = () => {
         setShowPrompt(false);
-        // We removed localStorage blocking as requested by the user
+        localStorage.setItem('lastInstallPromptTime', Date.now().toString());
     };
 
     return (
