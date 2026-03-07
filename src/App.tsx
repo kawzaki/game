@@ -104,6 +104,8 @@ const App: React.FC = () => {
   }, [players.length]);
 
   const [localSelecting, setLocalSelecting] = React.useState<string | number | null>(null);
+
+
   useEffect(() => {
     setLocalSelecting(null);
   }, [gameStatus, selectedCategory, activeQuestion]);
@@ -115,6 +117,26 @@ const App: React.FC = () => {
       setQCount(questionsPerCategoryServer);
     }
   }, [questionsPerCategoryServer, players, myId]);
+
+  // 20-second lobby countdown — auto-starts game for host when timer hits 0
+  const [lobbyCountdown, setLobbyCountdown] = React.useState(20);
+  useEffect(() => {
+    const joined = useGameStore.getState().hasJoined;
+    if (!joined || players.length === 0 || gameStatus !== 'lobby') return;
+    setLobbyCountdown(20);
+    const interval = setInterval(() => {
+      setLobbyCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          const st = useGameStore.getState();
+          if ((isCreator || players[0]?.id === myId) && roomId && st.gameStatus === 'lobby') startGame(roomId);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [players.length, gameStatus]);
 
   const forfeit = () => {
     if (confirm('هل أنت متأكد من إنهاء اللعبة مبكراً؟')) {
@@ -386,7 +408,28 @@ const App: React.FC = () => {
                 </>
               )}
 
-              <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+              {/* Players list */}
+              {players.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <h4 style={{ marginBottom: '8px', fontSize: '14px' }}>اللاعبون المتواجدون:</h4>
+                  <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', justifyContent: 'center' }}>
+                    {players.map((p, i) => (
+                      <motion.div
+                        key={p.id || i}
+                        animate={newestPlayerId === p.id ? { scale: [1, 1.15, 1], backgroundColor: ['#eee', '#fde68a', '#eee'] } : {}}
+                        transition={{ duration: 0.6, repeat: 2 }}
+                        style={{ background: '#eee', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', whiteSpace: 'nowrap' }}
+                      >
+                        <span style={{ fontWeight: 'bold', marginRight: '4px' }}>#{p.number || (i + 1)}</span>
+                        {p.name}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Share / QR — below players */}
+              <div style={{ display: 'flex', gap: '8px', width: '100%', marginTop: '16px' }}>
                 <button onClick={shareInviteLink} style={{ background: 'transparent', border: '1px solid #ccc', padding: '12px', borderRadius: '12px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                   <Share2 size={18} />
                   <span>مشاركة رابط الدعوة</span>
@@ -411,37 +454,45 @@ const App: React.FC = () => {
                 )}
               </AnimatePresence>
 
-              {players.length > 0 && (
-                <div style={{ marginTop: '20px' }}>
-                  <h4 style={{ marginBottom: '8px', fontSize: '14px' }}>اللاعبون المتواجدون:</h4>
-                  <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', justifyContent: 'center' }}>
-                    {players.map((p, i) => (
-                      <motion.div
-                        key={p.id || i}
-                        animate={newestPlayerId === p.id ? { scale: [1, 1.15, 1], backgroundColor: ['#eee', '#fde68a', '#eee'] } : {}}
-                        transition={{ duration: 0.6, repeat: 2 }}
-                        style={{ background: '#eee', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', whiteSpace: 'nowrap' }}
-                      >
-                        <span style={{ fontWeight: 'bold', marginRight: '4px' }}>#{p.number || (i + 1)}</span>
-                        {p.name}
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {(players[0]?.id === myId || isCreator) ? (
                 <button
                   disabled={!hasJoined || players.length === 0}
                   onClick={() => roomId && startGame(roomId)}
                   className="btn-primary-battle"
-                  style={{ marginTop: '20px', background: 'var(--brand-yellow)', color: '#000' }}
+                  style={{ marginTop: '20px', background: 'var(--brand-yellow)', color: '#000', position: 'relative', overflow: 'hidden' }}
                 >
-                  <Zap size={24} />
-                  ابدأ اللعبة!
+                  {/* countdown bar */}
+                  {hasJoined && players.length > 0 && lobbyCountdown > 0 && (
+                    <motion.div
+                      initial={{ width: '100%' }}
+                      animate={{ width: `${(lobbyCountdown / 20) * 100}%` }}
+                      transition={{ duration: 1, ease: 'linear' }}
+                      style={{ position: 'absolute', left: 0, top: 0, height: '100%', background: 'rgba(0,0,0,0.12)', zIndex: 0 }}
+                    />
+                  )}
+                  <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Zap size={24} />
+                    ابدأ اللعبة!
+                    {hasJoined && players.length > 0 && lobbyCountdown > 0 && (
+                      <span style={{ fontSize: '13px', fontWeight: 'bold', opacity: 0.8 }}>({lobbyCountdown})</span>
+                    )}
+                  </span>
                 </button>
               ) : (
-                <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+                <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', position: 'relative' }}>
+                  {/* countdown badge top-left */}
+                  {hasJoined && lobbyCountdown > 0 && (
+                    <div style={{
+                      position: 'absolute', top: '10px', left: '10px',
+                      background: lobbyCountdown <= 5 ? '#ef4444' : 'var(--brand-yellow)',
+                      color: lobbyCountdown <= 5 ? '#fff' : '#000',
+                      borderRadius: '50%', width: '36px', height: '36px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 900, fontSize: '15px'
+                    }}>
+                      {lobbyCountdown}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 1, delay: 0 }} style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--brand-yellow)' }} />
                     <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--brand-yellow)' }} />
