@@ -114,6 +114,47 @@ const App: React.FC = () => {
     setLocalSelecting(null);
   }, [gameStatus, selectedCategory, activeQuestion]);
 
+  // Request Screen Wake Lock
+  useEffect(() => {
+    let wakeLock: any = null;
+
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await (navigator as any).wakeLock.request('screen');
+          console.log('Screen Wake Lock is active');
+
+          wakeLock.addEventListener('release', () => {
+            console.log('Screen Wake Lock was released');
+          });
+        }
+      } catch (err: any) {
+        console.error(`${err.name}, ${err.message}`);
+      }
+    };
+
+    // Request on mount
+    requestWakeLock();
+
+    // Re-request when document becomes visible again
+    const handleVisibilityChange = () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (wakeLock !== null) {
+        wakeLock.release().then(() => {
+          wakeLock = null;
+        });
+      }
+    };
+  }, []);
+
   // Sync qCount with server data (important for guests)
   const questionsPerCategoryServer = useGameStore(state => (state as any).questionsPerCategory);
   useEffect(() => {
