@@ -19,10 +19,12 @@ export const InstallPrompt: React.FC = () => {
             setIsIOS(true);
         }
 
-        const lastPrompt = localStorage.getItem('lastInstallPromptTime');
-        const now = Date.now();
-        const ninetyDaysInMs = 60 * 1000; // DEV OVERRIDE: 1 minute
-        const isCooldownActive = lastPrompt && (now - parseInt(lastPrompt)) < ninetyDaysInMs;
+        // Show prompt unconditionally 3 seconds after load (if not in standalone mode)
+        const showInstallPromptTimer = setTimeout(() => {
+            if (!isStandalone) {
+                setShowPrompt(true);
+            }
+        }, 3000);
 
         // Capture the PWA install prompt event for Android/Desktop Chrome
         const handleBeforeInstallPrompt = (e: Event) => {
@@ -33,12 +35,12 @@ export const InstallPrompt: React.FC = () => {
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-        // Add scroll logic to trigger the prompt
+        // Add scroll logic to trigger the prompt (fallback or manual)
         let hasTriggeredScroll = false;
         const handleScroll = () => {
             if (!hasTriggeredScroll && window.scrollY > 100) {
                 hasTriggeredScroll = true;
-                if (!isCooldownActive) {
+                if (!isStandalone) {
                     setShowPrompt(true);
                 }
                 window.removeEventListener('scroll', handleScroll);
@@ -54,6 +56,7 @@ export const InstallPrompt: React.FC = () => {
         window.addEventListener('show-install-prompt', handleManualShow);
 
         return () => {
+            clearTimeout(showInstallPromptTimer);
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
             window.removeEventListener('scroll', handleScroll);
             window.removeEventListener('show-install-prompt', handleManualShow);
@@ -82,7 +85,7 @@ export const InstallPrompt: React.FC = () => {
 
         if (outcome === 'accepted') {
             setInstallState('success');
-            localStorage.setItem('lastInstallPromptTime', Date.now().toString());
+            // We removed localStorage blocking as requested by the user
             setTimeout(() => {
                 setShowPrompt(false);
             }, 5000); // Close automatically after success message
@@ -94,7 +97,7 @@ export const InstallPrompt: React.FC = () => {
 
     const handleDismiss = () => {
         setShowPrompt(false);
-        localStorage.setItem('lastInstallPromptTime', Date.now().toString());
+        // We removed localStorage blocking as requested by the user
     };
 
     return (
