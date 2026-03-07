@@ -89,9 +89,21 @@ const App: React.FC = () => {
       socket.emit('update_settings', { roomId, questionsPerCategory: newCount });
     }
   };
-  const [localSelecting, setLocalSelecting] = React.useState<string | number | null>(null);
+  const prevPlayersCount = React.useRef(0);
+  const [newestPlayerId, setNewestPlayerId] = React.useState<string | null>(null);
+  useEffect(() => {
+    if (players.length > prevPlayersCount.current && prevPlayersCount.current > 0) {
+      // New player joined — play ding and highlight
+      const audio = new Audio('https://www.myinstants.com/media/sounds/ding-sound-effect.mp3');
+      audio.volume = 0.6;
+      audio.play().catch(() => { });
+      setNewestPlayerId(players[players.length - 1]?.id || null);
+      setTimeout(() => setNewestPlayerId(null), 2500);
+    }
+    prevPlayersCount.current = players.length;
+  }, [players.length]);
 
-  // Sync local selection when game state changes
+  const [localSelecting, setLocalSelecting] = React.useState<string | number | null>(null);
   useEffect(() => {
     setLocalSelecting(null);
   }, [gameStatus, selectedCategory, activeQuestion]);
@@ -404,10 +416,15 @@ const App: React.FC = () => {
                   <h4 style={{ marginBottom: '8px', fontSize: '14px' }}>اللاعبون المتواجدون:</h4>
                   <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', justifyContent: 'center' }}>
                     {players.map((p, i) => (
-                      <div key={i} style={{ background: '#eee', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                      <motion.div
+                        key={p.id || i}
+                        animate={newestPlayerId === p.id ? { scale: [1, 1.15, 1], backgroundColor: ['#eee', '#fde68a', '#eee'] } : {}}
+                        transition={{ duration: 0.6, repeat: 2 }}
+                        style={{ background: '#eee', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', whiteSpace: 'nowrap' }}
+                      >
                         <span style={{ fontWeight: 'bold', marginRight: '4px' }}>#{p.number || (i + 1)}</span>
                         {p.name}
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
@@ -492,7 +509,11 @@ const App: React.FC = () => {
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isConnected ? '#10b981' : '#ef4444' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button className="btn-forfeit" onClick={forfeit}>إنهاء اللعبة</button>
+          {hasJoined && (
+            <button className="btn-forfeit" onClick={forfeit}>
+              {players.length <= 2 ? 'إنهاء اللعبة' : 'مغادرة اللعبة'}
+            </button>
+          )}
         </div>
       </header>
 

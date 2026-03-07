@@ -1279,8 +1279,34 @@ io.on('connection', (socket) => {
 
     socket.on('forfeit_game', (roomId) => {
         const room = rooms.get(roomId);
-        if (room && room.gameStatus !== 'game_over') {
+        if (!room || room.gameStatus === 'game_over') return;
+
+        // Only players who actually joined this room may forfeit (blocks late joiners with old links)
+        const playerIndex = room.players.findIndex(p => p.id === socket.id);
+        if (playerIndex === -1) return;
+
+        if (room.players.length <= 2) {
+            // 2 players: forfeiting player loses, other wins
             endGame(room, io, roomId, socket.id);
+        } else {
+            // 3+ players: remove this player, game continues
+            const leavingPlayer = room.players[playerIndex];
+            room.players.splice(playerIndex, 1);
+            console.log(`[Forfeit] ${leavingPlayer.name} left room ${roomId} — game continues with ${room.players.length} players`);
+
+            // If drawing challenge and the drawer left, start the next round immediately
+            if (room.gameType === 'drawing_challenge' && room.gameStatus === 'drawing_active' && leavingPlayer.id === room.drawingDrawerId) {
+                if (room._drawingInterval) { clearInterval(room._drawingInterval); room._drawingInterval = null; }
+                room.currentRound++;
+                room.drawingDrawerIndex = playerIndex % room.players.length;
+                if (room.currentRound > room.roundCount || room.players.length < 2) {
+                    endGame(room, io, roomId);
+                } else {
+                    startDrawingRound(room, io, roomId);
+                }
+            } else {
+                io.to(roomId).emit('room_data', room);
+            }
         }
     });
 
@@ -1440,9 +1466,9 @@ io.on('connection', (socket) => {
             if (allGuessed) {
                 room.timer = 0; // Trigger early end
                 scoreDrawingRound(room, io, roomId);
-            } else {
-                io.to(roomId).emit('room_data', room);
             }
+            // If not all guessed yet, drawing_correct_guess event already notified everyone
+            // Don't send room_data here — it would reset drawingLiveStrokes on all clients
         } else {
             room.drawingGuesses[socket.id] = { correct: false, guess };
             // Broadcast wrong guess to all (for the chat log)

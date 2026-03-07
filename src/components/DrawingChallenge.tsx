@@ -49,13 +49,29 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const [guessInput, setGuessInput] = useState('');
     const hasGuessedCorrectly = myId ? drawingGuesses[myId]?.correct : false;
 
-    // Chat log — use two stable selectors to avoid infinite loop warning
+    // Chat log
     const correctGuesses = useGameStore(state => state.drawingCorrectGuesses || []);
     const wrongGuesses = useGameStore(state => state.drawingWrongGuesses || []);
     const chatLog = [
         ...correctGuesses.map(g => ({ ...g, type: 'correct' as const })),
         ...wrongGuesses.map(g => ({ ...g, type: 'wrong' as const }))
     ];
+
+    // Correct-answer flash banner (fix 4)
+    const [correctBanner, setCorrectBanner] = useState<{ playerName: string; pts: number } | null>(null);
+    const prevCorrectLen = React.useRef(0);
+    useEffect(() => {
+        if (correctGuesses.length > prevCorrectLen.current) {
+            const latest = correctGuesses[correctGuesses.length - 1];
+            // estimate points: server uses Math.round((timeLeft/80)*60)+20, mirror here with timer
+            const pts = Math.round((timer / 80) * 60) + 20;
+            setCorrectBanner({ playerName: latest.playerName, pts });
+            const t = setTimeout(() => setCorrectBanner(null), 4000);
+            prevCorrectLen.current = correctGuesses.length;
+            return () => clearTimeout(t);
+        }
+        prevCorrectLen.current = correctGuesses.length;
+    }, [correctGuesses.length]);
 
     // ─── Canvas helpers ──────────────────────────────────────────────
     const getCanvasPos = (e: React.PointerEvent | PointerEvent) => {
@@ -81,6 +97,17 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         ctx.stroke();
     }, []);
 
+    // Countdown tick sound
+    useEffect(() => {
+        if (gameStatus !== 'countdown') return;
+        const src = timer > 0
+            ? 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'   // tick
+            : 'https://assets.mixkit.co/active_storage/sfx/1084/1084-preview.mp3';  // go!
+        const audio = new Audio(src);
+        audio.volume = 0.5;
+        audio.play().catch(() => { });
+    }, [timer, gameStatus]);
+
     // Initialise canvas background
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -105,15 +132,6 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         }
     }, [drawingLiveStrokes, isDrawer, drawSegment]);
 
-    // Handle drawingClear from server
-    useEffect(() => {
-        if (isDrawer) return;
-        const canvas = canvasRef.current;
-        const ctx = canvas?.getContext('2d');
-        if (!ctx || !canvas) return;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }, [drawingLiveStrokes.length === 0 && gameStatus === 'drawing_active' ? 'cleared' : 'ok', isDrawer]);
 
     // ─── Drawer pointer handlers ──────────────────────────────────────
     const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -244,6 +262,28 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         }
                     </div>
                 )}
+
+                {/* Correct-answer flash banner */}
+                <AnimatePresence>
+                    {correctBanner && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -12, scale: 0.92 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            style={{
+                                padding: '14px 20px', borderRadius: '16px',
+                                background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+                                border: '2px solid #10b981', textAlign: 'center',
+                                fontWeight: 900, fontSize: '17px', color: '#065f46',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+                            }}
+                            dir="rtl"
+                        >
+                            <Check size={22} color="#059669" />
+                            {correctBanner.playerName} خمّن الكلمة! +{correctBanner.pts} نقطة 🎉
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Canvas */}
                 <div style={{
@@ -396,15 +436,16 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     </motion.div>
                 )}
 
-                {/* Guess chat log */}
-                {!isDrawer && !isScoring && chatLog.length > 0 && (
+                {/* Guess chat log — visible to ALL players */}
+                {!isScoring && chatLog.length > 0 && (
                     <div style={{
                         padding: '10px', background: '#f8fafc', borderRadius: '12px',
-                        border: '1px solid #e2e8f0', maxHeight: '120px', overflowY: 'auto',
+                        border: '1px solid #e2e8f0', maxHeight: '140px', overflowY: 'auto',
                         display: 'flex', flexDirection: 'column', gap: '4px'
                     }}>
+                        <div style={{ fontSize: '11px', color: '#94a3b8', marginBottom: '4px', fontWeight: 'bold' }}>التخمينات</div>
                         <AnimatePresence>
-                            {chatLog.slice(-8).map((entry, idx) => (
+                            {chatLog.slice(-10).map((entry, idx) => (
                                 <motion.div
                                     key={idx}
                                     initial={{ opacity: 0, x: -10 }}

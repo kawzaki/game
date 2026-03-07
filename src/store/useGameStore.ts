@@ -115,12 +115,6 @@ export const useGameStore = create<GameState>((set) => {
             drawingDrawerId: data.drawingDrawerId ?? null,
             drawingGuesses: data.drawingGuesses ?? {},
             drawingStrokes: data.drawingStrokes ?? [],
-            // Reset live chat arrays only when a fresh drawing round begins
-            ...(data.gameStatus === 'drawing_active' ? {
-                drawingLiveStrokes: [],
-                drawingCorrectGuesses: [],
-                drawingWrongGuesses: [],
-            } : {}),
             myId: socket.id || null,
             isConnected: true,
             roomDataLoading: false
