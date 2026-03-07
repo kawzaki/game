@@ -374,8 +374,8 @@ const App: React.FC = () => {
         </div>
 
         <div className="join-section">
-          <span className="join-label">انضم إلى مباراة</span>
-          <div className="join-input-wrapper">
+          <span className="join-label">انضم إلى غرفة</span>
+          <div className="join-input-wrapper" style={{ position: 'relative' }}>
             <button
               onClick={() => joinCode && setRoomId(joinCode)}
               className="join-submit-btn"
