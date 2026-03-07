@@ -13,12 +13,14 @@ export const InstallPrompt: React.FC = () => {
     useEffect(() => {
         // Check if prompt was dismissed in the last 90 days.
         const lastPrompt = localStorage.getItem('lastInstallPromptTime');
-        const ninetyDaysInMs = 90 * 24 * 60 * 60 * 1000;
         const now = Date.now();
 
+        // DEV OVERRIDE: 1 minute for easier testing
+        const ninetyDaysInMs = 60 * 1000;
+
         // For testing/debugging, we might want to override the 90-day wait 
-        // but in production, uncomment the return below:
         if (lastPrompt && (now - parseInt(lastPrompt)) < ninetyDaysInMs) {
+            console.log("Install prompt skipped due to recent interaction limit.");
             return;
         }
 
@@ -29,6 +31,7 @@ export const InstallPrompt: React.FC = () => {
         const isStandalone = ('standalone' in window.navigator) && ((window.navigator as any).standalone);
 
         if (isIOSDevice && !isStandalone) {
+            console.log("iOS detected, showing manual installation prompt.");
             setIsIOS(true);
             setTimeout(() => setShowPrompt(true), 2000); // Slight delay for smoother UX
             return;
@@ -36,6 +39,7 @@ export const InstallPrompt: React.FC = () => {
 
         // Capture the PWA install prompt event for Android/Desktop Chrome
         const handleBeforeInstallPrompt = (e: Event) => {
+            console.log("beforeinstallprompt event fired! Capturing banner.");
             // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
             // Stash the event so it can be triggered later.
