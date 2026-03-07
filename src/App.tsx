@@ -342,7 +342,7 @@ const App: React.FC = () => {
         <h1 className="hero-title">هل أنت مستعد <span style={{ color: 'var(--brand-yellow)' }}>للمنافسة؟</span></h1>
         <p className="hero-subtitle">تحد أصدقاءك لإثبات معرفتك في مختلف الألعاب.</p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '20px' }}>
           <button className="btn-primary-battle" onClick={() => finalizeCreateRoom('jeopardy')}>
             <Layout size={24} />
             تحدي الاسئلة
@@ -615,6 +615,8 @@ const App: React.FC = () => {
           <div className="nav-item" onClick={() => window.dispatchEvent(new Event('show-install-prompt'))} style={{ cursor: 'pointer' }}><Download size={24} /><span>تثبيت</span></div>
           <div className="nav-item"><User size={24} /><span>الملف</span></div>
         </nav>
+
+        <InstallPrompt />
       </div >
     );
   }
