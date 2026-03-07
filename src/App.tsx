@@ -16,7 +16,7 @@ import {
   Zap,
   Plus,
   Home,
-  Clock,
+  Download,
   User,
   Layout,
   Type,
@@ -612,7 +612,7 @@ const App: React.FC = () => {
           <div className="nav-item active"><Home size={24} /><span>الرئيسية</span></div>
           <div className="nav-item"><Trophy size={24} /><span>البطولات</span></div>
           <div className="nav-plus"><Plus size={32} strokeWidth={3} /></div>
-          <div className="nav-item"><Clock size={24} /><span>السجل</span></div>
+          <div className="nav-item" onClick={() => window.dispatchEvent(new Event('show-install-prompt'))} style={{ cursor: 'pointer' }}><Download size={24} /><span>تثبيت</span></div>
           <div className="nav-item"><User size={24} /><span>الملف</span></div>
         </nav>
       </div >

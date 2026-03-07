@@ -44,14 +44,34 @@ export const InstallPrompt: React.FC = () => {
             e.preventDefault();
             // Stash the event so it can be triggered later.
             setDeferredPrompt(e);
-            // Update UI notify the user they can install the PWA
-            setTimeout(() => setShowPrompt(true), 2000);
+
+            // Note: we don't show it immediately anymore. We wait for scroll or manual trigger.
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
+        // Add scroll logic to trigger the prompt
+        let hasTriggeredScroll = false;
+        const handleScroll = () => {
+            if (!hasTriggeredScroll && window.scrollY > 100) {
+                hasTriggeredScroll = true;
+                setShowPrompt(true);
+                window.removeEventListener('scroll', handleScroll);
+            }
+        };
+        window.addEventListener('scroll', handleScroll);
+
+        // Listen for manual trigger from other components
+        const handleManualShow = () => {
+            hasTriggeredScroll = true; // prevent scroll from overriding it
+            setShowPrompt(true);
+        };
+        window.addEventListener('show-install-prompt', handleManualShow);
+
         return () => {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+            window.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('show-install-prompt', handleManualShow);
         };
     }, []);
 
