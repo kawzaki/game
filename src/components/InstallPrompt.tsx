@@ -11,41 +11,24 @@ export const InstallPrompt: React.FC = () => {
     const [installState, setInstallState] = useState<'idle' | 'installing' | 'success'>('idle');
 
     useEffect(() => {
-        // Check if prompt was dismissed in the last 90 days.
-        const lastPrompt = localStorage.getItem('lastInstallPromptTime');
-        const now = Date.now();
-
-        // DEV OVERRIDE: 1 minute for easier testing
-        const ninetyDaysInMs = 60 * 1000;
-
-        // For testing/debugging, we might want to override the 90-day wait 
-        if (lastPrompt && (now - parseInt(lastPrompt)) < ninetyDaysInMs) {
-            console.log("Install prompt skipped due to recent interaction limit.");
-            return;
-        }
-
-        // Detect iOS since it doesn't support the beforeinstallprompt event natively
         const userAgent = navigator.userAgent;
         const isIOSDevice = !!userAgent.match(/iPad/i) || !!userAgent.match(/iPhone/i);
-        // iOS Safari does not support PWA install natively without 'Add to Home Screen' from Share Menu
         const isStandalone = ('standalone' in window.navigator) && ((window.navigator as any).standalone);
 
         if (isIOSDevice && !isStandalone) {
-            console.log("iOS detected, showing manual installation prompt.");
             setIsIOS(true);
-            setTimeout(() => setShowPrompt(true), 2000); // Slight delay for smoother UX
-            return;
         }
+
+        const lastPrompt = localStorage.getItem('lastInstallPromptTime');
+        const now = Date.now();
+        const ninetyDaysInMs = 60 * 1000; // DEV OVERRIDE: 1 minute
+        const isCooldownActive = lastPrompt && (now - parseInt(lastPrompt)) < ninetyDaysInMs;
 
         // Capture the PWA install prompt event for Android/Desktop Chrome
         const handleBeforeInstallPrompt = (e: Event) => {
             console.log("beforeinstallprompt event fired! Capturing banner.");
-            // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
-            // Stash the event so it can be triggered later.
             setDeferredPrompt(e);
-
-            // Note: we don't show it immediately anymore. We wait for scroll or manual trigger.
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -55,7 +38,9 @@ export const InstallPrompt: React.FC = () => {
         const handleScroll = () => {
             if (!hasTriggeredScroll && window.scrollY > 100) {
                 hasTriggeredScroll = true;
-                setShowPrompt(true);
+                if (!isCooldownActive) {
+                    setShowPrompt(true);
+                }
                 window.removeEventListener('scroll', handleScroll);
             }
         };
