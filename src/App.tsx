@@ -230,11 +230,40 @@ const App: React.FC = () => {
 
   const hasJoined = useMemo(() => players.some(p => p.id === myId), [players, myId]);
 
-  // 20-second lobby countdown — auto-starts game for host when timer hits 0
-  const [lobbyCountdown, setLobbyCountdown] = React.useState(20);
+  // Prevent accidental back navigation or refresh if player is in a room
+  useEffect(() => {
+    if (!hasJoined) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ''; // Required for Chrome
+    };
+
+    // Push a state so popstate can intercept the back button
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = () => {
+      if (confirm('هل أنت متأكد من مغادرة اللعبة؟ ستفقد تقدمك.')) {
+        window.history.back(); // Actually go back if they confirm
+      } else {
+        window.history.pushState(null, '', window.location.href); // Push state again to block further back
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [hasJoined]);
+
+  // 60-second lobby countdown — auto-starts game for host when timer hits 0
+  const [lobbyCountdown, setLobbyCountdown] = React.useState(60);
   useEffect(() => {
     if (!hasJoined || players.length === 0 || gameStatus !== 'lobby') return;
-    setLobbyCountdown(20);
+    setLobbyCountdown(60);
     const interval = setInterval(() => {
       setLobbyCountdown(prev => {
         if (prev <= 1) {
@@ -465,7 +494,7 @@ const App: React.FC = () => {
                   {hasJoined && players.length > 0 && lobbyCountdown > 0 && (
                     <motion.div
                       initial={{ width: '100%' }}
-                      animate={{ width: `${(lobbyCountdown / 20) * 100}%` }}
+                      animate={{ width: `${(lobbyCountdown / 60) * 100}%` }}
                       transition={{ duration: 1, ease: 'linear' }}
                       style={{ position: 'absolute', left: 0, top: 0, height: '100%', background: 'rgba(0,0,0,0.12)', zIndex: 0 }}
                     />
