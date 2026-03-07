@@ -650,30 +650,28 @@ const App: React.FC = () => {
                 </div>
                 <h3 style={{ textAlign: 'center', marginBottom: '24px' }}>{selectedCategory}</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                  {(() => {
+                  {[100, 200, 300, 400, 500, 600].map((val) => {
                     const catQuestions = categories[selectedCategory || ''] || [];
-                    const distinctValues = Array.from(new Set(catQuestions.map(q => q.value))).sort((a, b) => a - b);
-                    if (distinctValues.length === 0) {
-                      return <div style={{ gridColumn: 'span 2', textAlign: 'center', padding: '20px' }}>لا توجد أسئلة لهذه الفئة</div>;
-                    }
-                    return distinctValues.map((val) => {
-                      const answeredCount = catQuestions.filter(q => q.value === val && q.isAnswered).length;
-                      const totalForValue = catQuestions.filter(q => q.value === val).length;
-                      const isFullyAnswered = answeredCount >= totalForValue && totalForValue > 0;
-                      return (
-                        <motion.button
-                          whileTap={(!isFullyAnswered && isMyTurn) ? { scale: 0.95 } : {}}
-                          key={val}
-                          className={`value-button ${isFullyAnswered ? 'tile-answered' : ''} ${!isMyTurn ? 'tile-disabled' : ''}`}
-                          onClick={() => !isFullyAnswered && handlePickValue(val)}
-                          style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                        >
-                          <Coins size={28} />
-                          <span style={{ fontWeight: 900, fontSize: '24px' }}>{val}</span>
-                        </motion.button>
-                      );
-                    });
-                  })()}
+                    const qForVal = catQuestions.filter(q => q.value === val);
+                    const totalForValue = qForVal.length;
+                    const answeredCount = qForVal.filter(q => q.isAnswered).length;
+
+                    const isFullyAnswered = answeredCount >= totalForValue && totalForValue > 0;
+                    const isMissing = totalForValue === 0;
+
+                    return (
+                      <motion.button
+                        whileTap={(!isFullyAnswered && !isMissing && isMyTurn) ? { scale: 0.95 } : {}}
+                        key={val}
+                        className={`value-button ${(isFullyAnswered || isMissing) ? 'tile-answered' : ''} ${(!isMyTurn || isMissing) ? 'tile-disabled' : ''}`}
+                        onClick={() => (!isFullyAnswered && !isMissing) && handlePickValue(val)}
+                        style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: isMissing ? 0.4 : (isFullyAnswered ? 0.6 : 1) }}
+                      >
+                        <Coins size={28} />
+                        <span style={{ fontWeight: 900, fontSize: '24px' }}>{val}</span>
+                      </motion.button>
+                    );
+                  })}
                   <button className="btn-back-ghost" onClick={() => useGameStore.setState({ gameStatus: 'selecting_category', selectedCategory: null })} style={{ gridColumn: 'span 2' }}>رجوع</button>
                 </div>
               </div>
