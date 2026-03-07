@@ -1454,21 +1454,14 @@ io.on('connection', (socket) => {
 
         if (isCorrect) {
             room.drawingGuesses[socket.id] = { correct: true, timeLeft: room.timer, guess };
-            // Broadcast correct guess event (don't reveal word to others)
             io.to(roomId).emit('drawing_correct_guess', {
                 playerId: socket.id,
                 playerName: player?.name || '?',
             });
 
-            // Check if ALL non-drawer players have guessed correctly
-            const nonDrawers = room.players.filter(p => p.id !== room.drawingDrawerId);
-            const allGuessed = nonDrawers.every(p => room.drawingGuesses[p.id]?.correct);
-            if (allGuessed) {
-                room.timer = 0; // Trigger early end
-                scoreDrawingRound(room, io, roomId);
-            }
-            // If not all guessed yet, drawing_correct_guess event already notified everyone
-            // Don't send room_data here — it would reset drawingLiveStrokes on all clients
+            // First correct guess ends the round immediately
+            room.timer = 0;
+            scoreDrawingRound(room, io, roomId);
         } else {
             room.drawingGuesses[socket.id] = { correct: false, guess };
             // Broadcast wrong guess to all (for the chat log)
