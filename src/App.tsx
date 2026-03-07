@@ -267,9 +267,13 @@ const App: React.FC = () => {
     const interval = setInterval(() => {
       setLobbyCountdown(prev => {
         if (prev <= 1) {
-          clearInterval(interval);
-          if ((isCreator || players[0]?.id === myId) && roomId && gameStatus === 'lobby') startGame(roomId);
-          return 0;
+          if (players.length > 1) {
+            clearInterval(interval);
+            if ((isCreator || players[0]?.id === myId) && roomId && gameStatus === 'lobby') startGame(roomId);
+            return 0;
+          }
+          // Nobody else joined yet, restart the countdown
+          return 60;
         }
         return prev - 1;
       });

@@ -1364,8 +1364,13 @@ io.on('connection', (socket) => {
             }
         }, 1000);
 
-        // Store interval ref so we can clear early when everyone guesses
-        room._drawingInterval = roundInterval;
+        // Store interval ref as non-enumerable to prevent socket.io from serializing it in room_data broadcasts
+        Object.defineProperty(room, '_drawingInterval', {
+            value: roundInterval,
+            enumerable: false,
+            writable: true,
+            configurable: true
+        });
     }
 
     function scoreDrawingRound(room, io, roomId) {
@@ -1601,7 +1606,12 @@ io.on('connection', (socket) => {
                 });
 
                 if (room.players.length > 0) {
-                    io.to(roomId).emit('room_data', room);
+                    // Sanitize room object to avoid crashing socket.io-parser on Timeout objects
+                    const safeRoom = { ...room };
+                    for (const key in safeRoom) {
+                        if (key.startsWith('_')) delete safeRoom[key];
+                    }
+                    io.to(roomId).emit('room_data', safeRoom);
                 } else {
                     console.log(`[Cleanup] Room ${roomId} is empty, removing.`);
                     rooms.delete(roomId);
