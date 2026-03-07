@@ -28,12 +28,12 @@ interface GameState {
     isConnected: boolean;
     feedback: { type: 'correct' | 'wrong' | 'all_wrong' | 'luck'; message: string; answer?: string; reward?: any } | null;
     wordMeaningFeedback?: Record<string, { answer: string; isCorrect: boolean; pointsEarned?: number }>;
-    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'selecting_letter' | 'question' | 'game_over' | 'countdown' | 'round_active' | 'round_scoring' | 'word_meaning_active' | 'word_meaning_scoring' | 'siba_active' | 'pixel_active' | 'pixel_scoring';
+    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'selecting_letter' | 'question' | 'game_over' | 'countdown' | 'round_active' | 'round_scoring' | 'word_meaning_active' | 'word_meaning_scoring' | 'siba_active' | 'pixel_active' | 'pixel_scoring' | 'drawing_active' | 'drawing_scoring';
     timer: number;
     winner: { name: string; score: number; isForfeit?: boolean; winningTeam?: 'red' | 'blue' } | null;
     playerName: string | null;
     questionsPerCategory: number;
-    gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge';
+    gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge' | 'drawing_challenge';
     currentLetter: string | null;
     currentRound: number;
     roundCount: number;
@@ -44,10 +44,19 @@ interface GameState {
     sibaPhase?: 'setup' | 'placement' | 'movement';
     sibaPiecesPlaced?: Record<string, number>;
     sibaTurn?: string; // Player ID
+    // Drawing Challenge state
+    drawingCurrentWord: string | null;  // only set for the current drawer
+    drawingWordLength: number;           // always set so guessers can show blanks
+    drawingDrawerId: string | null;
+    drawingGuesses: Record<string, { correct: boolean; guess?: string; timeLeft?: number; pointsEarned?: number }>;
+    drawingStrokes: any[];              // local canvas strokes (for replay on rejoin)
+    drawingLiveStrokes: any[];          // incoming live strokes from server events
+    drawingCorrectGuesses: { playerId: string; playerName: string }[];
+    drawingWrongGuesses: { playerId: string; playerName: string; guess: string }[];
 
     // Actions
     setRoomId: (id: string) => void;
-    setGameType: (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge') => void;
+    setGameType: (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge' | 'drawing_challenge') => void;
     addPlayer: (name: string, roomId: string, questionsPerCategory?: number) => void;
     startGame: (roomId: string) => void;
     pickCategory: (roomId: string, category: string) => void;
@@ -61,9 +70,12 @@ interface GameState {
     resetRoom: () => void;
     submitRoundBinOWalad: (roomId: string, inputs: Record<string, string>) => void;
     getRoomStatus: (roomId: string) => void;
-    createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge', qCount: number) => void;
+    createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge' | 'drawing_challenge', qCount: number) => void;
     submitWordMeaningAnswer: (roomId: string, answer: string) => void;
     submitPixelAnswer: (roomId: string, answer: string) => void;
+    sendDrawingStroke: (roomId: string, stroke: any) => void;
+    sendDrawingClear: (roomId: string) => void;
+    submitDrawingGuess: (roomId: string, guess: string) => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
@@ -98,10 +110,48 @@ export const useGameStore = create<GameState>((set) => {
             sibaPhase: data.sibaPhase,
             sibaPiecesPlaced: data.sibaPiecesPlaced,
             sibaTurn: data.sibaTurn,
+            drawingCurrentWord: data.drawingCurrentWord ?? null,
+            drawingWordLength: data.drawingWordLength ?? 0,
+            drawingDrawerId: data.drawingDrawerId ?? null,
+            drawingGuesses: data.drawingGuesses ?? {},
+            drawingStrokes: data.drawingStrokes ?? [],
+            // Reset live chat arrays only when a fresh drawing round begins
+            ...(data.gameStatus === 'drawing_active' ? {
+                drawingLiveStrokes: [],
+                drawingCorrectGuesses: [],
+                drawingWrongGuesses: [],
+            } : {}),
             myId: socket.id || null,
             isConnected: true,
             roomDataLoading: false
         });
+    });
+
+    // Drawing Challenge live events
+    socket.on('drawing_stroke', (stroke: any) => {
+        useGameStore.setState(state => ({
+            drawingLiveStrokes: [...(state.drawingLiveStrokes || []), stroke]
+        }));
+    });
+    socket.on('drawing_clear', () => {
+        useGameStore.setState({ drawingLiveStrokes: [] });
+    });
+    socket.on('drawing_timer', ({ timer }: { timer: number }) => {
+        useGameStore.setState({ timer });
+    });
+    socket.on('drawing_correct_guess', (payload: { playerId: string; playerName: string }) => {
+        useGameStore.setState(state => ({
+            drawingCorrectGuesses: [...(state.drawingCorrectGuesses || []), payload]
+        }));
+    });
+    // Drawer receives their secret word via this dedicated event (not in room_data)
+    socket.on('drawing_your_word', ({ word }: { word: string }) => {
+        useGameStore.setState({ drawingCurrentWord: word });
+    });
+    socket.on('drawing_wrong_guess', (payload: { playerId: string; playerName: string; guess: string }) => {
+        useGameStore.setState(state => ({
+            drawingWrongGuesses: [...(state.drawingWrongGuesses || []), payload]
+        }));
     });
 
     // Handle reconnections
@@ -146,6 +196,14 @@ export const useGameStore = create<GameState>((set) => {
         sibaPhase: 'setup',
         sibaPiecesPlaced: {},
         sibaTurn: undefined,
+        drawingCurrentWord: null,
+        drawingWordLength: 0,
+        drawingDrawerId: null,
+        drawingGuesses: {},
+        drawingStrokes: [],
+        drawingLiveStrokes: [],
+        drawingCorrectGuesses: [],
+        drawingWrongGuesses: [],
 
         setRoomId: (id) => set({ roomId: id }),
 
@@ -210,7 +268,15 @@ export const useGameStore = create<GameState>((set) => {
             sibaBoard: Array(9).fill(null),
             sibaPhase: 'setup',
             sibaPiecesPlaced: {},
-            sibaTurn: undefined
+            sibaTurn: undefined,
+            drawingCurrentWord: null,
+            drawingWordLength: 0,
+            drawingDrawerId: null,
+            drawingGuesses: {},
+            drawingStrokes: [],
+            drawingLiveStrokes: [],
+            drawingCorrectGuesses: [],
+            drawingWrongGuesses: []
         }),
 
         submitRoundBinOWalad: (roomId, inputs) => {
@@ -222,7 +288,7 @@ export const useGameStore = create<GameState>((set) => {
             socket.emit('get_room_status', roomId);
         },
 
-        createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge', questionsPerCategory: number) => {
+        createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge' | 'drawing_challenge', questionsPerCategory: number) => {
             socket.emit('create_room', { roomId, gameType, questionsPerCategory });
             set({ roomId, gameType, questionsPerCategory });
         },
@@ -232,6 +298,15 @@ export const useGameStore = create<GameState>((set) => {
         },
         submitPixelAnswer: (roomId, answer) => {
             socket.emit('submit_pixel_answer', { roomId, answer });
+        },
+        sendDrawingStroke: (roomId, stroke) => {
+            socket.emit('drawing_stroke', { roomId, stroke });
+        },
+        sendDrawingClear: (roomId) => {
+            socket.emit('drawing_clear', { roomId });
+        },
+        submitDrawingGuess: (roomId, guess) => {
+            socket.emit('drawing_guess', { roomId, guess });
         }
     };
 });

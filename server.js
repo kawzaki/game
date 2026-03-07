@@ -18,6 +18,12 @@ try {
 } catch (e) {
     console.error("Error loading pixelChallenge.json:", e.message);
 }
+let drawingWordsPool = [];
+try {
+    drawingWordsPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/drawingWords.json'), 'utf8'));
+} catch (e) {
+    console.error("Error loading drawingWords.json:", e.message);
+}
 
 const ARABIC_LETTERS = [
     'أ', 'ب', 'ت', 'ث', 'ج',
@@ -335,6 +341,8 @@ io.on('connection', (socket) => {
                 const shuffled = [...pixelChallengePool].sort(() => Math.random() - 0.5);
                 // Select 15 questions (10 main + 5 buffer for tie-breakers)
                 selectedQuestions = shuffled.slice(0, questionsPerCategory + 5);
+            } else if (requestedGameType === 'drawing_challenge') {
+                selectedQuestions = [...drawingWordsPool].sort(() => Math.random() - 0.5);
             }
 
             rooms.set(roomId, {
@@ -355,7 +363,7 @@ io.on('connection', (socket) => {
                 correctAnswer: null,
                 buzzedPlayerId: null,
                 // Bent o Walad specific
-                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge') ? questionsPerCategory : 0,
+                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge' || requestedGameType === 'drawing_challenge') ? questionsPerCategory : 0,
                 currentRound: 0,
                 usedLetters: [],
                 currentLetter: null,
@@ -366,7 +374,12 @@ io.on('connection', (socket) => {
                 sibaBoard: Array(9).fill(null),
                 sibaPhase: 'setup',
                 sibaPiecesPlaced: {},
-                sibaTurn: null
+                sibaTurn: null,
+                // Drawing Challenge specific
+                drawingDrawerIndex: 0,
+                drawingCurrentWord: null,
+                drawingGuesses: {},
+                drawingStrokes: []
             });
         }
 
@@ -427,6 +440,8 @@ io.on('connection', (socket) => {
                 const shuffled = [...pixelChallengePool].sort(() => Math.random() - 0.5);
                 // Select 15 questions (10 main + 5 buffer for tie-breakers)
                 selectedQuestions = shuffled.slice(0, questionsPerCategory + 5);
+            } else if (requestedGameType === 'drawing_challenge') {
+                selectedQuestions = [...drawingWordsPool].sort(() => Math.random() - 0.5);
             }
 
             rooms.set(roomId, {
@@ -446,7 +461,7 @@ io.on('connection', (socket) => {
                 winner: null,
                 correctAnswer: null,
                 buzzedPlayerId: null,
-                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge') ? questionsPerCategory : 0,
+                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge' || requestedGameType === 'drawing_challenge') ? questionsPerCategory : 0,
                 currentRound: 0,
                 usedLetters: [],
                 currentLetter: null,
@@ -457,7 +472,12 @@ io.on('connection', (socket) => {
                 sibaBoard: Array(9).fill(null),
                 sibaPhase: 'setup',
                 sibaPiecesPlaced: {},
-                sibaTurn: null
+                sibaTurn: null,
+                // Drawing Challenge specific
+                drawingDrawerIndex: 0,
+                drawingCurrentWord: null,
+                drawingGuesses: {},
+                drawingStrokes: []
             });
 
             // Note: We don't join the socket to the room yet, 
@@ -484,7 +504,7 @@ io.on('connection', (socket) => {
             const questionsPerCategory = Number(rawQCount);
             console.log(`[Update Settings] Room: ${roomId}, New count: ${questionsPerCategory}`);
             room.questionsPerCategory = questionsPerCategory;
-            if (room.gameType === 'bin_o_walad' || room.gameType === 'pixel_challenge' || room.gameType === 'word_meaning') {
+            if (room.gameType === 'bin_o_walad' || room.gameType === 'pixel_challenge' || room.gameType === 'word_meaning' || room.gameType === 'drawing_challenge') {
                 room.roundCount = questionsPerCategory;
 
                 // For Pixel Challenge, re-select questions based on new count
@@ -566,6 +586,23 @@ io.on('connection', (socket) => {
                 room.sibaTurn = room.players[0]?.id || null;
                 room.sibaPiecesPlaced = {};
                 room.sibaBoard = Array(9).fill(null);
+            } else if (room.gameType === 'drawing_challenge') {
+                room.gameStatus = 'countdown';
+                room.timer = 3;
+                room.currentRound = 1;
+                room.drawingDrawerIndex = 0;
+                room.drawingGuesses = {};
+                room.drawingStrokes = [];
+
+                const countdownInterval = setInterval(() => {
+                    if (room.timer > 0) {
+                        room.timer--;
+                        io.to(roomId).emit('room_data', room);
+                    } else {
+                        clearInterval(countdownInterval);
+                        startDrawingRound(room, io, roomId);
+                    }
+                }, 1000);
             } else {
                 room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
             }
@@ -1244,6 +1281,176 @@ io.on('connection', (socket) => {
         const room = rooms.get(roomId);
         if (room && room.gameStatus !== 'game_over') {
             endGame(room, io, roomId, socket.id);
+        }
+    });
+
+    // =============================================
+    // DRAWING CHALLENGE HANDLERS
+    // =============================================
+
+    function startDrawingRound(room, io, roomId) {
+        if (room.currentRound > room.roundCount) {
+            endGame(room, io, roomId);
+            return;
+        }
+
+        const drawer = room.players[room.drawingDrawerIndex % room.players.length];
+        if (!drawer) { endGame(room, io, roomId); return; }
+
+        // Pick a word the drawer hasn't seen yet (use currentRound - 1 as index)
+        const wordEntry = room.questions[(room.currentRound - 1) % room.questions.length];
+        const word = wordEntry ? wordEntry.word : 'كلمة';
+
+        room.drawingCurrentWord = word;
+        room.drawingDrawerId = drawer.id;
+        room.drawingGuesses = {};
+        room.drawingStrokes = [];
+        room.gameStatus = 'drawing_active';
+        room.timer = 80;
+        room.feedback = null;
+
+        console.log(`[Drawing] Round ${room.currentRound}/${room.roundCount} - Drawer: ${drawer.name}, Word: ${word}`);
+
+        // Broadcast room data to EVERYONE but with the word hidden (null)
+        const savedWord = room.drawingCurrentWord;
+        room.drawingCurrentWord = null;
+        room.drawingWordLength = word.length;
+        io.to(roomId).emit('room_data', room);
+        // Restore word on server for guessing logic
+        room.drawingCurrentWord = savedWord;
+
+        // Send secret word only to the drawer via a separate event
+        const drawerSocket = io.sockets.sockets.get(drawer.id);
+        if (drawerSocket) {
+            drawerSocket.emit('drawing_your_word', { word });
+        }
+
+        const roundInterval = setInterval(() => {
+            if (room.timer > 0 && room.gameStatus === 'drawing_active') {
+                room.timer--;
+                // Only broadcast timer + strokes, no need to re-hide word (word already sent)
+                io.to(roomId).emit('drawing_timer', { timer: room.timer, roomId });
+            } else {
+                clearInterval(roundInterval);
+                if (room.gameStatus === 'drawing_active') {
+                    scoreDrawingRound(room, io, roomId);
+                }
+            }
+        }, 1000);
+
+        // Store interval ref so we can clear early when everyone guesses
+        room._drawingInterval = roundInterval;
+    }
+
+    function scoreDrawingRound(room, io, roomId) {
+        if (room._drawingInterval) {
+            clearInterval(room._drawingInterval);
+            room._drawingInterval = null;
+        }
+        room.gameStatus = 'drawing_scoring';
+
+        const word = room.drawingCurrentWord;
+        const guesses = room.drawingGuesses || {};
+        const drawerPlayer = room.players.find(p => p.id === room.drawingDrawerId);
+
+        let correctGuessCount = 0;
+        room.players.forEach(p => {
+            if (p.id === room.drawingDrawerId) return;
+            const g = guesses[p.id];
+            if (g && g.correct) {
+                // Speed bonus: 20 base + up to 60 for speed (timeLeft out of 80)
+                const speedBonus = Math.round((g.timeLeft / 80) * 60);
+                const pts = 20 + speedBonus;
+                p.score += pts;
+                g.pointsEarned = pts;
+                correctGuessCount++;
+            }
+        });
+
+        // Drawer earns 10 pts per correct guesser
+        if (drawerPlayer && correctGuessCount > 0) {
+            const drawerPts = correctGuessCount * 10;
+            drawerPlayer.score += drawerPts;
+            if (guesses[drawerPlayer.id] === undefined) guesses[drawerPlayer.id] = {};
+            guesses[drawerPlayer.id].pointsEarned = drawerPts;
+        }
+
+        room.drawingGuesses = guesses;
+        room.drawingCurrentWord = word; // Reveal word during scoring
+
+        // Broadcast full room with revealed word
+        io.to(roomId).emit('room_data', room);
+
+        setTimeout(() => {
+            room.currentRound++;
+            room.drawingDrawerIndex = (room.drawingDrawerIndex + 1) % room.players.length;
+            room.feedback = null;
+            room.drawingStrokes = [];
+
+            if (room.currentRound > room.roundCount) {
+                endGame(room, io, roomId);
+            } else {
+                startDrawingRound(room, io, roomId);
+            }
+        }, 6000);
+    }
+
+    // Relay draw strokes to all players in the room
+    socket.on('drawing_stroke', ({ roomId, stroke }) => {
+        const room = rooms.get(roomId);
+        if (!room || room.gameStatus !== 'drawing_active') return;
+        if (socket.id !== room.drawingDrawerId) return; // Only drawer can draw
+        room.drawingStrokes.push(stroke);
+        socket.to(roomId).emit('drawing_stroke', stroke);
+    });
+
+    // Drawer clears the canvas
+    socket.on('drawing_clear', ({ roomId }) => {
+        const room = rooms.get(roomId);
+        if (!room || room.gameStatus !== 'drawing_active') return;
+        if (socket.id !== room.drawingDrawerId) return;
+        room.drawingStrokes = [];
+        io.to(roomId).emit('drawing_clear');
+    });
+
+    // Player submits a guess
+    socket.on('drawing_guess', ({ roomId, guess }) => {
+        const room = rooms.get(roomId);
+        if (!room || room.gameStatus !== 'drawing_active') return;
+        if (socket.id === room.drawingDrawerId) return; // Drawer can't guess their own word
+
+        const existingGuess = room.drawingGuesses[socket.id];
+        if (existingGuess && existingGuess.correct) return; // Already guessed correctly
+
+        const player = room.players.find(p => p.id === socket.id);
+        const normalized = (s) => s.trim().replace(/\s+/g, ' ').toLowerCase();
+        const isCorrect = normalized(guess) === normalized(room.drawingCurrentWord);
+
+        if (isCorrect) {
+            room.drawingGuesses[socket.id] = { correct: true, timeLeft: room.timer, guess };
+            // Broadcast correct guess event (don't reveal word to others)
+            io.to(roomId).emit('drawing_correct_guess', {
+                playerId: socket.id,
+                playerName: player?.name || '?',
+            });
+
+            // Check if ALL non-drawer players have guessed correctly
+            const nonDrawers = room.players.filter(p => p.id !== room.drawingDrawerId);
+            const allGuessed = nonDrawers.every(p => room.drawingGuesses[p.id]?.correct);
+            if (allGuessed) {
+                room.timer = 0; // Trigger early end
+                scoreDrawingRound(room, io, roomId);
+            } else {
+                io.to(roomId).emit('room_data', room);
+            }
+        } else {
+            room.drawingGuesses[socket.id] = { correct: false, guess };
+            // Broadcast wrong guess to all (for the chat log)
+            io.to(roomId).emit('drawing_wrong_guess', {
+                playerId: socket.id,
+                playerName: player?.name || '?',
+                guess
+            });
         }
     });
 
