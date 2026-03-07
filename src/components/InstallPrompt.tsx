@@ -156,9 +156,9 @@ export const InstallPrompt: React.FC = () => {
                                     <p style={{ color: '#64748b', fontSize: '15px', lineHeight: '1.5', margin: 0, maxWidth: '320px' }}>
                                         {isIOS ? (
                                             <span style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-                                                {t('ios_install_desc').split('Share')[0]}
-                                                <Share size={18} style={{ color: '#0f172a' }} />
-                                                {t('ios_install_desc').split('Share')[1]}
+                                                {t('ios_install_desc').split('المشاركة')[0]}
+                                                المشاركة <Share size={18} style={{ color: '#0f172a' }} />
+                                                {t('ios_install_desc').split('المشاركة')[1]}
                                             </span>
                                         ) : (
                                             t('install_desc')
