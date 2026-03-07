@@ -209,7 +209,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         const timerColor = timer > 40 ? '#22c55e' : timer > 15 ? '#f97316' : '#ef4444';
 
         return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '640px', margin: '0 auto', padding: '0 4px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '640px', margin: '0 auto', padding: '0 8px', boxSizing: 'border-box' }}>
                 {/* Round header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: 900, fontSize: '15px' }}>
@@ -287,7 +287,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
                 {/* Canvas */}
                 <div style={{
-                    borderRadius: '16px', overflow: 'hidden',
+                    borderRadius: '16px', overflow: 'hidden', width: '100%', boxSizing: 'border-box',
                     border: '2px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
                     background: '#fff', touchAction: 'none'
                 }}>
@@ -370,7 +370,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
                 {/* Guesser input */}
                 {!isDrawer && !isScoring && (
-                    <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px' }}>
+                    <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
                         <input
                             type="text"
                             value={guessInput}
