@@ -885,11 +885,20 @@ const App: React.FC = () => {
                 className={`hud-player-unit ${i === currentPlayerIndex ? 'active' : ''}`}
                 style={gameType === 'huroof' ? { borderBottom: `4px solid ${p.team === 'blue' ? '#3b82f6' : '#ef4444'}` } : {}}
               >
-                <div className="hud-player-name">
-                  <span style={{ fontSize: '10px', opacity: 0.8, marginRight: '4px' }}>#{p.number || (i + 1)}</span>
-                  {p.name}
+                <div className="hud-player-name" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                  <span style={{ fontSize: '10px', opacity: 0.8, marginRight: '4px', flexShrink: 0 }}>#{p.number || (i + 1)}</span>
+                  <span title={p.name} style={{
+                    color: ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'][i % 8],
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: 'inline-block',
+                    maxWidth: gameType === 'huroof' ? '35px' : '65px'
+                  }}>
+                    {p.name}
+                  </span>
                   {gameType === 'huroof' && (
-                    <span style={{ fontSize: '10px', marginLeft: '4px', color: p.team === 'blue' ? '#3b82f6' : '#ef4444', fontWeight: 'bold' }}>
+                    <span style={{ fontSize: '10px', marginLeft: '4px', color: p.team === 'blue' ? '#3b82f6' : '#ef4444', fontWeight: 'bold', flexShrink: 0 }}>
                       ({p.team === 'blue' ? 'أزرق' : 'أحمر'})
                     </span>
                   )}
