@@ -8,6 +8,7 @@ import SibaGame from './components/SibaGame';
 import PixelChallenge from './components/PixelChallenge';
 import DrawingChallenge from './components/DrawingChallenge';
 import { InstallPrompt } from './components/InstallPrompt';
+import { QRScannerModal } from './components/QRScannerModal';
 import confetti from 'canvas-confetti';
 import {
   Timer as TimerIcon,
@@ -24,7 +25,8 @@ import {
   QrCode,
   BookOpen,
   Image as ImageIcon,
-  Pencil
+  Pencil,
+  Camera
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -75,6 +77,7 @@ const App: React.FC = () => {
 
   const [isCreator, setIsCreator] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   const isMyTurn = players[currentPlayerIndex]?.id === myId;
@@ -386,8 +389,40 @@ const App: React.FC = () => {
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
             />
+            <button
+              onClick={() => setShowScanner(true)}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                right: '76px', // position inside the input just right of the "join" button side (in RTL)
+                transform: 'translateY(-50%)',
+                background: 'transparent',
+                border: 'none',
+                color: '#64748b',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '8px'
+              }}
+              title="مسح رمز QR بالكاميرا"
+              aria-label="مسح بالكاميرا"
+            >
+              <Camera size={20} />
+            </button>
           </div>
         </div>
+
+        {showScanner && (
+          <QRScannerModal
+            onClose={() => setShowScanner(false)}
+            onScanSuccess={(code) => {
+              setJoinCode(code);
+              setRoomId(code);
+              setShowScanner(false);
+            }}
+          />
+        )}
 
         {roomId && (
           <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
