@@ -383,35 +383,38 @@ const App: React.FC = () => {
         <h1 className="hero-title">هل أنت مستعد <span style={{ color: 'var(--brand-yellow)' }}>للمنافسة؟</span></h1>
         <p className="hero-subtitle">تحد أصدقاءك لإثبات معرفتك في مختلف الألعاب.</p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '20px' }}>
-          <button className="btn-primary-battle" onClick={() => finalizeCreateRoom('jeopardy')}>
-            <Layout size={24} />
-            تحدي الاسئلة
-          </button>
-          <button className="btn-primary-battle" style={{ background: 'var(--brand-yellow)', color: '#000' }} onClick={() => finalizeCreateRoom('huroof')}>
-            <Type size={24} />
-            لعبة الحروف
-          </button>
-          <button className="btn-primary-battle" style={{ background: '#10b981', color: '#fff' }} onClick={() => finalizeCreateRoom('bin_o_walad')}>
-            <Layout size={24} />
-            بنت وولد
-          </button>
-          <button className="btn-primary-battle" style={{ background: '#8b5cf6', color: '#fff' }} onClick={() => finalizeCreateRoom('word_meaning')}>
-            <BookOpen size={24} />
-            معاني الكلمات
-          </button>
-          <button className="btn-primary-battle" style={{ background: '#f59e0b', color: '#fff' }} onClick={() => finalizeCreateRoom('siba')}>
-            <Layout size={24} />
-            لعبة الصبة
-          </button>
-          <button className="btn-primary-battle" style={{ background: '#ec4899', color: '#fff' }} onClick={() => finalizeCreateRoom('pixel_challenge')}>
-            <ImageIcon size={24} />
-            تحدي الصور
-          </button>
-          <button className="btn-primary-battle" style={{ background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)', color: '#fff' }} onClick={() => finalizeCreateRoom('drawing_challenge')}>
-            <Pencil size={24} />
-            تحدي الرسم
-          </button>
+        <div className="join-section">
+          <span className="join-label">اختر لعبة للتحدي</span>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '4px' }}>
+            <button className="btn-primary-battle" onClick={() => finalizeCreateRoom('jeopardy')}>
+              <Layout size={24} />
+              تحدي الاسئلة
+            </button>
+            <button className="btn-primary-battle" style={{ background: 'var(--brand-yellow)', color: '#000' }} onClick={() => finalizeCreateRoom('huroof')}>
+              <Type size={24} />
+              لعبة الحروف
+            </button>
+            <button className="btn-primary-battle" style={{ background: '#10b981', color: '#fff' }} onClick={() => finalizeCreateRoom('bin_o_walad')}>
+              <Layout size={24} />
+              بنت وولد
+            </button>
+            <button className="btn-primary-battle" style={{ background: '#8b5cf6', color: '#fff' }} onClick={() => finalizeCreateRoom('word_meaning')}>
+              <BookOpen size={24} />
+              معاني الكلمات
+            </button>
+            <button className="btn-primary-battle" style={{ background: '#f59e0b', color: '#fff' }} onClick={() => finalizeCreateRoom('siba')}>
+              <Layout size={24} />
+              لعبة الصبة
+            </button>
+            <button className="btn-primary-battle" style={{ background: '#ec4899', color: '#fff' }} onClick={() => finalizeCreateRoom('pixel_challenge')}>
+              <ImageIcon size={24} />
+              تحدي الصور
+            </button>
+            <button className="btn-primary-battle" style={{ background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)', color: '#fff' }} onClick={() => finalizeCreateRoom('drawing_challenge')}>
+              <Pencil size={24} />
+              تحدي الرسم
+            </button>
+          </div>
         </div>
 
         <div className="join-section">
