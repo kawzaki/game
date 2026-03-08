@@ -182,6 +182,7 @@ body {
 /* Primary Action */
 .btn-primary-battle {
   width: 100%;
+  box-sizing: border-box;
   background: var(--brand-yellow);
   padding: 20px;
   border-radius: 20px;
@@ -195,6 +196,15 @@ body {
   gap: 12px;
   box-shadow: 0 10px 30px var(--brand-yellow-glow);
   cursor: pointer;
+}
+
+/* Make sure the battle buttons shrink properly when inside the join-section wrapper */
+.join-section .btn-primary-battle {
+  padding: 12px 8px;
+  /* Reduce padding so two columns fit inside the padded wrapper */
+  font-size: 16px;
+  border-radius: 16px;
+  gap: 8px;
 }
 
 /* Grid Options */

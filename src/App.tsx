@@ -385,7 +385,7 @@ const App: React.FC = () => {
 
         <div className="join-section">
           <span className="join-label">اختر لعبة للتحدي</span>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '4px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' }}>
             <button className="btn-primary-battle" onClick={() => finalizeCreateRoom('jeopardy')}>
               <Layout size={24} />
               تحدي الاسئلة
