@@ -194,7 +194,6 @@ body {
   justify-content: center;
   gap: 12px;
   box-shadow: 0 10px 30px var(--brand-yellow-glow);
-  margin-bottom: 24px;
   cursor: pointer;
 }
 
