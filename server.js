@@ -994,6 +994,7 @@ io.on('connection', (socket) => {
                     };
                     room.correctAnswer = null;
                     room.selectedCategory = category;
+                    room.timer = 15; // Reset timer for consistency
                     room.gameStatus = 'question';
 
                     // Check for team win if claimed
@@ -1069,7 +1070,7 @@ io.on('connection', (socket) => {
             );
 
             if (question) {
-                const isLuck = Math.random() < 0.1;
+                const isLuck = question.type === 'luck' || Math.random() < 0.1;
                 if (isLuck) {
                     const rewards = [
                         { msg: "تبريكاتنا! ربحت ضعف القيمة!", multiplier: 2 },
@@ -1104,6 +1105,7 @@ io.on('connection', (socket) => {
                     delete safeQuestion.answer;
                     room.activeQuestion = safeQuestion;
                     room.correctAnswer = null;
+                    room.timer = 15; // Reset timer for luck questions as well
                     room.gameStatus = 'question';
                     io.to(roomId).emit('room_data', room);
                 } else {
