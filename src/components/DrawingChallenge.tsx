@@ -243,35 +243,33 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
                 {/* Word display */}
                 {isDrawer && !isScoring ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{
-                            textAlign: 'center', padding: '14px 20px', borderRadius: '16px',
-                            background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-                            border: '2px solid #f59e0b', fontWeight: 900, fontSize: '26px',
-                            letterSpacing: '2px', color: '#92400e'
-                        }}>
-                            ✏️ {drawingCurrentWord}
-                        </div>
+                    <div style={{
+                        textAlign: 'center', padding: '14px 20px', borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+                        border: '2px solid #f59e0b', fontWeight: 900, fontSize: '26px',
+                        letterSpacing: '2px', color: '#92400e', display: 'flex', flexDirection: 'column', gap: '4px'
+                    }}>
+                        <div>✏️ {drawingCurrentWord}</div>
                         {drawingCategory && (
-                            <div style={{ textAlign: 'center', fontSize: '14px', fontWeight: 'bold', color: '#b45309' }}>
+                            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#b45309', opacity: 0.8 }}>
                                 التصنيف: {drawingCategory}
                             </div>
                         )}
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{
-                            textAlign: 'center', padding: '10px 20px', borderRadius: '16px',
-                            background: '#f1f5f9', fontWeight: 900, fontSize: '22px',
-                            letterSpacing: '8px', color: '#475569'
-                        }}>
+                    <div style={{
+                        textAlign: 'center', padding: '10px 20px', borderRadius: '16px',
+                        background: '#f1f5f9', fontWeight: 900, fontSize: '22px',
+                        color: '#475569', display: 'flex', flexDirection: 'column', gap: '4px'
+                    }}>
+                        <div style={{ letterSpacing: isScoring ? '3px' : '8px' }}>
                             {isScoring
-                                ? <span style={{ color: '#1e293b', letterSpacing: '3px' }}>الكلمة: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span></span>
+                                ? <span style={{ color: '#1e293b' }}>الكلمة: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span></span>
                                 : wordBlanks
                             }
                         </div>
                         {!isScoring && drawingCategory && (
-                            <div style={{ textAlign: 'center', fontSize: '14px', fontWeight: 'bold', color: '#64748b' }}>
+                            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#64748b', opacity: 0.8, letterSpacing: 'normal' }}>
                                 تلميح: {drawingCategory}
                             </div>
                         )}

@@ -378,6 +378,7 @@ io.on('connection', (socket) => {
                 // Drawing Challenge specific
                 drawingDrawerIndex: 0,
                 drawingCurrentWord: null,
+                drawingCategory: null,
                 drawingGuesses: {},
                 drawingStrokes: []
             });
@@ -476,6 +477,7 @@ io.on('connection', (socket) => {
                 // Drawing Challenge specific
                 drawingDrawerIndex: 0,
                 drawingCurrentWord: null,
+                drawingCategory: null,
                 drawingGuesses: {},
                 drawingStrokes: []
             });
