@@ -206,215 +206,205 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     // ─── Active drawing round ─────────────────────────────────────────
     if (gameStatus === 'drawing_active' || gameStatus === 'drawing_scoring') {
         const isScoring = gameStatus === 'drawing_scoring';
-        const timerPct = (timer / 80) * 100;
-        const timerColor = timer > 40 ? '#22c55e' : timer > 15 ? '#f97316' : '#ef4444';
 
         return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '640px', margin: '0 auto', padding: '0 8px', boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '800px', margin: '0 auto', padding: '0 8px', boxSizing: 'border-box' }}>
                 {/* Round header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 900, fontSize: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '8px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                    <span style={{ fontWeight: 900, fontSize: '14px', color: '#64748b' }}>
                         الجولة {currentRound} / {roundCount}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Pencil size={16} />
-                        <span style={{ fontWeight: 'bold', fontSize: '14px' }}>
+                        <Pencil size={14} color="#64748b" />
+                        <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#1e293b' }}>
                             {drawerPlayer?.name || '...'}
                         </span>
                     </div>
-                    {!isScoring && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: timerColor }}>
-                            <Timer size={16} />
-                            <span style={{ fontWeight: 900, fontSize: '18px' }}>{timer}s</span>
-                        </div>
-                    )}
                 </div>
 
-                {/* Timer bar */}
-                {!isScoring && (
-                    <div style={{ height: '6px', background: '#e2e8f0', borderRadius: '99px', overflow: 'hidden' }}>
-                        <motion.div
-                            animate={{ width: `${timerPct}%` }}
-                            transition={{ duration: 0.9, ease: 'linear' }}
-                            style={{ height: '100%', background: timerColor, borderRadius: '99px' }}
-                        />
-                    </div>
-                )}
-
-                {/* Word display */}
-                {isDrawer && !isScoring ? (
-                    <div style={{
-                        textAlign: 'center', padding: '14px 20px', borderRadius: '16px',
-                        background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-                        border: '2px solid #f59e0b', fontWeight: 900, fontSize: '26px',
-                        letterSpacing: '2px', color: '#92400e', display: 'flex', flexDirection: 'column', gap: '4px'
-                    }}>
-                        <div>✏️ {drawingCurrentWord}</div>
-                        {drawingCategory && (
-                            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#b45309', opacity: 0.8 }}>
-                                التصنيف: {drawingCategory}
+                {/* Main Game Area with Sidebar */}
+                <div style={{ display: 'flex', gap: '12px', position: 'relative' }}>
+                    
+                    {/* Vertical Toolbar - Side of Canvas */}
+                    {isDrawer && !isScoring && (
+                        <div style={{
+                            display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px',
+                            background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0',
+                            width: '50px', flexShrink: 0, height: 'fit-content'
+                        }}>
+                            {/* Brush sizes */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                                {BRUSH_SIZES.map(s => (
+                                    <button
+                                        key={s}
+                                        onClick={() => { setBrushSize(s); setIsEraser(false); }}
+                                        style={{
+                                            width: '32px', height: '32px', borderRadius: '8px', display: 'flex',
+                                            alignItems: 'center', justifyContent: 'center', border: '2px solid #e2e8f0',
+                                            background: (!isEraser && brushSize === s) ? '#dbeafe' : 'white', cursor: 'pointer'
+                                        }}
+                                    >
+                                        <div style={{ width: Math.min(s, 16), height: Math.min(s, 16), borderRadius: '50%', background: color }} />
+                                    </button>
+                                ))}
                             </div>
-                        )}
-                    </div>
-                ) : (
-                    <div style={{
-                        textAlign: 'center', padding: '10px 20px', borderRadius: '16px',
-                        background: '#f1f5f9', fontWeight: 900, fontSize: '22px',
-                        color: '#475569', display: 'flex', flexDirection: 'column', gap: '4px'
-                    }}>
-                        <div style={{ letterSpacing: isScoring ? '3px' : '8px' }}>
-                            {isScoring
-                                ? <span style={{ color: '#1e293b' }}>الكلمة: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span></span>
-                                : wordBlanks
-                            }
+
+                            <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
+
+                            {/* Eraser & Clear */}
+                            <button
+                                onClick={() => setIsEraser(e => !e)}
+                                style={{
+                                    width: '32px', height: '32px', borderRadius: '8px', border: '2px solid #e2e8f0',
+                                    background: isEraser ? '#fef3c7' : 'white', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}
+                                title="ممحاة"
+                            >
+                                <Eraser size={18} />
+                            </button>
+                            <button
+                                onClick={handleClear}
+                                style={{
+                                    width: '32px', height: '32px', borderRadius: '8px', border: '2px solid #fca5a5',
+                                    background: '#fef2f2', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626'
+                                }}
+                                title="مسح الكل"
+                            >
+                                <Trash2 size={18} />
+                            </button>
+
+                            <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
+
+                            {/* Colors */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                                {COLORS.map(c => (
+                                    <button
+                                        key={c}
+                                        onClick={() => { setColor(c); setIsEraser(false); }}
+                                        style={{
+                                            width: '24px', height: '24px', borderRadius: '50%',
+                                            background: c, border: (!isEraser && color === c) ? '2px solid #3b82f6' : '1px solid #cbd5e1',
+                                            cursor: 'pointer', flexShrink: 0,
+                                            boxShadow: (!isEraser && color === c) ? '0 0 0 2px white' : 'none'
+                                        }}
+                                    />
+                                ))}
+                            </div>
                         </div>
-                        {!isScoring && drawingCategory && (
-                            <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#64748b', opacity: 0.8, letterSpacing: 'normal' }}>
-                                تلميح: {drawingCategory}
+                    )}
+
+                    {/* Canvas and Controls */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
+                        {/* Word display - SHRUNK */}
+                        {isDrawer && !isScoring ? (
+                            <div style={{
+                                textAlign: 'center', padding: '8px 16px', borderRadius: '12px',
+                                background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+                                border: '2px solid #f59e0b', fontWeight: 900, fontSize: '20px',
+                                color: '#92400e', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px'
+                            }}>
+                                <div>✏️ {drawingCurrentWord}</div>
+                                {drawingCategory && (
+                                    <div style={{ fontSize: '12px', fontWeight: 'bold', borderLeft: '1px solid #f59e0b', paddingLeft: '12px', color: '#b45309', opacity: 0.8 }}>
+                                        التصنيف: {drawingCategory}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div style={{
+                                textAlign: 'center', padding: '6px 16px', borderRadius: '12px',
+                                background: '#f1f5f9', fontWeight: 900, fontSize: '18px',
+                                color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px'
+                            }}>
+                                <div style={{ letterSpacing: isScoring ? '2px' : '4px' }}>
+                                    {isScoring
+                                        ? <span style={{ color: '#1e293b' }}>الكلمة: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span></span>
+                                        : wordBlanks
+                                    }
+                                </div>
+                                {!isScoring && drawingCategory && (
+                                    <div style={{ fontSize: '12px', fontWeight: 'bold', borderLeft: '1px solid #cbd5e1', paddingLeft: '12px', color: '#64748b', opacity: 0.8, letterSpacing: 'normal' }}>
+                                        تلميح: {drawingCategory}
+                                    </div>
+                                )}
                             </div>
                         )}
-                        {!drawingCategory && !isScoring && (
-                             <div style={{ fontSize: '10px', color: '#94a3b8' }}>Category missing</div>
-                        )}
-                    </div>
-                )}
 
-                {/* Correct-answer flash banner */}
-                <AnimatePresence>
-                    {correctBanner && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -12, scale: 0.92 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            style={{
-                                padding: '14px 20px', borderRadius: '16px',
-                                background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
-                                border: '2px solid #10b981', textAlign: 'center',
-                                fontWeight: 900, fontSize: '17px', color: '#065f46',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
-                            }}
-                            dir="rtl"
-                        >
-                            <Check size={22} color="#059669" />
-                            {correctBanner.playerName} خمّن الكلمة! +{correctBanner.pts} نقطة 🎉
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Canvas */}
-                <div style={{
-                    borderRadius: '16px', overflow: 'hidden', width: '100%', boxSizing: 'border-box',
-                    border: '2px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                    background: '#fff', touchAction: 'none'
-                }}>
-                    <canvas
-                        ref={canvasRef}
-                        width={640}
-                        height={400}
-                        style={{ width: '100%', display: 'block', cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default' }}
-                        onPointerDown={handlePointerDown}
-                        onPointerMove={handlePointerMove}
-                        onPointerUp={handlePointerUp}
-                        onPointerLeave={handlePointerUp}
-                    />
-                </div>
-
-                {/* Drawer toolbar */}
-                {isDrawer && !isScoring && (
-                    <div style={{
-                        display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '12px',
-                        background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', alignItems: 'center'
-                    }}>
-                        {/* Colors */}
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                            {COLORS.map(c => (
-                                <button
-                                    key={c}
-                                    onClick={() => { setColor(c); setIsEraser(false); }}
+                        {/* Correct-answer flash banner */}
+                        <AnimatePresence>
+                            {correctBanner && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -12, scale: 0.92 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -8 }}
                                     style={{
-                                        width: '28px', height: '28px', borderRadius: '50%',
-                                        background: c, border: (!isEraser && color === c) ? '3px solid #3b82f6' : '2px solid #cbd5e1',
-                                        cursor: 'pointer', flexShrink: 0
+                                        padding: '10px 16px', borderRadius: '12px',
+                                        background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+                                        border: '1px solid #10b981', textAlign: 'center',
+                                        fontWeight: 900, fontSize: '14px', color: '#065f46',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                                     }}
-                                />
-                            ))}
+                                    dir="rtl"
+                                >
+                                    <Check size={18} color="#059669" />
+                                    {correctBanner.playerName} خمّن الكلمة! +{correctBanner.pts} نقطة 🎉
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Canvas */}
+                        <div style={{
+                            borderRadius: '16px', overflow: 'hidden', width: '100%', boxSizing: 'border-box',
+                            border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                            background: '#fff', touchAction: 'none'
+                        }}>
+                            <canvas
+                                ref={canvasRef}
+                                width={640}
+                                height={440}
+                                style={{ width: '100%', display: 'block', cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default' }}
+                                onPointerDown={handlePointerDown}
+                                onPointerMove={handlePointerMove}
+                                onPointerUp={handlePointerUp}
+                                onPointerLeave={handlePointerUp}
+                            />
                         </div>
-                        {/* Separator */}
-                        <div style={{ width: '1px', height: '28px', background: '#e2e8f0' }} />
-                        {/* Brush sizes */}
-                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                            {BRUSH_SIZES.map(s => (
-                                <button
-                                    key={s}
-                                    onClick={() => { setBrushSize(s); setIsEraser(false); }}
+
+                        {/* Guesser input */}
+                        {!isDrawer && !isScoring && (
+                            <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
+                                <input
+                                    type="text"
+                                    value={guessInput}
+                                    onChange={e => setGuessInput(e.target.value)}
+                                    disabled={!!hasGuessedCorrectly}
+                                    placeholder={hasGuessedCorrectly ? '✅ أحسنت! خمّنت الكلمة!' : 'اكتب تخمينك...'}
                                     style={{
-                                        width: '36px', height: '36px', borderRadius: '8px', display: 'flex',
-                                        alignItems: 'center', justifyContent: 'center', border: '2px solid #e2e8f0',
-                                        background: (!isEraser && brushSize === s) ? '#dbeafe' : 'white', cursor: 'pointer'
+                                        flex: 1, padding: '10px 16px', borderRadius: '12px', fontSize: '15px',
+                                        border: hasGuessedCorrectly ? '2px solid #10b981' : '1px solid #e2e8f0',
+                                        background: hasGuessedCorrectly ? '#ecfdf5' : 'white',
+                                        outline: 'none', textAlign: 'right', fontFamily: 'inherit'
+                                    }}
+                                    dir="rtl"
+                                    autoComplete="off"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={!!hasGuessedCorrectly || !guessInput.trim()}
+                                    style={{
+                                        padding: '10px 20px', borderRadius: '12px', fontWeight: 900, fontSize: '15px',
+                                        background: 'var(--brand-yellow)', border: 'none', cursor: 'pointer',
+                                        opacity: (hasGuessedCorrectly || !guessInput.trim()) ? 0.5 : 1
                                     }}
                                 >
-                                    <div style={{ width: s, height: s, borderRadius: '50%', background: color, maxWidth: '20px', maxHeight: '20px' }} />
+                                    أرسل
                                 </button>
-                            ))}
-                        </div>
-                        {/* Eraser */}
-                        <button
-                            onClick={() => setIsEraser(e => !e)}
-                            style={{
-                                padding: '6px 12px', borderRadius: '8px', border: '2px solid #e2e8f0',
-                                background: isEraser ? '#fef3c7' : 'white', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold', fontSize: '13px'
-                            }}
-                        >
-                            <Eraser size={16} />
-                            ممحاة
-                        </button>
-                        {/* Clear */}
-                        <button
-                            onClick={handleClear}
-                            style={{
-                                padding: '6px 12px', borderRadius: '8px', border: '2px solid #fca5a5',
-                                background: '#fef2f2', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 'bold', fontSize: '13px', color: '#dc2626'
-                            }}
-                        >
-                            <Trash2 size={16} />
-                            مسح الكل
-                        </button>
+                            </form>
+                        )}
                     </div>
-                )}
-
-                {/* Guesser input */}
-                {!isDrawer && !isScoring && (
-                    <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px', width: '100%', boxSizing: 'border-box' }}>
-                        <input
-                            type="text"
-                            value={guessInput}
-                            onChange={e => setGuessInput(e.target.value)}
-                            disabled={!!hasGuessedCorrectly}
-                            placeholder={hasGuessedCorrectly ? '✅ أحسنت! خمّنت الكلمة!' : 'اكتب تخمينك...'}
-                            style={{
-                                flex: 1, padding: '12px 16px', borderRadius: '12px', fontSize: '16px',
-                                border: hasGuessedCorrectly ? '2px solid #10b981' : '2px solid #e2e8f0',
-                                background: hasGuessedCorrectly ? '#ecfdf5' : 'white',
-                                outline: 'none', textAlign: 'right', fontFamily: 'inherit'
-                            }}
-                            dir="rtl"
-                            autoComplete="off"
-                        />
-                        <button
-                            type="submit"
-                            disabled={!!hasGuessedCorrectly || !guessInput.trim()}
-                            style={{
-                                padding: '12px 20px', borderRadius: '12px', fontWeight: 900, fontSize: '16px',
-                                background: 'var(--brand-yellow)', border: 'none', cursor: 'pointer',
-                                opacity: (hasGuessedCorrectly || !guessInput.trim()) ? 0.5 : 1
-                            }}
-                        >
-                            أرسل
-                        </button>
-                    </form>
-                )}
+                </div>
 
                 {/* Scoring reveal banner */}
                 {isScoring && (
@@ -423,20 +413,20 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         animate={{ opacity: 1, y: 0 }}
                         style={{
                             padding: '16px', borderRadius: '16px', background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
-                            border: '2px solid #10b981', textAlign: 'center'
+                            border: '1px solid #10b981', textAlign: 'center'
                         }}
                     >
-                        <div style={{ fontWeight: 900, fontSize: '18px', marginBottom: '8px', color: '#065f46' }}>
+                        <div style={{ fontWeight: 900, fontSize: '16px', marginBottom: '8px', color: '#065f46' }}>
                             نهاية الجولة! الكلمة كانت: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span>
                         </div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center' }}>
                             {players.map(p => {
                                 const g = drawingGuesses[p.id];
                                 const pts = g?.pointsEarned;
                                 const isDrawerP = p.id === drawingDrawerId;
                                 return (
                                     <div key={p.id} style={{
-                                        padding: '8px 14px', borderRadius: '12px', fontWeight: 'bold', fontSize: '14px',
+                                        padding: '6px 12px', borderRadius: '10px', fontWeight: 'bold', fontSize: '13px',
                                         background: pts ? '#bbf7d0' : '#f1f5f9',
                                         border: pts ? '1px solid #86efac' : '1px solid #e2e8f0'
                                     }}>

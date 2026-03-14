@@ -673,6 +673,12 @@ const App: React.FC = () => {
           <Trophy size={18} style={{ color: 'var(--accent-gold)' }} />
           <span className="gold-text" style={{ fontSize: '14px' }}>غرفة #{roomId}</span>
           <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isConnected ? '#10b981' : '#ef4444' }} />
+          {gameType === 'drawing_challenge' && gameStatus !== 'game_over' && (
+            <div style={{ marginLeft: '12px', padding: '2px 8px', background: '#f1f5f9', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '4px', color: timer > 15 ? '#475569' : '#ef4444' }}>
+              <TimerIcon size={14} />
+              <span style={{ fontWeight: 900, fontSize: '14px' }}>{timer}s</span>
+            </div>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {hasJoined && (
@@ -958,7 +964,7 @@ const App: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {players.length > 0 && (
+      {players.length > 0 && !(gameType === 'drawing_challenge' && (gameStatus === 'drawing_active' || gameStatus === 'countdown')) && (
         <div className="bottom-hud">
           <div className="hud-row-players">
             {players.map((p, i) => (
