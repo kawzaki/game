@@ -388,11 +388,26 @@ io.on('connection', (socket) => {
         const existingPlayer = room.players.find(p => p.name === playerName);
 
         if (existingPlayer) {
+            const oldId = existingPlayer.id;
             existingPlayer.id = socket.id;
+            // Support rejoining drawer
+            if (room.drawingDrawerId === oldId) {
+                room.drawingDrawerId = socket.id;
+            }
         } else {
             const playerNumber = room.players.length + 1;
             const team = playerNumber % 2 === 1 ? 'red' : 'blue';
             room.players.push({ id: socket.id, name: playerName, score: 0, number: playerNumber, team });
+        }
+
+        // Hide word for guessers on join
+        if (room.gameType === 'drawing_challenge' && room.gameStatus === 'drawing_active') {
+            const savedWord = room.drawingCurrentWord;
+            room.drawingCurrentWord = null;
+            socket.emit('room_data', room);
+            room.drawingCurrentWord = savedWord;
+        } else {
+            socket.emit('room_data', room);
         }
 
         io.to(roomId).emit('room_data', room);

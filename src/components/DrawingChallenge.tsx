@@ -273,6 +273,9 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                 تلميح: {drawingCategory}
                             </div>
                         )}
+                        {!drawingCategory && !isScoring && (
+                             <div style={{ fontSize: '10px', color: '#94a3b8' }}>Category missing</div>
+                        )}
                     </div>
                 )}
 
