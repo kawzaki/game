@@ -1328,11 +1328,12 @@ io.on('connection', (socket) => {
         const drawer = room.players[room.drawingDrawerIndex % room.players.length];
         if (!drawer) { endGame(room, io, roomId); return; }
 
-        // Pick a word the drawer hasn't seen yet (use currentRound - 1 as index)
         const wordEntry = room.questions[(room.currentRound - 1) % room.questions.length];
         const word = wordEntry ? wordEntry.word : 'كلمة';
+        const category = wordEntry ? wordEntry.category : 'غير معروف';
 
         room.drawingCurrentWord = word;
+        room.drawingCategory = category;
         room.drawingDrawerId = drawer.id;
         room.drawingGuesses = {};
         room.drawingStrokes = [];
@@ -1459,8 +1460,25 @@ io.on('connection', (socket) => {
         if (existingGuess && existingGuess.correct) return; // Already guessed correctly
 
         const player = room.players.find(p => p.id === socket.id);
-        const normalized = (s) => s.trim().replace(/\s+/g, ' ').toLowerCase();
-        const isCorrect = normalized(guess) === normalized(room.drawingCurrentWord);
+        
+        const normalizeArabic = (s) => {
+            if (!s) return '';
+            return s.trim()
+                .replace(/\s+/g, ' ')
+                .replace(/[أإآ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[ـ\u064B-\u0652]/g, '')
+                .toLowerCase();
+        };
+
+        const nGuess = normalizeArabic(guess);
+        const nWord = normalizeArabic(room.drawingCurrentWord);
+        
+        // Match if exact, or if guess is a significant part of the word (e.g. "ايفل" in "برج ايفل")
+        const isCorrect = nGuess === nWord || 
+                          (nGuess.length >= 3 && nWord.includes(nGuess)) ||
+                          (nWord.length >= 3 && nGuess.includes(nWord));
 
         if (isCorrect) {
             room.drawingGuesses[socket.id] = { correct: true, timeLeft: room.timer, guess };

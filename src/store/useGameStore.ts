@@ -50,6 +50,7 @@ interface GameState {
     drawingWordLength: number;           // always set so guessers can show blanks
     drawingDrawerId: string | null;
     drawingGuesses: Record<string, { correct: boolean; guess?: string; timeLeft?: number; pointsEarned?: number }>;
+    drawingCategory: string | null;
     drawingStrokes: any[];              // local canvas strokes (for replay on rejoin)
     drawingLiveStrokes: any[];          // incoming live strokes from server events
     drawingCorrectGuesses: { playerId: string; playerName: string }[];
@@ -115,6 +116,7 @@ export const useGameStore = create<GameState>((set) => {
             drawingWordLength: data.drawingWordLength ?? 0,
             drawingDrawerId: data.drawingDrawerId ?? null,
             drawingGuesses: data.drawingGuesses ?? {},
+            drawingCategory: data.drawingCategory ?? null,
             drawingStrokes: data.drawingStrokes ?? [],
             myId: socket.id || null,
             isConnected: true,
@@ -196,6 +198,7 @@ export const useGameStore = create<GameState>((set) => {
         drawingWordLength: 0,
         drawingDrawerId: null,
         drawingGuesses: {},
+        drawingCategory: null,
         drawingStrokes: [],
         drawingLiveStrokes: [],
         drawingCorrectGuesses: [],
@@ -270,6 +273,7 @@ export const useGameStore = create<GameState>((set) => {
             drawingWordLength: 0,
             drawingDrawerId: null,
             drawingGuesses: {},
+            drawingCategory: null,
             drawingStrokes: [],
             drawingLiveStrokes: [],
             drawingCorrectGuesses: [],
