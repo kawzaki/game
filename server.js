@@ -1566,9 +1566,9 @@ io.on('connection', (socket) => {
         if (isCorrect) {
             room.drawingGuesses[socket.id] = { correct: true, timeLeft: room.timer, guess };
             io.to(roomId).emit('drawing_correct_guess', {
-                playerId: socket.id,
                 playerName: player?.name || '?',
             });
+            io.to(roomId).emit('room_data', room);
 
             // Mark challenge as answered if it's a session room
             if (roomId.startsWith('session_')) {
