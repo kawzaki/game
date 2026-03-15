@@ -45,7 +45,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const [isEraser, setIsEraser] = useState(false);
     const [isDrawing, setIsDrawing] = useState(false);
     const lastPos = useRef<{ x: number; y: number } | null>(null);
-    const currentStroke = useRef<any[]>([]);
+    const drawerStrokes = useRef<any[]>([]); // To track drawer strokes locally
 
     // Guess state
     const [guessInput, setGuessInput] = useState('');
@@ -134,7 +134,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                const strokesToDraw = roomId === 'solo-challenge' ? (challengeData?.strokes || []) : drawingLiveStrokes;
+                const strokesToDraw = roomId === 'solo-challenge' ? (challengeData?.strokes || []) : (isDrawer ? drawerStrokes.current : drawingLiveStrokes);
                 strokesToDraw.forEach(stroke => {
                     if (stroke.type === 'segment' && stroke.from && stroke.to) {
                         drawSegment(ctx, stroke.from, stroke.to, stroke.color, stroke.size, stroke.eraser);
@@ -146,7 +146,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         window.addEventListener('resize', updateSize);
         updateSize();
         return () => window.removeEventListener('resize', updateSize);
-    }, [gameStatus, drawingLiveStrokes, drawSegment, roomId, challengeData]);
+    }, [gameStatus, drawingLiveStrokes, drawSegment, roomId, challengeData, isDrawer]);
 
     // Draw incoming strokes live
     useEffect(() => {
@@ -169,7 +169,6 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         (e.target as HTMLCanvasElement).setPointerCapture(e.pointerId);
         setIsDrawing(true);
         lastPos.current = getCanvasPos(e);
-        currentStroke.current = [lastPos.current];
     };
 
     const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -182,16 +181,16 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         const ctx = canvas?.getContext('2d');
         if (ctx) drawSegment(ctx, from, pos, activeColor, brushSize, isEraser);
 
-        sendDrawingStroke(roomId, { type: 'segment', from, to: pos, color: activeColor, size: brushSize, eraser: isEraser });
+        const stroke = { type: 'segment', from, to: pos, color: activeColor, size: brushSize, eraser: isEraser };
+        sendDrawingStroke(roomId, stroke);
+        drawerStrokes.current.push(stroke);
 
-        currentStroke.current.push(pos);
         lastPos.current = pos;
     };
 
     const handlePointerUp = () => {
         setIsDrawing(false);
         lastPos.current = null;
-        currentStroke.current = [];
     };
 
     const handleClear = () => {
@@ -201,6 +200,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         sendDrawingClear(roomId);
+        drawerStrokes.current = [];
     };
 
     const handleGuessSubmit = (e: React.FormEvent) => {
@@ -224,24 +224,47 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const handleDownload = () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
-        const link = document.createElement('a');
-        link.download = `drawing-${drawingCurrentWord || 'challenge'}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+        
+        // Ensure background is strictly white before capture
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        if (tempCtx) {
+            tempCtx.fillStyle = '#ffffff';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            
+            const link = document.createElement('a');
+            link.download = `drawing-${drawingCurrentWord || 'challenge'}.png`;
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+        }
     };
 
     const handleShare = async () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
+        
         try {
-            const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            if (!tempCtx) return;
+            
+            tempCtx.fillStyle = '#ffffff';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+
+            const blob = await new Promise<Blob | null>(resolve => tempCanvas.toBlob(resolve, 'image/png'));
             if (!blob) return;
             const file = new File([blob], 'drawing.png', { type: 'image/png' });
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     files: [file],
-                    title: 'رسمتي في تحدي الرسم!',
-                    text: `شوفوا وش رسمت: ${drawingCurrentWord}`
+                    title: 'تحدي الرسم!',
+                    text: 'خمنوا ايش رسمت'
                 });
             } else {
                 handleDownload();
@@ -253,8 +276,11 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     };
 
     const handleCreateChallenge = () => {
-        if (!drawingCurrentWord || drawingLiveStrokes.length === 0) return;
-        createChallenge(drawingLiveStrokes, drawingCurrentWord, drawingCategory || '');
+        if (!drawingCurrentWord || drawerStrokes.current.length === 0) {
+            alert('يجب عليك الرسم أولاً!');
+            return;
+        }
+        createChallenge(drawerStrokes.current, drawingCurrentWord, drawingCategory || '');
     };
 
     // ─── Countdown UI ───────────────────────────────────────────────────
@@ -325,15 +351,6 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                     <button key={c} onClick={() => { setColor(c); setIsEraser(false); }} style={{ width: '24px', height: '24px', borderRadius: '50%', background: c, border: (!isEraser && color === c) ? '2px solid #fff' : '1px solid rgba(0,0,0,0.1)', cursor: 'pointer', flexShrink: 0, boxShadow: (!isEraser && color === c) ? '0 0 0 2px #3b82f6' : 'none' }} />
                                 ))}
                             </div>
-                            <div style={{ width: '1px', height: '20px', background: '#e2e8f0' }} />
-                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                                <button onClick={handleDownload} title="حفظ الصورة" style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}><Download size={16} /></button>
-                                <button onClick={handleShare} title="مشاركة الصورة" style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'white', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}><Share2 size={16} /></button>
-                                <button onClick={handleCreateChallenge} disabled={challengeLoading} title="وضع التحدي" style={{ height: '32px', padding: '0 12px', borderRadius: '8px', background: 'var(--brand-yellow)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold', fontSize: '12px', gap: '6px' }}>
-                                    {challengeLoading ? <Loader2 size={14} className="animate-spin" /> : <LinkIcon size={14} />}
-                                    تحدي
-                                </button>
-                            </div>
                         </div>
                     )}
                 </div>
@@ -372,12 +389,32 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                             </AnimatePresence>
                         </div>
                     )}
-                    {!isDrawer && !isScoring && (
-                        <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                            <input type="text" value={guessInput} onChange={e => setGuessInput(e.target.value)} disabled={!!hasGuessedCorrectly} placeholder={hasGuessedCorrectly ? '✅ تم التخمين!' : 'تخمين...'} style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', fontSize: '15px', border: hasGuessedCorrectly ? '2px solid #10b981' : '1px solid #e2e8f0', background: hasGuessedCorrectly ? '#f0fdf4' : '#fff', outline: 'none', textAlign: 'right', fontFamily: 'inherit' }} dir="rtl" autoComplete="off" />
-                            <button type="submit" disabled={!!hasGuessedCorrectly || !guessInput.trim()} style={{ padding: '10px 16px', borderRadius: '10px', fontWeight: 900, fontSize: '14px', background: 'var(--brand-yellow)', border: 'none', cursor: 'pointer', opacity: (hasGuessedCorrectly || !guessInput.trim()) ? 0.5 : 1 }}>أرسل</button>
-                        </form>
-                    )}
+                    
+                    <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center' }}>
+                        {!isDrawer && !isScoring && (
+                            <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                                <input type="text" value={guessInput} onChange={e => setGuessInput(e.target.value)} disabled={!!hasGuessedCorrectly} placeholder={hasGuessedCorrectly ? '✅ تم التخمين!' : 'تخمين...'} style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', fontSize: '15px', border: hasGuessedCorrectly ? '2px solid #10b981' : '1px solid #e2e8f0', background: hasGuessedCorrectly ? '#f0fdf4' : '#fff', outline: 'none', textAlign: 'right', fontFamily: 'inherit' }} dir="rtl" autoComplete="off" />
+                                <button type="submit" disabled={!!hasGuessedCorrectly || !guessInput.trim()} style={{ padding: '10px 16px', borderRadius: '10px', fontWeight: 900, fontSize: '14px', background: 'var(--brand-yellow)', border: 'none', cursor: 'pointer', opacity: (hasGuessedCorrectly || !guessInput.trim()) ? 0.5 : 1 }}>أرسل</button>
+                            </form>
+                        )}
+                        
+                        {isDrawer && !isScoring && (
+                            <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'center' }}>
+                                <button onClick={handleDownload} title="حفظ الصورة" style={{ padding: '10px 16px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', gap: '6px', fontSize: '13px', fontWeight: 'bold' }}>
+                                    <Download size={16} />
+                                    حفظ
+                                </button>
+                                <button onClick={handleShare} title="مشاركة الصورة" style={{ padding: '10px 16px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', gap: '6px', fontSize: '13px', fontWeight: 'bold' }}>
+                                    <Share2 size={16} />
+                                    مشاركة
+                                </button>
+                                <button onClick={handleCreateChallenge} disabled={challengeLoading} title="وضع التحدي" style={{ padding: '10px 20px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold', fontSize: '14px', gap: '8px', flex: 1 }}>
+                                    {challengeLoading ? <Loader2 size={16} className="animate-spin" /> : <LinkIcon size={16} />}
+                                    تحدي صديق
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {isScoring && (
