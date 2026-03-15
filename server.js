@@ -144,7 +144,57 @@ const io = new Server(httpServer, {
 
 // In-memory room storage
 const rooms = new Map();
-const challenges = new Map();
+const challengesPath = path.join(__dirname, 'src/data/challenges.json');
+let challenges = new Map();
+
+// Persistence helpers
+function loadChallenges() {
+    try {
+        if (fs.existsSync(challengesPath)) {
+            const data = JSON.parse(fs.readFileSync(challengesPath, 'utf8'));
+            challenges = new Map(Object.entries(data));
+            console.log(`[Persistence] Loaded ${challenges.size} challenges from disk`);
+        }
+    } catch (err) {
+        console.error('[Persistence] Error loading challenges:', err);
+    }
+}
+
+function saveChallenges() {
+    try {
+        const obj = Object.fromEntries(challenges);
+        fs.writeFileSync(challengesPath, JSON.stringify(obj, null, 2), 'utf8');
+    } catch (err) {
+        console.error('[Persistence] Error saving challenges:', err);
+    }
+}
+
+loadChallenges();
+
+// Cleanup old challenges: 24h old OR answered for more than 1h
+setInterval(() => {
+    const now = Date.now();
+    let deletedCount = 0;
+    const expirationMs = 24 * 60 * 60 * 1000; // 24 hours
+    const gracePeriodMs = 60 * 60 * 1000;    // 1 hour after answer
+
+    for (const [id, ch] of challenges.entries()) {
+        const age = now - ch.createdAt;
+        const timeSinceAnswered = ch.answeredAt ? now - ch.answeredAt : null;
+
+        const isTooOld = age > expirationMs;
+        const isAnsweredAndDone = ch.isAnswered && timeSinceAnswered && timeSinceAnswered > gracePeriodMs;
+
+        if (isTooOld || isAnsweredAndDone) {
+            challenges.delete(id);
+            deletedCount++;
+        }
+    }
+    if (deletedCount > 0) {
+        console.log(`[Cleanup] Removed ${deletedCount} old challenges`);
+        saveChallenges();
+    }
+}, 10 * 60 * 1000); // Check every 10 mins
 
 function generateChallengeId() {
     return Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -1520,6 +1570,18 @@ io.on('connection', (socket) => {
                 playerName: player?.name || '?',
             });
 
+            // Mark challenge as answered if it's a session room
+            if (roomId.startsWith('session_')) {
+                const challengeId = roomId.replace('session_', '');
+                const challenge = challenges.get(challengeId);
+                if (challenge) {
+                    challenge.isAnswered = true;
+                    challenge.answeredAt = Date.now();
+                    saveChallenges();
+                    console.log(`[Challenge] Marked challenge ${challengeId} as answered`);
+                }
+            }
+
             // First correct guess ends the round immediately
             room.timer = 0;
             scoreDrawingRound(room, io, roomId);
@@ -1650,8 +1712,9 @@ io.on('connection', (socket) => {
                 return socket.emit('challenge_error', 'يجب عليك الرسم أولاً');
             }
             const id = generateChallengeId();
-            const challenge = { id, strokes, word, category, createdAt: Date.now() };
+            const challenge = { id, strokes, word, category, createdAt: Date.now(), isAnswered: false };
             challenges.set(id, challenge);
+            saveChallenges();
             socket.emit('challenge_created', challenge);
             console.log(`[Challenge] Created challenge ${id} successfully`);
         } catch (err) {
