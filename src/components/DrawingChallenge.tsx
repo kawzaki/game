@@ -203,7 +203,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 const isArtist = isDrawer || isSoloArtist;
                 const strokesToDraw = isArtist 
                     ? drawerStrokes.current 
-                    : (roomId === 'solo-challenge' ? (challengeData?.strokes || []) : drawingLiveStrokes);
+                    : (drawingLiveStrokes.length > 0 ? drawingLiveStrokes : (challengeData?.strokes || []));
                 
                 strokesToDraw.forEach(stroke => {
                     if (stroke.type === 'segment' && stroke.from && stroke.to) {
