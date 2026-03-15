@@ -300,8 +300,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         }}>
                             <canvas
                                 ref={canvasRef}
-                                width={640}
-                                height={440}
+                                width={800}
+                                height={540}
                                 style={{ width: '100%', display: 'block', cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default' }}
                                 onPointerDown={handlePointerDown}
                                 onPointerMove={handlePointerMove}
@@ -351,7 +351,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         <div style={{
                             display: 'flex', flexDirection: 'column', gap: '12px', padding: '12px 8px',
                             background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0',
-                            width: '60px', flexShrink: 0, height: '440px', boxSizing: 'border-box',
+                            width: '60px', flexShrink: 0, height: '540px', boxSizing: 'border-box',
                             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
                         }}>
                             {/* Brush sizes */}
