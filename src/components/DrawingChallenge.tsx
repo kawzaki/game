@@ -71,8 +71,16 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const [isSoloArtist, setIsSoloArtist] = useState(false);
 
     const handleDrawBack = () => {
+        // Clear the URL challenge parameter to prevent App.tsx from refetching the old challenge
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('challenge')) {
+            url.searchParams.delete('challenge');
+            window.history.replaceState({}, '', url.toString());
+        }
+
         setSoloGuessedCorrectly(false);
         setIsSoloArtist(true);
+        setShowChallengeModal(false); // <--- Explicitly hide old modal
         setGuessInput('');
         setInk(100);
         drawerStrokes.current = [];
@@ -168,7 +176,12 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                const strokesToDraw = roomId === 'solo-challenge' ? (challengeData?.strokes || []) : (isDrawer ? drawerStrokes.current : drawingLiveStrokes);
+                // Prioritize local strokes if we ARE the artist, else show challenge or live strokes
+                const isArtist = isDrawer || isSoloArtist;
+                const strokesToDraw = isArtist 
+                    ? drawerStrokes.current 
+                    : (roomId === 'solo-challenge' ? (challengeData?.strokes || []) : drawingLiveStrokes);
+                
                 strokesToDraw.forEach(stroke => {
                     if (stroke.type === 'segment' && stroke.from && stroke.to) {
                         drawSegment(ctx, stroke.from, stroke.to, stroke.color, stroke.size, stroke.eraser);
