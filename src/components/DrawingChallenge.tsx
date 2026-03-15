@@ -197,7 +197,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         // Ink depletion logic
         if (isSoloInkMode && !isEraser) {
             const dist = Math.sqrt(Math.pow(pos.x - from.x, 2) + Math.pow(pos.y - from.y, 2));
-            const consumption = (dist * (brushSize / 10)) / 100; // Calibrated consumption
+            const consumption = (dist * (brushSize / 10)) / 300; // Increased capacity (slower consumption)
             setInk(prev => Math.max(0, prev - consumption));
         }
 
@@ -332,7 +332,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         const reversedChatLog = [...chatLog].reverse().slice(0, 10);
 
         return (
-            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100vw', height: 'calc(100vh - 64px)', overflow: 'hidden', background: '#f1f5f9' }}>
+            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100vw', height: 'calc(100vh - 64px)', overflow: 'hidden', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none' }}>
                 <div style={{ zIndex: 30, display: 'flex', flexDirection: 'column', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', width: '100%' }}>
                         {drawingCategory && (
@@ -342,19 +342,6 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                             </div>
                         )}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                             {isSoloInkMode && isDrawer && !isScoring && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px', minWidth: '120px' }}>
-                                    <Droplets size={14} color="#3b82f6" />
-                                    <div style={{ flex: 1, height: '6px', background: '#e2e8f0', borderRadius: '3px', position: 'relative', overflow: 'hidden' }}>
-                                        <motion.div 
-                                            initial={{ width: '100%' }}
-                                            animate={{ width: `${ink}%` }}
-                                            style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: ink > 20 ? '#3b82f6' : '#ef4444' }} 
-                                        />
-                                    </div>
-                                    <span style={{ fontSize: '10px', fontWeight: 900, color: '#64748b' }}>{Math.ceil(ink)}%</span>
-                                </div>
-                            )}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 900, color: '#451a03', direction: 'rtl' }}>
                                 {isDrawer && !isScoring ? (
                                     <><span>{drawingCurrentWord}</span><Pencil size={18} color="#f59e0b" /></>
@@ -390,6 +377,26 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                 {COLORS.map(c => (
                                     <button key={c} onClick={() => { setColor(c); setIsEraser(false); }} style={{ width: '24px', height: '24px', borderRadius: '50%', background: c, border: (!isEraser && color === c) ? '2px solid #fff' : '1px solid rgba(0,0,0,0.1)', cursor: 'pointer', flexShrink: 0, boxShadow: (!isEraser && color === c) ? '0 0 0 2px #3b82f6' : 'none' }} />
                                 ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {isSoloInkMode && isDrawer && !isScoring && (
+                        <div style={{ padding: '0 12px 8px 12px', background: '#f8fafc' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#fff', padding: '6px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#3b82f6', flexShrink: 0 }}>
+                                    <Droplets size={14} />
+                                    <span style={{ fontSize: '11px', fontWeight: 900 }}>حبر المبدع</span>
+                                </div>
+                                <div style={{ flex: 1, height: '8px', background: '#f1f5f9', borderRadius: '4px', position: 'relative', overflow: 'hidden', border: '1px solid #f1f5f9' }}>
+                                    <motion.div 
+                                        initial={{ width: '100%' }}
+                                        animate={{ width: `${ink}%` }}
+                                        transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+                                        style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: ink > 20 ? 'linear-gradient(90deg, #3b82f6, #60a5fa)' : 'linear-gradient(90deg, #ef4444, #f87171)' }} 
+                                    />
+                                </div>
+                                <span style={{ fontSize: '11px', fontWeight: 900, color: '#64748b', minWidth: '35px', textAlign: 'right' }}>{Math.ceil(ink)}%</span>
                             </div>
                         </div>
                     )}
@@ -500,7 +507,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     if (roomId === 'solo-challenge' && challengeData) {
         const soloMasked = challengeData.word.split('').map(c => c === ' ' ? '\u00A0\u00A0' : '_').join(' ');
         return (
-            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: 'calc(100vh - 44px)', background: '#f1f5f9' }}>
+            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: 'calc(100vh - 44px)', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none' }}>
                 <div style={{ background: 'white', padding: '12px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: '13px', fontWeight: 900, color: '#f59e0b' }}>{challengeData.category}</div>
                     <div style={{ fontSize: '20px', fontWeight: 900, color: '#451a03' }}>
