@@ -85,10 +85,14 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     };
 
     useEffect(() => {
-        if (challengeData && roomId !== 'solo-challenge') {
-            setShowChallengeModal(true);
+        if (challengeData) {
+            // Show modal if we just CREATED a challenge (drawingCurrentWord is set)
+            // or if we are in a room and received one.
+            if (drawingCurrentWord || roomId !== 'solo-challenge') {
+                setShowChallengeModal(true);
+            }
         }
-    }, [challengeData, roomId]);
+    }, [challengeData, roomId, drawingCurrentWord]);
 
     // Reset ink on new round
     useEffect(() => {
@@ -194,7 +198,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
     // ─── Drawer pointer handlers ──────────────────────────────────────
     const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-        if (!isDrawer || gameStatus !== 'drawing_active' || roomId === 'solo-challenge') return;
+        const canDraw = isDrawer || (isSoloArtist && drawingCurrentWord);
+        if (!canDraw || (gameStatus !== 'drawing_active' && !isSoloArtist)) return;
         if (isSoloInkMode && ink <= 0) return;
         (e.target as HTMLCanvasElement).setPointerCapture(e.pointerId);
         setIsDrawing(true);
@@ -202,7 +207,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     };
 
     const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-        if (!isDrawer || !isDrawing || gameStatus !== 'drawing_active' || roomId === 'solo-challenge') return;
+        const canDraw = isDrawer || (isSoloArtist && drawingCurrentWord);
+        if (!canDraw || !isDrawing || (gameStatus !== 'drawing_active' && !isSoloArtist)) return;
         if (isSoloInkMode && ink <= 0) {
             setIsDrawing(false);
             return;

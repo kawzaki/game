@@ -1654,7 +1654,7 @@ io.on('connection', (socket) => {
         if (drawingWordsPool.length === 0) return;
         const randomItem = drawingWordsPool[Math.floor(Math.random() * drawingWordsPool.length)];
         socket.emit('drawing_your_word', { 
-            word: randomItem.answer, 
+            word: randomItem.word, 
             category: randomItem.category,
             isSolo: true 
         });
