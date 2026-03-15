@@ -1725,8 +1725,8 @@ io.on('connection', (socket) => {
 
     socket.on('join_challenge_session', ({ challengeId, playerName }) => {
         const roomId = `session_${challengeId}`;
+        const challenge = challenges.get(challengeId);
         let room = rooms.get(roomId);
-        
         if (!room) {
             room = {
                 id: roomId,
@@ -1738,7 +1738,8 @@ io.on('connection', (socket) => {
                 drawingDrawerId: null,
                 drawingStrokes: [],
                 drawingGuesses: {},
-                drawingCurrentWord: null,
+                drawingCurrentWord: challenge ? challenge.word : null,
+                drawingCategory: challenge ? challenge.category : null,
                 isPrivate: true,
                 isSession: true,
                 createdAt: Date.now()
