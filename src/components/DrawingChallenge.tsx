@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eraser, Trash2, Check, Pencil, Palette, Share2, Link as LinkIcon, Loader2, Droplets } from 'lucide-react';
+import { isFuzzyMatch } from '../utils/arabicUtils';
 
 interface DrawingChallengeProps {
     roomId: string;
@@ -272,7 +273,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         if (!guess || hasGuessedCorrectly || soloGuessedCorrectly) return;
 
         if (roomId === 'solo-challenge' && challengeData) {
-            if (guess.toLowerCase() === challengeData.word.toLowerCase()) {
+            if (isFuzzyMatch(guess, challengeData.word)) {
                 setSoloGuessedCorrectly(true);
                 import('canvas-confetti').then(confetti => confetti.default());
             } else {
