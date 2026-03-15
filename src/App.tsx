@@ -374,7 +374,7 @@ const App: React.FC = () => {
   // SOLO CHALLENGE VIEW
   if (challengeData && !roomId) {
     return (
-      <div className="game-wrapper" dir="rtl" style={{ minHeight: '100vh', padding: 0 }}>
+      <div className="game-wrapper" dir="rtl" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: 'white', borderBottom: '1px solid #eee' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Pencil size={18} color="var(--brand-yellow)" />
@@ -705,7 +705,7 @@ const App: React.FC = () => {
 
   // GAME BOARD RENDERING (Jeopardy or Huroof)
   return (
-    <div className="game-wrapper" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', paddingBottom: gameType === 'drawing_challenge' && (gameStatus === 'drawing_active' || gameStatus === 'drawing_scoring') ? '0' : '80px' }}>
+    <div className="game-wrapper" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', paddingBottom: gameType === 'drawing_challenge' && (gameStatus === 'drawing_active' || gameStatus === 'drawing_scoring') ? '0' : '80px' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #eee', background: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Trophy size={18} style={{ color: 'var(--accent-gold)' }} />
@@ -727,7 +727,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main style={{ padding: gameType === 'drawing_challenge' && (gameStatus === 'drawing_active' || gameStatus === 'drawing_scoring') ? '0' : '16px' }}>
+      <main style={{ flex: 1, padding: gameType === 'drawing_challenge' && (gameStatus === 'drawing_active' || gameStatus === 'drawing_scoring') ? '0' : '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
         {gameType === 'jeopardy' ? (
           /* JEOPARDY BOARD */
           <>

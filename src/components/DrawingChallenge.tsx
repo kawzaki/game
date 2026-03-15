@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eraser, Trash2, Check, Pencil, Palette, Download, Share2, Link as LinkIcon, Loader2, Droplets } from 'lucide-react';
+import { Eraser, Trash2, Check, Pencil, Palette, Share2, Link as LinkIcon, Loader2, Droplets } from 'lucide-react';
 
 interface DrawingChallengeProps {
     roomId: string;
@@ -356,7 +356,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         const reversedChatLog = [...chatLog].reverse().slice(0, 10);
 
         return (
-            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100vw', height: 'calc(100vh - 64px)', overflow: 'hidden', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none' }}>
+            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100vw', height: '100%', overflow: 'hidden', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none' }}>
                 <div style={{ zIndex: 30, display: 'flex', flexDirection: 'column', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', width: '100%' }}>
                         {drawingCategory && (
@@ -471,10 +471,6 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         
                         {isDrawer && !isScoring && (
                             <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'center' }}>
-                                <button onClick={handleDownload} title="حفظ الصورة" style={{ padding: '10px 16px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', gap: '6px', fontSize: '13px', fontWeight: 'bold' }}>
-                                    <Download size={16} />
-                                    حفظ
-                                </button>
                                 <button onClick={handleShare} title="مشاركة الصورة" style={{ padding: '10px 16px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', gap: '6px', fontSize: '13px', fontWeight: 'bold' }}>
                                     <Share2 size={16} />
                                     مشاركة
@@ -540,7 +536,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     if (roomId === 'solo-challenge' && challengeData) {
         const soloMasked = challengeData.word.split('').map(c => c === ' ' ? '\u00A0\u00A0' : '_').join(' ');
         return (
-            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: 'calc(100vh - 44px)', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none' }}>
+            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none' }}>
                 <div style={{ background: 'white', padding: '12px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: '13px', fontWeight: 900, color: '#f59e0b' }}>{challengeData.category}</div>
                     <div style={{ fontSize: '20px', fontWeight: 900, color: '#451a03' }}>
