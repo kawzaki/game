@@ -85,7 +85,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     useEffect(() => {
         if (correctGuesses.length > prevCorrectLen.current) {
             const latest = correctGuesses[correctGuesses.length - 1];
-            const pts = Math.round((timer / 80) * 60) + 20;
+            const pts = Math.round((timer / 90) * 60) + 20;
             setCorrectBanner({ playerName: latest.playerName, pts });
             const t = setTimeout(() => setCorrectBanner(null), 4000);
             prevCorrectLen.current = correctGuesses.length;

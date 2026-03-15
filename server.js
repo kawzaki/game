@@ -407,6 +407,12 @@ io.on('connection', (socket) => {
 
         // Hide word for guessers on join
         if (room.gameType === 'drawing_challenge' && room.gameStatus === 'drawing_active') {
+            // If someone joins a solo session, start the timer
+            if (room.timer === -1 && room.players.length >= 2) {
+                room.timer = 90; 
+                console.log(`[Timer Start] Player joined room ${roomId} - Competitive timer active (90s)`);
+            }
+            
             const savedWord = room.drawingCurrentWord;
             room.drawingCurrentWord = null;
             socket.emit('room_data', room);
@@ -1360,7 +1366,7 @@ io.on('connection', (socket) => {
         room.drawingGuesses = {};
         room.drawingStrokes = [];
         room.gameStatus = 'drawing_active';
-        room.timer = room.players.length === 1 ? -1 : 80;
+        room.timer = room.players.length === 1 ? -1 : 90;
         room.feedback = null;
 
         console.log(`[Drawing] Round ${room.currentRound}/${room.roundCount} - Drawer: ${drawer.name}, Word: ${word}`);
@@ -1381,15 +1387,20 @@ io.on('connection', (socket) => {
         }
 
         const roundInterval = setInterval(() => {
-            if (room.timer > 0 && room.gameStatus === 'drawing_active') {
+            if (room.gameStatus !== 'drawing_active') {
+                clearInterval(roundInterval);
+                return;
+            }
+
+            if (room.timer === -1) {
+                // Solo mode: no timer decrement, just broadcast periodically
+                io.to(roomId).emit('drawing_timer', { timer: -1, roomId });
+            } else if (room.timer > 0) {
                 room.timer--;
-                // Only broadcast timer + strokes, no need to re-hide word (word already sent)
                 io.to(roomId).emit('drawing_timer', { timer: room.timer, roomId });
             } else {
                 clearInterval(roundInterval);
-                if (room.gameStatus === 'drawing_active') {
-                    scoreDrawingRound(room, io, roomId);
-                }
+                scoreDrawingRound(room, io, roomId);
             }
         }, 1000);
 
