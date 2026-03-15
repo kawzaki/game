@@ -1413,18 +1413,16 @@ io.on('connection', (socket) => {
             if (p.id === room.drawingDrawerId) return;
             const g = guesses[p.id];
             if (g && g.correct) {
-                // Speed bonus: 20 base + up to 60 for speed (timeLeft out of 80)
-                const speedBonus = Math.round((g.timeLeft / 80) * 60);
-                const pts = 20 + speedBonus;
+                const pts = 100; // Full points for guesser
                 p.score += pts;
                 g.pointsEarned = pts;
                 correctGuessCount++;
             }
         });
 
-        // Drawer earns 10 pts per correct guesser
+        // Drawer earns 100 pts if someone recognized the word
         if (drawerPlayer && correctGuessCount > 0) {
-            const drawerPts = correctGuessCount * 10;
+            const drawerPts = 100; // Full points for artist
             drawerPlayer.score += drawerPts;
             if (guesses[drawerPlayer.id] === undefined) guesses[drawerPlayer.id] = {};
             guesses[drawerPlayer.id].pointsEarned = drawerPts;

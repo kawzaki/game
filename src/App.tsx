@@ -667,7 +667,7 @@ const App: React.FC = () => {
 
   // GAME BOARD RENDERING (Jeopardy or Huroof)
   return (
-    <div className="game-wrapper" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', paddingBottom: '80px' }}>
+    <div className="game-wrapper" dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} style={{ minHeight: '100vh', paddingBottom: gameType === 'drawing_challenge' && (gameStatus === 'drawing_active' || gameStatus === 'drawing_scoring') ? '0' : '80px' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid #eee', background: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Trophy size={18} style={{ color: 'var(--accent-gold)' }} />
@@ -689,7 +689,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main style={{ padding: '16px' }}>
+      <main style={{ padding: gameType === 'drawing_challenge' && (gameStatus === 'drawing_active' || gameStatus === 'drawing_scoring') ? '0' : '16px' }}>
         {gameType === 'jeopardy' ? (
           /* JEOPARDY BOARD */
           <>
