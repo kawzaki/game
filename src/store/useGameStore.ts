@@ -86,6 +86,7 @@ interface GameState {
     leaveRoom: (roomId: string) => void;
     createChallenge: (strokes: any[], word: string, category: string) => void;
     getChallenge: (challengeId: string) => void;
+    getSoloWord: () => void;
     clearChallengeData: () => void;
 }
 
@@ -164,8 +165,11 @@ export const useGameStore = create<GameState>((set) => {
         }));
     });
     // Drawer receives their secret word via this dedicated event (not in room_data)
-    socket.on('drawing_your_word', ({ word }: { word: string }) => {
-        useGameStore.setState({ drawingCurrentWord: word });
+    socket.on('drawing_your_word', ({ word, category }: { word: string; category?: string }) => {
+        useGameStore.setState({ 
+            drawingCurrentWord: word,
+            drawingCategory: category || null 
+        });
     });
     socket.on('drawing_wrong_guess', (payload: { playerId: string; playerName: string; guess: string }) => {
         useGameStore.setState(state => ({
@@ -348,6 +352,9 @@ export const useGameStore = create<GameState>((set) => {
         getChallenge: (challengeId) => {
             set({ challengeLoading: true });
             socket.emit('get_challenge', { challengeId });
+        },
+        getSoloWord: () => {
+            socket.emit('get_solo_word');
         },
         clearChallengeData: () => set({ challengeData: null })
     };

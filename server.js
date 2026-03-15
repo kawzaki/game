@@ -1650,6 +1650,17 @@ io.on('connection', (socket) => {
         console.log(`[Challenge] Created challenge ${id} for word ${word}`);
     });
 
+    socket.on('get_solo_word', () => {
+        if (drawingWordsPool.length === 0) return;
+        const randomItem = drawingWordsPool[Math.floor(Math.random() * drawingWordsPool.length)];
+        socket.emit('drawing_your_word', { 
+            word: randomItem.answer, 
+            category: randomItem.category,
+            isSolo: true 
+        });
+        console.log(`[Solo] Sent random word ${randomItem.answer} to ${socket.id}`);
+    });
+
     socket.on('get_challenge', ({ challengeId }) => {
         const challenge = challenges.get(challengeId);
         if (challenge) {

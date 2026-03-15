@@ -32,6 +32,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         submitDrawingGuess,
         finishDrawingRound,
         createChallenge,
+        getSoloWord,
         challengeData,
         challengeLoading,
         clearChallengeData
@@ -67,6 +68,21 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
     const [showChallengeModal, setShowChallengeModal] = useState(false);
     const [soloGuessedCorrectly, setSoloGuessedCorrectly] = useState(false);
+    const [isSoloArtist, setIsSoloArtist] = useState(false);
+
+    const handleDrawBack = () => {
+        setSoloGuessedCorrectly(false);
+        setIsSoloArtist(true);
+        setGuessInput('');
+        setInk(100);
+        drawerStrokes.current = [];
+        const canvas = canvasRef.current;
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx?.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        getSoloWord();
+    };
 
     useEffect(() => {
         if (challengeData && roomId !== 'solo-challenge') {
@@ -533,14 +549,112 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         );
     }
 
-    if (roomId === 'solo-challenge' && challengeData) {
-        const soloMasked = challengeData.word.split('').map(c => c === ' ' ? '\u00A0\u00A0' : '_').join(' ');
+    if ((roomId === 'solo-challenge' && challengeData) || isSoloArtist) {
+        // If we are a solo artist OR viewing a challenge
+        const isActuallySoloArtist = isSoloArtist || (challengeData && drawingCurrentWord);
+        
+        if (isActuallySoloArtist) {
+            // RENDER DRAWING UI (Reuse the active drawing round UI logic or similar)
+            // For simplicity, we can reuse most of the drawing logic here
+            // or just render the standard drawing_active view if we tweak the conditions.
+        }
+
+        const soloMasked = (challengeData?.word || '').split('').map(c => c === ' ' ? '\u00A0\u00A0' : '_').join(' ');
+        
+        // Let's adjust the logic: If we have a drawingCurrentWord and we are in solo-challenge room, we are drawing.
+        if (drawingCurrentWord && (roomId === 'solo-challenge' || isSoloArtist)) {
+             // Standard Drawing UI for Solo Artist
+             return (
+                <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none' }}>
+                    <div style={{ zIndex: 30, display: 'flex', flexDirection: 'column', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', width: '100%' }}>
+                            {drawingCategory && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 900, color: '#f59e0b', direction: 'rtl' }}>
+                                    <Palette size={16} />
+                                    <span>{drawingCategory}</span>
+                                </div>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 900, color: '#451a03', direction: 'rtl' }}>
+                                <span style={{ color: '#059669' }}>{drawingCurrentWord}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ flex: 1, position: 'relative', background: 'white', overflow: 'hidden', touchAction: 'none' }}>
+                        <canvas
+                            ref={canvasRef}
+                            onPointerDown={handlePointerDown}
+                            onPointerMove={handlePointerMove}
+                            onPointerUp={handlePointerUp}
+                            onPointerCancel={handlePointerUp}
+                            onPointerLeave={handlePointerUp}
+                            style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }}
+                        />
+                    </div>
+
+                    <div style={{ padding: '12px', background: 'white', borderTop: '1px solid #eee', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {/* Toolbar */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', flex: 1 }}>
+                                    {COLORS.map(c => (
+                                        <button key={c} onClick={() => { setColor(c); setIsEraser(false); }} style={{ width: '28px', height: '28px', borderRadius: '50%', background: c, border: color === c && !isEraser ? '2px solid #000' : '1px solid #ddd', flexShrink: 0 }} />
+                                    ))}
+                                </div>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                    <button onClick={() => setIsEraser(!isEraser)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: isEraser ? 'var(--brand-yellow)' : '#f1f5f9', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Eraser size={20} />
+                                    </button>
+                                    <button onClick={() => { drawerStrokes.current = []; const ctx = canvasRef.current?.getContext('2d'); ctx?.clearRect(0,0,canvasRef.current!.width, canvasRef.current!.height); }} style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#f1f5f9', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Trash2 size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div style={{ width: '100%', height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
+                                <motion.div animate={{ width: `${ink}%` }} style={{ height: '100%', background: ink > 20 ? 'var(--brand-yellow)' : '#ef4444' }} />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                                <button onClick={handleShare} style={{ padding: '10px 16px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', fontWeight: 'bold', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <Share2 size={16} />
+                                    مشاركة
+                                </button>
+                                <button onClick={handleCreateChallenge} disabled={challengeLoading} style={{ flex: 1, padding: '10px 20px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 900, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    {challengeLoading ? <Loader2 size={16} className="animate-spin" /> : <LinkIcon size={16} />}
+                                    تحدي صديق
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <AnimatePresence>
+                        {showChallengeModal && challengeData && (
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ background: 'white', padding: '24px', borderRadius: '20px', textAlign: 'center', maxWidth: '400px', width: '100%', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
+                                    <div style={{ fontSize: '18px', fontWeight: 900, marginBottom: '12px' }}>تم إنشاء التحدي! 🎉</div>
+                                    <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>ارسل هذا الرابط لصديقك ليعرف ماذا رسمت!</p>
+                                    <div style={{ background: '#f1f5f9', padding: '10px', borderRadius: '10px', fontSize: '11px', wordBreak: 'break-all', marginBottom: '20px', cursor: 'pointer', border: '1px dashed #cbd5e1' }} onClick={handleShareChallenge}>
+                                        {window.location.origin}{window.location.pathname}?challenge={challengeData.id}
+                                        <div style={{ marginTop: '8px', color: '#3b82f6', fontWeight: 'bold', fontSize: '12px' }}>
+                                            {typeof navigator.share === 'function' ? 'اضغط للمشاركة' : 'اضغط للنسخ'}
+                                        </div>
+                                    </div>
+                                    <button onClick={() => { setShowChallengeModal(false); clearChallengeData(); }} style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>إغلاق</button>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>
+                </div>
+             );
+        }
+
         return (
             <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none' }}>
                 <div style={{ background: 'white', padding: '12px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 900, color: '#f59e0b' }}>{challengeData.category}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 900, color: '#f59e0b' }}>{challengeData?.category}</div>
                     <div style={{ fontSize: '20px', fontWeight: 900, color: '#451a03' }}>
-                        {soloGuessedCorrectly ? <span style={{ color: '#059669' }}>{challengeData.word}</span> : soloMasked}
+                        {soloGuessedCorrectly ? <span style={{ color: '#059669' }}>{challengeData?.word}</span> : soloMasked}
                     </div>
                 </div>
                 <div style={{ flex: 1, position: 'relative', background: 'white' }}>
@@ -552,10 +666,33 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     </AnimatePresence>
                 </div>
                 <div style={{ padding: '12px', background: 'white', borderTop: '1px solid #eee' }}>
-                    <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px' }}>
-                        <input type="text" value={guessInput} onChange={e => setGuessInput(e.target.value)} disabled={soloGuessedCorrectly} placeholder={soloGuessedCorrectly ? '✅ إجابة صحيحة!' : 'خمّن الكلمة...'} style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #eee', textAlign: 'right' }} dir="rtl" />
-                        <button type="submit" style={{ padding: '10px 20px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 900 }}>خمّن</button>
-                    </form>
+                    {soloGuessedCorrectly ? (
+                        <button 
+                            onClick={handleDrawBack}
+                            style={{ 
+                                width: '100%', 
+                                padding: '14px', 
+                                borderRadius: '12px', 
+                                background: 'black', 
+                                color: 'white', 
+                                border: 'none', 
+                                fontWeight: 900, 
+                                fontSize: '16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px'
+                            }}
+                        >
+                            <Pencil size={20} />
+                            ارسم تحدي جديد
+                        </button>
+                    ) : (
+                        <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px' }}>
+                            <input type="text" value={guessInput} onChange={e => setGuessInput(e.target.value)} disabled={soloGuessedCorrectly} placeholder='خمّن الكلمة...' style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #eee', textAlign: 'right' }} dir="rtl" />
+                            <button type="submit" style={{ padding: '10px 20px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 900 }}>خمّن</button>
+                        </form>
+                    )}
                 </div>
             </div>
         );
