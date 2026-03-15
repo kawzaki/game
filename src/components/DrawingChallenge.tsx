@@ -126,25 +126,41 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         prevCorrectLen.current = correctGuesses.length;
     }, [correctGuesses.length, timer]);
 
+    // Clear banner immediately when drawer changes
+    useEffect(() => {
+        setCorrectBanner(null);
+        prevCorrectLen.current = correctGuesses.length;
+    }, [drawingDrawerId]);
+
     // ─── Canvas helpers ──────────────────────────────────────────────
     const getCanvasPos = (e: React.PointerEvent | PointerEvent) => {
         const canvas = canvasRef.current;
         if (!canvas) return { x: 0, y: 0 };
         const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
+        
+        // Return normalized coordinates (0-1000)
         return {
-            x: (e.clientX - rect.left) * scaleX,
-            y: (e.clientY - rect.top) * scaleY,
+            x: ((e.clientX - rect.left) / rect.width) * 1000,
+            y: ((e.clientY - rect.top) / rect.height) * 1000,
         };
     };
 
     const drawSegment = useCallback((ctx: CanvasRenderingContext2D, from: { x: number; y: number }, to: { x: number; y: number }, strokeColor: string, size: number, eraser: boolean) => {
+        const canvas = ctx.canvas;
+        if (!canvas) return;
+
+        // Translate normalized coordinates (0-1000) to actual canvas pixels
+        const fromX = (from.x / 1000) * canvas.width;
+        const fromY = (from.y / 1000) * canvas.height;
+        const toX = (to.x / 1000) * canvas.width;
+        const toY = (to.y / 1000) * canvas.height;
+        const scaledSize = (size / 1000) * canvas.width;
+
         ctx.beginPath();
-        ctx.moveTo(from.x, from.y);
-        ctx.lineTo(to.x, to.y);
+        ctx.moveTo(fromX, fromY);
+        ctx.lineTo(toX, toY);
         ctx.strokeStyle = eraser ? '#ffffff' : strokeColor;
-        ctx.lineWidth = size;
+        ctx.lineWidth = scaledSize;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
