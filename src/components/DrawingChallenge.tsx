@@ -129,6 +129,26 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         prevCorrectLen.current = correctGuesses.length;
     }, [correctGuesses.length, timer]);
 
+    // Wrong-answer flash banner (Session)
+    const prevWrongLen = React.useRef(0);
+    useEffect(() => {
+        if (wrongGuesses.length > prevWrongLen.current) {
+            setWrongBanner(true);
+            const t = setTimeout(() => setWrongBanner(false), 2000);
+            prevWrongLen.current = wrongGuesses.length;
+            return () => clearTimeout(t);
+        }
+        prevWrongLen.current = wrongGuesses.length;
+    }, [wrongGuesses.length]);
+
+    // Sync soloGuessedCorrectly with session state
+    useEffect(() => {
+        if (hasGuessedCorrectly && !soloGuessedCorrectly) {
+            setSoloGuessedCorrectly(true);
+            import('canvas-confetti').then(confetti => confetti.default());
+        }
+    }, [hasGuessedCorrectly, soloGuessedCorrectly]);
+
     // Clear banner immediately when drawer changes
     useEffect(() => {
         setCorrectBanner(null);
