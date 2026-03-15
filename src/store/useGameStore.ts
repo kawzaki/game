@@ -144,7 +144,8 @@ export const useGameStore = create<GameState>((set) => {
 
     socket.on('challenge_error', (error) => {
         console.error("Challenge error:", error);
-        set({ challengeLoading: false });
+        alert(error); // Show error to user
+        useGameStore.setState({ challengeLoading: false });
     });
 
     // Drawing Challenge live events
@@ -348,6 +349,16 @@ export const useGameStore = create<GameState>((set) => {
         createChallenge: (strokes, word, category) => {
             set({ challengeLoading: true });
             socket.emit('create_challenge', { strokes, word, category });
+            
+            // Safety timeout: if server doesn't respond in 10s, reset loading
+            setTimeout(() => {
+                const currentState = useGameStore.getState();
+                if (currentState.challengeLoading) {
+                    console.warn("Challenge creation timed out");
+                    set({ challengeLoading: false });
+                    alert("نعتذر، حدث تأخير في إنشاء الرابط. يرجى المحاولة مرة أخرى.");
+                }
+            }, 10000);
         },
         getChallenge: (challengeId) => {
             set({ challengeLoading: true });

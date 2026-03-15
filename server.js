@@ -138,7 +138,8 @@ const io = new Server(httpServer, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
-    }
+    },
+    maxHttpBufferSize: 1e7 // 10MB for drawing strokes
 });
 
 // In-memory room storage
@@ -1643,11 +1644,20 @@ io.on('connection', (socket) => {
     });
 
     socket.on('create_challenge', ({ strokes, word, category }) => {
-        const id = generateChallengeId();
-        const challenge = { id, strokes, word, category, createdAt: Date.now() };
-        challenges.set(id, challenge);
-        socket.emit('challenge_created', challenge);
-        console.log(`[Challenge] Created challenge ${id} for word ${word}`);
+        try {
+            console.log(`[Challenge] Creating challenge for word: ${word}, stroke count: ${strokes?.length || 0}`);
+            if (!strokes || strokes.length === 0) {
+                return socket.emit('challenge_error', 'يجب عليك الرسم أولاً');
+            }
+            const id = generateChallengeId();
+            const challenge = { id, strokes, word, category, createdAt: Date.now() };
+            challenges.set(id, challenge);
+            socket.emit('challenge_created', challenge);
+            console.log(`[Challenge] Created challenge ${id} successfully`);
+        } catch (err) {
+            console.error('[Challenge] Error creating challenge:', err);
+            socket.emit('challenge_error', 'حدث خطأ في إنشاء التحدي');
+        }
     });
 
     socket.on('get_solo_word', () => {
