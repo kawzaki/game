@@ -392,8 +392,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         const reversedChatLog = [...chatLog].reverse().slice(0, 10);
 
         return (
-            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100vw', height: '100%', overflow: 'hidden', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none' }}>
-                <div style={{ zIndex: 30, display: 'flex', flexDirection: 'column', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100vw', height: '100dvh', overflow: 'hidden', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none' }}>
+                <div style={{ height: '70px', zIndex: 30, display: 'flex', flexDirection: 'column', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', width: '100%' }}>
                         {drawingCategory && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 900, color: '#f59e0b', direction: 'rtl' }}>
@@ -462,7 +462,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     )}
                 </div>
 
-                <div style={{ flex: 1, position: 'relative', background: '#fff', overflow: 'hidden' }}>
+                <div style={{ height: 'calc(80dvh - 70px)', position: 'relative', background: '#fff', overflow: 'hidden' }}>
                     <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default', touchAction: 'none' }} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp} />
                     <AnimatePresence>
                         {correctBanner && (
@@ -474,7 +474,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     </AnimatePresence>
                 </div>
 
-                <div style={{ zIndex: 30, background: '#fff', borderTop: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
+                <div style={{ height: '20dvh', zIndex: 30, background: '#fff', borderTop: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
                     {!isScoring && chatLog.length > 0 && (
                         <div style={{ background: '#f8fafc', borderRadius: '10px', padding: '8px', maxHeight: '100px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             <AnimatePresence>
@@ -585,8 +585,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         if (drawingCurrentWord && (roomId === 'solo-challenge' || isSoloArtist)) {
              // Standard Drawing UI for Solo Artist
              return (
-                <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none' }}>
-                    <div style={{ zIndex: 30, display: 'flex', flexDirection: 'column', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100dvh', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none' }}>
+                    <div style={{ height: '70px', zIndex: 30, display: 'flex', flexDirection: 'column', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', width: '100%' }}>
                             {drawingCategory && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 900, color: '#f59e0b', direction: 'rtl' }}>
@@ -600,7 +600,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         </div>
                     </div>
 
-                    <div style={{ flex: 1, position: 'relative', background: 'white', overflow: 'hidden', touchAction: 'none' }}>
+                    <div style={{ height: 'calc(80dvh - 70px)', position: 'relative', background: 'white', overflow: 'hidden', touchAction: 'none' }}>
                         <canvas
                             ref={canvasRef}
                             onPointerDown={handlePointerDown}
@@ -612,11 +612,11 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         />
                     </div>
 
-                    <div style={{ padding: '12px', background: 'white', borderTop: '1px solid #eee', flexShrink: 0 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ height: '20dvh', padding: '12px', background: 'white', borderTop: '1px solid #eee', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', height: '100%', justifyContent: 'center' }}>
                             {/* Toolbar */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', flex: 1 }}>
+                                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', flex: 1, scrollbarWidth: 'none' }}>
                                     {COLORS.map(c => (
                                         <button key={c} onClick={() => { setColor(c); setIsEraser(false); }} style={{ width: '28px', height: '28px', borderRadius: '50%', background: c, border: color === c && !isEraser ? '2px solid #000' : '1px solid #ddd', flexShrink: 0 }} />
                                     ))}
@@ -670,22 +670,22 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         }
 
         return (
-            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none' }}>
-                <div style={{ background: 'white', padding: '12px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100dvh', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none' }}>
+                <div style={{ height: '50px', background: 'white', padding: '12px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: '13px', fontWeight: 900, color: '#f59e0b' }}>{challengeData?.category}</div>
                     <div style={{ fontSize: '20px', fontWeight: 900, color: '#451a03' }}>
                         {soloGuessedCorrectly ? <span style={{ color: '#059669' }}>{challengeData?.word}</span> : soloMasked}
                     </div>
                 </div>
-                <div style={{ flex: 1, position: 'relative', background: 'white' }}>
-                    <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
+                <div style={{ height: 'calc(80dvh - 50px)', position: 'relative', background: 'white', overflow: 'hidden' }}>
+                    <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }} />
                     <AnimatePresence>
                         {soloGuessedCorrectly && (
                             <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(5, 150, 105, 0.9)', color: 'white', padding: '20px 40px', borderRadius: '50px', fontWeight: 900, zIndex: 100 }}>كفووو! إجابة صحيحة 🎉</motion.div>
                         )}
                     </AnimatePresence>
                 </div>
-                <div style={{ padding: '12px', background: 'white', borderTop: '1px solid #eee' }}>
+                <div style={{ height: '20dvh', padding: '12px', background: 'white', borderTop: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {soloGuessedCorrectly ? (
                         <button 
                             onClick={handleDrawBack}
@@ -708,9 +708,9 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                             ارسم تحدي جديد
                         </button>
                     ) : (
-                        <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px' }}>
-                            <input type="text" value={guessInput} onChange={e => setGuessInput(e.target.value)} disabled={soloGuessedCorrectly} placeholder='خمّن الكلمة...' style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #eee', textAlign: 'right' }} dir="rtl" />
-                            <button type="submit" style={{ padding: '10px 20px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 900 }}>خمّن</button>
+                        <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                            <input type="text" value={guessInput} onChange={e => setGuessInput(e.target.value)} disabled={soloGuessedCorrectly} placeholder='خمّن الكلمة...' style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #eee', textAlign: 'right', fontSize: '16px' }} dir="rtl" />
+                            <button type="submit" style={{ padding: '12px 24px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 900, fontSize: '16px' }}>خمّن</button>
                         </form>
                     )}
                 </div>
