@@ -1614,6 +1614,30 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('room_data', room);
     });
 
+    socket.on('leave_room', ({ roomId }) => {
+        const room = rooms.get(roomId);
+        if (room) {
+            const playerIndex = room.players.findIndex(p => p.id === socket.id);
+            if (playerIndex !== -1) {
+                console.log(`[Leave] Player ${room.players[playerIndex].name} left room ${roomId}`);
+                room.players.splice(playerIndex, 1);
+                
+                // Update numbers for remaining players
+                room.players.forEach((p, idx) => {
+                    p.number = idx + 1;
+                });
+
+                if (room.players.length > 0) {
+                    io.to(roomId).emit('room_data', room);
+                } else {
+                    console.log(`[Cleanup] Room ${roomId} is empty after leave.`);
+                    rooms.delete(roomId);
+                }
+            }
+        }
+        socket.leave(roomId);
+    });
+
     socket.on('disconnect', () => {
         rooms.forEach((room, roomId) => {
             const playerIndex = room.players.findIndex(p => p.id === socket.id);

@@ -72,7 +72,8 @@ const App: React.FC = () => {
     createRoom,
     roomDataLoading,
     addPlayer,
-    huroofHistory
+    huroofHistory,
+    leaveRoom
   } = useGameStore();
 
   const [isCreator, setIsCreator] = useState(false);
@@ -474,8 +475,16 @@ const App: React.FC = () => {
               <div style={{ background: 'var(--brand-yellow)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                 <Zap size={30} color="#000" fill="#000" />
               </div>
-              <h2 style={{ marginBottom: '8px' }}>الغرفة جاهزة!</h2>
-              <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '4px', margin: '12px 0' }}>{roomId}</div>
+              <h2 style={{ marginBottom: '8px' }}>
+                {gameType === 'jeopardy' ? 'غرفة تحدي الأسئلة' : 
+                 gameType === 'huroof' ? 'غرفة لعبة الحروف' : 
+                 gameType === 'word_meaning' ? 'غرفة معاني الكلمات' : 
+                 gameType === 'siba' ? 'غرفة لعبة الصبة' : 
+                 gameType === 'pixel_challenge' ? 'غرفة تحدي الصور' : 
+                 gameType === 'drawing_challenge' ? 'غرفة تحدي الرسم' : 
+                 'غرفة بنت وولد'}
+              </h2>
+              <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '4px', margin: '4px 0' }}>{roomId}</div>
 
               {roomDataLoading ? (
                 <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -484,28 +493,24 @@ const App: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  <div style={{ marginBottom: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                    نوع اللعبة: <strong>{gameType === 'jeopardy' ? 'تحدي الاسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : gameType === 'word_meaning' ? 'معاني الكلمات' : gameType === 'siba' ? 'لعبة الصبة' : gameType === 'pixel_challenge' ? 'تحدي الصور' : gameType === 'drawing_challenge' ? 'تحدي الرسم' : 'تحدي بنت وولد'}</strong>
-                  </div>
-
                   <input
                     type="text"
                     placeholder="أدخل اسمك ..."
                     className="join-input"
-                    style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', width: '100%', marginBottom: '12px' }}
+                    style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', width: '100%', marginBottom: '12px', marginTop: '8px' }}
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
                   />
 
                   {(players[0]?.id === myId || isCreator) && (gameType === 'jeopardy' || gameType === 'bin_o_walad' || gameType === 'word_meaning' || gameType === 'pixel_challenge' || gameType === 'drawing_challenge') && (
-                    <div style={{ marginBottom: '16px', background: '#f1f5f9', padding: '12px', borderRadius: '12px' }}>
-                      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px', fontWeight: 'bold' }}>
-                        {(gameType === 'jeopardy') ? 'عدد الأسئلة لكل فئة' : 'عدد الجولات'}
+                    <div style={{ marginBottom: '12px', background: '#f1f5f9', padding: '10px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>
+                        {(gameType === 'jeopardy') ? 'عدد الأسئلة' : 'عدد الجولات'}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                        <button onClick={() => handleQCountChange(Math.max(1, qCount - 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>-</button>
-                        <span style={{ fontSize: '18px', fontWeight: 'bold', width: '30px' }}>{qCount}</span>
-                        <button onClick={() => handleQCountChange(Math.min(50, qCount + 1))} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1px solid #cbd5e1' }}>+</button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <button onClick={() => handleQCountChange(Math.max(1, qCount - 1))} style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
+                        <span style={{ fontSize: '16px', fontWeight: 'bold', minWidth: '24px' }}>{qCount}</span>
+                        <button onClick={() => handleQCountChange(Math.min(50, qCount + 1))} style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid #cbd5e1', background: '#fff', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
                       </div>
                     </div>
                   )}
@@ -514,7 +519,7 @@ const App: React.FC = () => {
                     disabled={!playerName || hasJoined}
                     onClick={() => roomId && addPlayer(playerName, roomId, qCount)}
                     className="btn-primary-battle"
-                    style={{ width: '100%', marginBottom: '12px', opacity: (hasJoined || !playerName) ? 0.6 : 1 }}
+                    style={{ width: '100%', marginBottom: '8px', opacity: (hasJoined || !playerName) ? 0.6 : 1 }}
                   >
                     {hasJoined ? 'تم الانضمام ✓' : 'انضم الآن'}
                   </button>
@@ -643,7 +648,7 @@ const App: React.FC = () => {
               </AnimatePresence>
 
               <button onClick={() => {
-                setRoomId('');
+                if (roomId) leaveRoom(roomId);
                 window.history.replaceState({}, '', window.location.pathname);
               }} style={{ marginTop: '10px', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '14px', textDecoration: 'underline' }}>
                 العودة لتغيير نوع اللعبة

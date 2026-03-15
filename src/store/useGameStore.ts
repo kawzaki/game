@@ -78,6 +78,7 @@ interface GameState {
     sendDrawingStroke: (roomId: string, stroke: any) => void;
     sendDrawingClear: (roomId: string) => void;
     submitDrawingGuess: (roomId: string, guess: string) => void;
+    leaveRoom: (roomId: string) => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
@@ -308,6 +309,11 @@ export const useGameStore = create<GameState>((set) => {
         },
         submitDrawingGuess: (roomId, guess) => {
             socket.emit('drawing_guess', { roomId, guess });
+        },
+        leaveRoom: (roomId) => {
+            socket.emit('leave_room', { roomId });
+            const reset = useGameStore.getState().resetRoom;
+            reset();
         }
     };
 });
