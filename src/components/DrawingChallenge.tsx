@@ -236,6 +236,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 style={{ 
                     position: 'relative', 
                     width: '100%', 
+                    maxWidth: '100vw',
                     height: 'calc(100vh - 64px)', 
                     overflow: 'hidden',
                     background: '#ffffff'
@@ -348,7 +349,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         left: '0',
                         top: '50%',
                         transform: 'translateY(-50%)',
-                        zIndex: 20,
+                        zIndex: 25,
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '12px',
@@ -451,7 +452,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     transform: 'translateX(-50%)',
                     zIndex: 20,
                     width: '90%',
-                    maxWidth: '600px',
+                    maxWidth: '300px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '12px',
