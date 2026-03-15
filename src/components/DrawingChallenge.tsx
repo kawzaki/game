@@ -36,6 +36,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         getSoloWord,
         challengeData,
         challengeLoading,
+        isChallengeCreator,
         clearChallengeData,
         joinChallengeSession,
         playerName
@@ -101,14 +102,10 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     };
 
     useEffect(() => {
-        if (challengeData) {
-            // Show modal if we just CREATED a challenge (drawingCurrentWord is set)
-            // or if we are in a room and received one.
-            if (drawingCurrentWord || roomId !== 'solo-challenge') {
-                setShowChallengeModal(true);
-            }
+        if (challengeData && isChallengeCreator) {
+            setShowChallengeModal(true);
         }
-    }, [challengeData, roomId, drawingCurrentWord]);
+    }, [challengeData, isChallengeCreator]);
 
     // Reset ink on new round
     useEffect(() => {

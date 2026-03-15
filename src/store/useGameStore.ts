@@ -59,6 +59,7 @@ interface GameState {
     // Async Challenge state
     challengeData: { strokes: any[]; word: string; category: string; id: string } | null;
     challengeLoading: boolean;
+    isChallengeCreator: boolean;
 
     // Actions
     setRoomId: (id: string) => void;
@@ -137,11 +138,11 @@ export const useGameStore = create<GameState>((set) => {
     });
 
     socket.on('challenge_created', (data) => {
-        set({ challengeData: data, challengeLoading: false });
+        set({ challengeData: data, challengeLoading: false, isChallengeCreator: true });
     });
 
     socket.on('challenge_data', (data) => {
-        set({ challengeData: data, challengeLoading: false });
+        set({ challengeData: data, challengeLoading: false, isChallengeCreator: false });
     });
 
     socket.on('challenge_error', (error) => {
@@ -234,6 +235,7 @@ export const useGameStore = create<GameState>((set) => {
         drawingWrongGuesses: [],
         challengeData: null,
         challengeLoading: false,
+        isChallengeCreator: false,
 
         setRoomId: (id) => set({ roomId: id }),
 
@@ -370,7 +372,7 @@ export const useGameStore = create<GameState>((set) => {
         getSoloWord: () => {
             socket.emit('get_solo_word');
         },
-        clearChallengeData: () => set({ challengeData: null }),
+        clearChallengeData: () => set({ challengeData: null, isChallengeCreator: false }),
         joinChallengeSession: (challengeId, playerName) => {
             socket.emit('join_challenge_session', { challengeId, playerName });
         }
