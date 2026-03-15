@@ -234,68 +234,56 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
             <div 
                 ref={containerRef}
                 style={{ 
-                    position: 'relative', 
+                    display: 'flex',
+                    flexDirection: 'column',
                     width: '100%', 
                     maxWidth: '100vw',
                     height: 'calc(100vh - 64px)', 
                     overflow: 'hidden',
-                    background: '#ffffff'
+                    background: '#f1f5f9'
                 }}
             >
-                {/* 1. Full-screen Canvas */}
-                <canvas
-                    ref={canvasRef}
-                    style={{ 
-                        position: 'absolute',
-                        inset: 0,
-                        width: '100%', 
-                        height: '100%', 
-                        display: 'block', 
-                        cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default',
-                        touchAction: 'none'
-                    }}
-                    onPointerDown={handlePointerDown}
-                    onPointerMove={handlePointerMove}
-                    onPointerUp={handlePointerUp}
-                    onPointerLeave={handlePointerUp}
-                />
-
-                {/* 2. Top Overlay: Word and Category */}
+                {/* 2. Top Bar: Word, Tools and Scrollable Palette */}
                 <div style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '20px',
-                    zIndex: 20,
+                    zIndex: 30,
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'flex-end',
-                    gap: '8px',
-                    width: 'auto',
-                    pointerEvents: 'none'
+                    background: '#fff',
+                    borderBottom: '1px solid #e2e8f0',
+                    flexShrink: 0
                 }}>
+                    {/* Row 1: Word & Category */}
                     <div style={{
                         display: 'flex', 
                         alignItems: 'center', 
-                        gap: '12px',
-                        padding: '8px 16px',
-                        background: 'transparent',
-                        width: 'auto',
-                        pointerEvents: 'none'
+                        justifyContent: 'space-between',
+                        padding: '10px 16px',
+                        width: '100%'
                     }}>
-                         {/* Word/Mask */}
-                         <div style={{ 
+                        {drawingCategory && (
+                            <div style={{ 
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                fontSize: '13px', fontWeight: 900, color: '#f59e0b',
+                                direction: 'rtl'
+                            }}>
+                                <Palette size={16} />
+                                <span>{drawingCategory}</span>
+                            </div>
+                        )}
+                        
+                        <div style={{ 
                             display: 'flex', alignItems: 'center', gap: '8px',
-                            fontSize: '28px', 
+                            fontSize: '20px', 
                             fontWeight: 900, color: '#451a03',
                             direction: 'rtl'
                         }}>
                             {isDrawer && !isScoring ? (
                                 <>
                                     <span>{drawingCurrentWord}</span>
-                                    <Pencil size={24} color="#f59e0b" />
+                                    <Pencil size={18} color="#f59e0b" />
                                 </>
                             ) : (
-                                <div style={{ letterSpacing: isScoring ? '2px' : '6px' }}>
+                                <div style={{ letterSpacing: isScoring ? '2px' : '4px' }}>
                                     {isScoring
                                         ? <span>الكلمة: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span></span>
                                         : maskedDisplay
@@ -303,175 +291,167 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                 </div>
                             )}
                         </div>
-
-                        {/* Category with Icon */}
-                        {drawingCategory && (
-                            <div style={{ 
-                                display: 'flex', alignItems: 'center', gap: '6px',
-                                fontSize: '16px', fontWeight: 900, color: '#f59e0b',
-                                direction: 'rtl'
-                            }}>
-                                <Palette size={20} />
-                                <span>{drawingCategory}</span>
-                            </div>
-                        )}
                     </div>
 
-                    {/* Correct-answer flash banner */}
+                    {/* Row 2: Tools & Color Palette (Drawer Only) */}
+                    {isDrawer && !isScoring && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '6px 12px',
+                            background: '#f8fafc',
+                            borderTop: '1px solid #f1f5f9'
+                        }}>
+                            {/* Brush sizes, Eraser, Clear */}
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                                <button
+                                    onClick={() => setIsEraser(e => !e)}
+                                    style={{
+                                        width: '32px', height: '32px', borderRadius: '8px', border: '1px solid transparent',
+                                        background: isEraser ? '#fef3c7' : 'white', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        boxShadow: isEraser ? '0 0 0 2px #d97706' : '0 1px 2px rgba(0,0,0,0.05)'
+                                    }}
+                                >
+                                    <Eraser size={16} color={isEraser ? '#d97706' : '#64748b'} />
+                                </button>
+                                <button
+                                    onClick={handleClear}
+                                    style={{
+                                        width: '32px', height: '32px', borderRadius: '8px',
+                                        background: 'white', border: '1px solid #fee2e2', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444'
+                                    }}
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+
+                                <div style={{ width: '1px', height: '20px', background: '#e2e8f0', margin: '0 2px' }} />
+
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                    {BRUSH_SIZES.map(s => (
+                                        <button
+                                            key={s}
+                                            onClick={() => { setBrushSize(s); setIsEraser(false); }}
+                                            style={{
+                                                width: '26px', height: '26px', borderRadius: '6px', display: 'flex',
+                                                alignItems: 'center', justifyContent: 'center', border: '1px solid transparent',
+                                                background: (!isEraser && brushSize === s) ? '#3b82f6' : 'white', cursor: 'pointer',
+                                                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                                            }}
+                                        >
+                                            <div style={{ 
+                                                width: Math.min(s/2 + 2, 12), 
+                                                height: Math.min(s/2 + 2, 12), 
+                                                borderRadius: '50%', 
+                                                background: (!isEraser && brushSize === s) ? 'white' : color 
+                                            }} />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div style={{ width: '1px', height: '20px', background: '#e2e8f0' }} />
+
+                            {/* Scrollable Color Palette */}
+                            <div style={{ 
+                                display: 'flex', gap: '6px', overflowX: 'auto', padding: '2px 0',
+                                scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch'
+                            }}>
+                                {COLORS.map(c => (
+                                    <button
+                                        key={c}
+                                        onClick={() => { setColor(c); setIsEraser(false); }}
+                                        style={{
+                                            width: '24px', height: '24px', borderRadius: '50%',
+                                            background: c, border: (!isEraser && color === c) ? '2px solid #fff' : '1px solid rgba(0,0,0,0.1)',
+                                            cursor: 'pointer', flexShrink: 0,
+                                            boxShadow: (!isEraser && color === c) ? '0 0 0 2px #3b82f6' : 'none'
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* 1. Canvas Area - Flex Grow */}
+                <div style={{
+                    flex: 1,
+                    position: 'relative',
+                    background: '#fff',
+                    overflow: 'hidden'
+                }}>
+                    <canvas
+                        ref={canvasRef}
+                        style={{ 
+                            position: 'absolute',
+                            inset: 0,
+                            width: '100%', 
+                            height: '100%', 
+                            display: 'block', 
+                            cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default',
+                            touchAction: 'none'
+                        }}
+                        onPointerDown={handlePointerDown}
+                        onPointerMove={handlePointerMove}
+                        onPointerUp={handlePointerUp}
+                        onPointerLeave={handlePointerUp}
+                    />
+
+                    {/* Correct-answer flash banner - Absolute over canvas middle */}
                     <AnimatePresence>
                         {correctBanner && (
                             <motion.div
-                                initial={{ opacity: 0, y: -12, scale: 0.95 }}
+                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: -8 }}
+                                exit={{ opacity: 0, y: -10 }}
                                 style={{
-                                    padding: '12px 16px', borderRadius: '12px',
-                                    background: 'rgba(236, 253, 245, 0.9)',
-                                    backdropFilter: 'blur(8px)',
-                                    border: '1px solid #10b981', textAlign: 'center',
-                                    fontWeight: 900, fontSize: '15px', color: '#065f46',
+                                    position: 'absolute',
+                                    top: '20px',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    zIndex: 40,
+                                    padding: '10px 20px', borderRadius: '50px',
+                                    background: 'rgba(5, 150, 105, 0.95)',
+                                    color: '#fff',
+                                    fontWeight: 900, fontSize: '14px',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                                    boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                                    whiteSpace: 'nowrap'
                                 }}
                                 dir="rtl"
                             >
-                                <Check size={20} color="#059669" />
+                                <Check size={18} color="#fff" />
                                 {correctBanner.playerName} خمّن الكلمة! +{correctBanner.pts} نقطة 🎉
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
 
-                {/* 3. Left Overlay: Drawing Tools (Drawer Only) */}
-                {isDrawer && !isScoring && (
-                    <div style={{
-                        position: 'absolute',
-                        left: '0',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        zIndex: 25,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '12px',
-                        padding: '20px 8px',
-                        background: 'rgba(255, 255, 255, 0.9)',
-                        backdropFilter: 'blur(12px)',
-                        borderRadius: '0 24px 24px 0',
-                        border: '1px solid rgba(226, 232, 240, 0.8)',
-                        borderLeft: 'none',
-                        width: '64px',
-                        boxShadow: '4px 0 32px rgba(0,0,0,0.1)',
-                        pointerEvents: 'auto'
-                    }}>
-                        {/* Brush sizes */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                            {BRUSH_SIZES.map(s => (
-                                <button
-                                    key={s}
-                                    onClick={() => { setBrushSize(s); setIsEraser(false); }}
-                                    style={{
-                                        width: '40px', height: '40px', borderRadius: '12px', display: 'flex',
-                                        alignItems: 'center', justifyContent: 'center', border: '2px solid transparent',
-                                        background: (!isEraser && brushSize === s) ? '#eff6ff' : 'white', cursor: 'pointer',
-                                        transition: 'all 0.2s ease',
-                                        boxShadow: (!isEraser && brushSize === s) ? '0 0 0 2px #3b82f6' : '0 2px 4px rgba(0,0,0,0.05)'
-                                    }}
-                                >
-                                    <div style={{ width: Math.min(s, 20), height: Math.min(s, 20), borderRadius: '50%', background: color }} />
-                                </button>
-                            ))}
-                        </div>
-
-                        <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
-
-                        {/* Eraser & Clear */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                            <button
-                                onClick={() => setIsEraser(e => !e)}
-                                style={{
-                                    width: '40px', height: '40px', borderRadius: '12px', border: '2px solid transparent',
-                                    background: isEraser ? '#fef3c7' : 'white', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    transition: 'all 0.2s ease',
-                                    boxShadow: isEraser ? '0 0 0 2px #d97706' : '0 2px 4px rgba(0,0,0,0.05)'
-                                }}
-                                title="ممحاة"
-                            >
-                                <Eraser size={20} color={isEraser ? '#d97706' : '#64748b'} />
-                            </button>
-                            <button
-                                onClick={handleClear}
-                                style={{
-                                    width: '40px', height: '40px', borderRadius: '12px', border: '1px solid #fee2e2',
-                                    background: 'white', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444',
-                                    transition: 'all 0.2s ease',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'white'}
-                                title="مسح الكل"
-                            >
-                                <Trash2 size={20} />
-                            </button>
-                        </div>
-
-                        <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
-
-                        {/* Colors */}
-                        <div style={{ 
-                            display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center', 
-                            overflowY: 'auto', flex: 1, paddingRight: '2px',
-                            scrollbarWidth: 'none', msOverflowStyle: 'none',
-                            maxHeight: '200px'
-                        }}>
-                            {COLORS.map(c => (
-                                <button
-                                    key={c}
-                                    onClick={() => { setColor(c); setIsEraser(false); }}
-                                    style={{
-                                        width: '32px', height: '32px', borderRadius: '50%',
-                                        background: c, border: (!isEraser && color === c) ? '3px solid #fff' : '1px solid rgba(0,0,0,0.1)',
-                                        cursor: 'pointer', flexShrink: 0,
-                                        boxShadow: (!isEraser && color === c) ? '0 0 0 2px #3b82f6' : '0 2px 4px rgba(0,0,0,0.1)',
-                                        transition: 'transform 0.1s ease'
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
-                                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* 4. Bottom Overlay: Guesses and Input */}
+                {/* 4. Bottom Area: Guesses and Input */}
                 <div style={{
-                    position: 'absolute',
-                    bottom: '20px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    zIndex: 20,
-                    width: '90%',
-                    maxWidth: '300px',
+                    zIndex: 30,
+                    background: '#fff',
+                    borderTop: '1px solid #e2e8f0',
+                    padding: '12px 16px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '12px',
-                    pointerEvents: 'none'
+                    gap: '8px',
+                    flexShrink: 0
                 }}>
                     {/* Guesses Log - Reversed (Recent at top) */}
                     {!isScoring && chatLog.length > 0 && (
                         <div style={{
-                            padding: '12px', 
-                            background: 'rgba(255, 255, 255, 0.8)',
-                            backdropFilter: 'blur(12px)',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(229, 231, 235, 0.8)',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                            maxHeight: '140px', 
+                            background: '#f8fafc',
+                            borderRadius: '10px',
+                            padding: '8px',
+                            maxHeight: '100px', 
                             overflowY: 'auto',
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: '6px'
+                            gap: '4px'
                         }}>
                             <AnimatePresence>
                                 {reversedChatLog.map((entry, idx) => (
@@ -480,21 +460,20 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         style={{
-                                            fontSize: '14px', fontWeight: 'bold',
-                                            display: 'flex', alignItems: 'center', gap: '8px',
-                                            justifyContent: 'flex-start'
+                                            fontSize: '13px', fontWeight: 'bold',
+                                            display: 'flex', alignItems: 'center', gap: '6px'
                                         }}
                                         dir="rtl"
                                     >
                                         {entry.type === 'correct' ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#059669', background: 'rgba(236, 253, 245, 0.8)', padding: '2px 8px', borderRadius: '6px' }}>
-                                                <Check size={14} />
-                                                <span>{entry.playerName} خمّن الكلمة!</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#059669', background: '#dcfce7', padding: '2px 8px', borderRadius: '4px' }}>
+                                                <Check size={12} />
+                                                <span style={{ fontSize: '12px' }}>{entry.playerName} خمّن!</span>
                                             </div>
                                         ) : (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4b5563', padding: '2px 8px', background: 'rgba(255,255,255,0.4)', borderRadius: '6px' }}>
-                                                <span style={{ color: '#64748b' }}>{entry.playerName}:</span>
-                                                <span style={{ fontWeight: 600 }}>{(entry as any).guess}</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4b5563', padding: '2px 8px', background: '#fff', borderRadius: '4px', border: '1px solid #f1f5f9' }}>
+                                                <span style={{ color: '#64748b', fontSize: '12px' }}>{entry.playerName}:</span>
+                                                <span style={{ fontWeight: 600, fontSize: '12px' }}>{(entry as any).guess}</span>
                                             </div>
                                         )}
                                     </motion.div>
@@ -505,20 +484,18 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
                     {/* Guesser Input */}
                     {!isDrawer && !isScoring && (
-                        <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '10px', width: '100%', pointerEvents: 'auto' }}>
+                        <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px', width: '100%' }}>
                             <input
                                 type="text"
                                 value={guessInput}
                                 onChange={e => setGuessInput(e.target.value)}
                                 disabled={!!hasGuessedCorrectly}
-                                placeholder={hasGuessedCorrectly ? '✅ تم التخمين بنجاح!' : 'اكتب تخمينك هنا...'}
+                                placeholder={hasGuessedCorrectly ? '✅ تم التخمين!' : 'تخمين...'}
                                 style={{
-                                    flex: 1, padding: '14px 20px', borderRadius: '16px', fontSize: '16px',
-                                    border: hasGuessedCorrectly ? '2px solid #10b981' : '1px solid rgba(226, 232, 240, 0.8)',
-                                    background: hasGuessedCorrectly ? 'rgba(240, 253, 244, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-                                    backdropFilter: 'blur(8px)',
-                                    outline: 'none', textAlign: 'right', fontFamily: 'inherit',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                                    flex: 1, padding: '10px 14px', borderRadius: '10px', fontSize: '15px',
+                                    border: hasGuessedCorrectly ? '2px solid #10b981' : '1px solid #e2e8f0',
+                                    background: hasGuessedCorrectly ? '#f0fdf4' : '#fff',
+                                    outline: 'none', textAlign: 'right', fontFamily: 'inherit'
                                 }}
                                 dir="rtl"
                                 autoComplete="off"
@@ -527,11 +504,9 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                 type="submit"
                                 disabled={!!hasGuessedCorrectly || !guessInput.trim()}
                                 style={{
-                                    padding: '14px 28px', borderRadius: '16px', fontWeight: 900, fontSize: '16px',
+                                    padding: '10px 16px', borderRadius: '10px', fontWeight: 900, fontSize: '14px',
                                     background: 'var(--brand-yellow)', border: 'none', cursor: 'pointer',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                    opacity: (hasGuessedCorrectly || !guessInput.trim()) ? 0.5 : 1,
-                                    transition: 'all 0.2s ease'
+                                    opacity: (hasGuessedCorrectly || !guessInput.trim()) ? 0.5 : 1
                                 }}
                             >
                                 أرسل
