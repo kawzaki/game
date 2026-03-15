@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eraser, Trash2, Check, Pencil } from 'lucide-react';
+import { Eraser, Trash2, Check, Pencil, Palette } from 'lucide-react';
 
 interface DrawingChallengeProps {
     roomId: string;
@@ -34,6 +34,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         submitDrawingGuess,
     } = useGameStore();
 
+    const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const isDrawer = myId === drawingDrawerId;
     const drawerPlayer = players.find(p => p.id === drawingDrawerId);
@@ -108,22 +109,45 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         audio.play().catch(() => { });
     }, [timer, gameStatus]);
 
-    // Initialise canvas background
+    // Dynamic canvas sizing
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }, [gameStatus]);
+        const updateSize = () => {
+            const container = containerRef.current;
+            const canvas = canvasRef.current;
+            if (!container || !canvas) return;
 
-    // Listen for incoming live strokes (for guessers)
+            const rect = container.getBoundingClientRect();
+            // Store previous drawing if needed, but we draw from state anyway
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                // Re-fill white background
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Re-draw all strokes from history
+                drawingLiveStrokes.forEach(stroke => {
+                    if (stroke.type === 'segment' && stroke.from && stroke.to) {
+                        drawSegment(ctx, stroke.from, stroke.to, stroke.color, stroke.size, stroke.eraser);
+                    }
+                });
+            }
+        };
+
+        window.addEventListener('resize', updateSize);
+        updateSize();
+        return () => window.removeEventListener('resize', updateSize);
+    }, [gameStatus, drawingLiveStrokes, drawSegment]);
+
+    // Draw incoming strokes live
     useEffect(() => {
-        if (isDrawer) return;
+        if (isDrawer) return; // Drawer already drew locally
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
         if (!ctx || !canvas || drawingLiveStrokes.length === 0) return;
+
         const stroke = drawingLiveStrokes[drawingLiveStrokes.length - 1];
         if (!stroke) return;
 
@@ -207,74 +231,67 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         const reversedChatLog = [...chatLog].reverse().slice(0, 10);
 
         return (
-            <div style={{ 
-                position: 'relative', 
-                width: '100%', 
-                height: 'calc(100vh - 64px)', 
-                overflow: 'hidden',
-                background: '#f8fafc'
-            }}>
+            <div 
+                ref={containerRef}
+                style={{ 
+                    position: 'relative', 
+                    width: '100%', 
+                    height: 'calc(100vh - 64px)', 
+                    overflow: 'hidden',
+                    background: '#ffffff'
+                }}
+            >
                 {/* 1. Full-screen Canvas */}
-                <div style={{
-                    position: 'absolute',
-                    inset: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: '#fff'
-                }}>
-                    <canvas
-                        ref={canvasRef}
-                        width={800}
-                        height={540}
-                        style={{ 
-                            maxWidth: '100%', 
-                            maxHeight: '100%', 
-                            display: 'block', 
-                            cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default',
-                            boxShadow: '0 0 20px rgba(0,0,0,0.05)'
-                        }}
-                        onPointerDown={handlePointerDown}
-                        onPointerMove={handlePointerMove}
-                        onPointerUp={handlePointerUp}
-                        onPointerLeave={handlePointerUp}
-                    />
-                </div>
+                <canvas
+                    ref={canvasRef}
+                    style={{ 
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%', 
+                        height: '100%', 
+                        display: 'block', 
+                        cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default',
+                        touchAction: 'none'
+                    }}
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerLeave={handlePointerUp}
+                />
 
                 {/* 2. Top Overlay: Word and Category */}
                 <div style={{
                     position: 'absolute',
                     top: '20px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
+                    right: '20px',
                     zIndex: 20,
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
+                    alignItems: 'flex-end',
                     gap: '8px',
-                    width: '90%',
-                    maxWidth: '500px'
+                    width: 'auto',
+                    pointerEvents: 'none'
                 }}>
                     <div style={{
-                        display: 'flex', alignItems: 'stretch', borderRadius: '16px', overflow: 'hidden',
-                        border: '2px solid #fbbf24',
-                        background: 'rgba(255, 255, 255, 0.9)',
-                        backdropFilter: 'blur(8px)',
-                        minHeight: '48px',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                        width: '100%'
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '12px',
+                        padding: '8px 16px',
+                        background: 'transparent',
+                        width: 'auto',
+                        pointerEvents: 'none'
                     }}>
-                         {/* Word/Mask - Centered */}
+                         {/* Word/Mask */}
                          <div style={{ 
-                            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            padding: '8px 20px', fontSize: '24px', 
-                            fontWeight: 900, color: '#78350f',
-                            direction: 'rtl', gap: '12px'
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            fontSize: '28px', 
+                            fontWeight: 900, color: '#451a03',
+                            direction: 'rtl'
                         }}>
                             {isDrawer && !isScoring ? (
                                 <>
                                     <span>{drawingCurrentWord}</span>
-                                    <Pencil size={20} color="#f59e0b" />
+                                    <Pencil size={24} color="#f59e0b" />
                                 </>
                             ) : (
                                 <div style={{ letterSpacing: isScoring ? '2px' : '6px' }}>
@@ -286,14 +303,15 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                             )}
                         </div>
 
-                        {/* Category - Swapped to Right */}
+                        {/* Category with Icon */}
                         {drawingCategory && (
                             <div style={{ 
-                                padding: '0 20px', display: 'flex', alignItems: 'center', 
-                                fontSize: '14px', fontWeight: 900, color: '#92400e',
-                                background: '#fcd34d', minWidth: '80px', justifyContent: 'center'
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                fontSize: '16px', fontWeight: 900, color: '#f59e0b',
+                                direction: 'rtl'
                             }}>
-                                {drawingCategory}
+                                <Palette size={20} />
+                                <span>{drawingCategory}</span>
                             </div>
                         )}
                     </div>
@@ -327,20 +345,22 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 {isDrawer && !isScoring && (
                     <div style={{
                         position: 'absolute',
-                        left: '20px',
+                        left: '0',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         zIndex: 20,
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '12px',
-                        padding: '12px 8px',
-                        background: 'rgba(255, 255, 255, 0.8)',
+                        padding: '20px 8px',
+                        background: 'rgba(255, 255, 255, 0.9)',
                         backdropFilter: 'blur(12px)',
-                        borderRadius: '20px',
+                        borderRadius: '0 24px 24px 0',
                         border: '1px solid rgba(226, 232, 240, 0.8)',
-                        width: '60px',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+                        borderLeft: 'none',
+                        width: '64px',
+                        boxShadow: '4px 0 32px rgba(0,0,0,0.1)',
+                        pointerEvents: 'auto'
                     }}>
                         {/* Brush sizes */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
@@ -434,7 +454,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     maxWidth: '600px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '12px'
+                    gap: '12px',
+                    pointerEvents: 'none'
                 }}>
                     {/* Guesses Log - Reversed (Recent at top) */}
                     {!isScoring && chatLog.length > 0 && (
@@ -470,9 +491,9 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                                 <span>{entry.playerName} خمّن الكلمة!</span>
                                             </div>
                                         ) : (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4b5563' }}>
-                                                <span style={{ color: '#9ca3af' }}>{entry.playerName}:</span>
-                                                <span style={{ fontWeight: 500 }}>{(entry as any).guess}</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#4b5563', padding: '2px 8px', background: 'rgba(255,255,255,0.4)', borderRadius: '6px' }}>
+                                                <span style={{ color: '#64748b' }}>{entry.playerName}:</span>
+                                                <span style={{ fontWeight: 600 }}>{(entry as any).guess}</span>
                                             </div>
                                         )}
                                     </motion.div>
@@ -483,7 +504,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
                     {/* Guesser Input */}
                     {!isDrawer && !isScoring && (
-                        <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                        <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '10px', width: '100%', pointerEvents: 'auto' }}>
                             <input
                                 type="text"
                                 value={guessInput}
