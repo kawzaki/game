@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eraser, Trash2, Check, Pencil, Palette, Download, Share2, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { Eraser, Trash2, Check, Pencil, Palette, Download, Share2, Link as LinkIcon, Loader2, Droplets } from 'lucide-react';
 
 interface DrawingChallengeProps {
     roomId: string;
@@ -47,6 +47,10 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const lastPos = useRef<{ x: number; y: number } | null>(null);
     const drawerStrokes = useRef<any[]>([]); // To track drawer strokes locally
 
+    // Ink state (for solo play)
+    const [ink, setInk] = useState(100);
+    const isSoloInkMode = timer === -1;
+
     // Guess state
     const [guessInput, setGuessInput] = useState('');
     const hasGuessedCorrectly = myId ? drawingGuesses[myId]?.correct : false;
@@ -67,6 +71,13 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
             setShowChallengeModal(true);
         }
     }, [challengeData, roomId]);
+
+    // Reset ink on new round
+    useEffect(() => {
+        if (isSoloInkMode) {
+            setInk(100);
+        }
+    }, [drawingDrawerId, isSoloInkMode]);
 
     // Correct-answer flash banner
     const [correctBanner, setCorrectBanner] = useState<{ playerName: string; pts: number } | null>(null);
@@ -166,6 +177,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     // ─── Drawer pointer handlers ──────────────────────────────────────
     const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
         if (!isDrawer || gameStatus !== 'drawing_active' || roomId === 'solo-challenge') return;
+        if (isSoloInkMode && ink <= 0) return;
         (e.target as HTMLCanvasElement).setPointerCapture(e.pointerId);
         setIsDrawing(true);
         lastPos.current = getCanvasPos(e);
@@ -173,9 +185,21 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
     const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
         if (!isDrawer || !isDrawing || gameStatus !== 'drawing_active' || roomId === 'solo-challenge') return;
+        if (isSoloInkMode && ink <= 0) {
+            setIsDrawing(false);
+            return;
+        }
+
         const pos = getCanvasPos(e);
         const from = lastPos.current!;
         const activeColor = isEraser ? '#ffffff' : color;
+
+        // Ink depletion logic
+        if (isSoloInkMode && !isEraser) {
+            const dist = Math.sqrt(Math.pow(pos.x - from.x, 2) + Math.pow(pos.y - from.y, 2));
+            const consumption = (dist * (brushSize / 10)) / 100; // Calibrated consumption
+            setInk(prev => Math.max(0, prev - consumption));
+        }
 
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
@@ -201,6 +225,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         sendDrawingClear(roomId);
         drawerStrokes.current = [];
+        if (isSoloInkMode) setInk(100);
     };
 
     const handleGuessSubmit = (e: React.FormEvent) => {
@@ -316,14 +341,29 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                 <span>{drawingCategory}</span>
                             </div>
                         )}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 900, color: '#451a03', direction: 'rtl' }}>
-                            {isDrawer && !isScoring ? (
-                                <><span>{drawingCurrentWord}</span><Pencil size={18} color="#f59e0b" /></>
-                            ) : (
-                                <div style={{ letterSpacing: isScoring ? '2px' : '4px' }}>
-                                    {isScoring ? <span>الكلمة: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span></span> : maskedDisplay}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                             {isSoloInkMode && isDrawer && !isScoring && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px', minWidth: '120px' }}>
+                                    <Droplets size={14} color="#3b82f6" />
+                                    <div style={{ flex: 1, height: '6px', background: '#e2e8f0', borderRadius: '3px', position: 'relative', overflow: 'hidden' }}>
+                                        <motion.div 
+                                            initial={{ width: '100%' }}
+                                            animate={{ width: `${ink}%` }}
+                                            style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: ink > 20 ? '#3b82f6' : '#ef4444' }} 
+                                        />
+                                    </div>
+                                    <span style={{ fontSize: '10px', fontWeight: 900, color: '#64748b' }}>{Math.ceil(ink)}%</span>
                                 </div>
                             )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 900, color: '#451a03', direction: 'rtl' }}>
+                                {isDrawer && !isScoring ? (
+                                    <><span>{drawingCurrentWord}</span><Pencil size={18} color="#f59e0b" /></>
+                                ) : (
+                                    <div style={{ letterSpacing: isScoring ? '2px' : '4px' }}>
+                                        {isScoring ? <span>الكلمة: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span></span> : maskedDisplay}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 

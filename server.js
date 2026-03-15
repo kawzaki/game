@@ -1360,7 +1360,7 @@ io.on('connection', (socket) => {
         room.drawingGuesses = {};
         room.drawingStrokes = [];
         room.gameStatus = 'drawing_active';
-        room.timer = 80;
+        room.timer = room.players.length === 1 ? -1 : 80;
         room.feedback = null;
 
         console.log(`[Drawing] Round ${room.currentRound}/${room.roundCount} - Drawer: ${drawer.name}, Word: ${word}`);
