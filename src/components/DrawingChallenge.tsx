@@ -493,17 +493,28 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default', touchAction: 'none' }} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp} />
                     <AnimatePresence>
                         {correctBanner && (
-                            <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10 }} style={{ position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 40, padding: '10px 20px', borderRadius: '50px', background: 'rgba(5, 150, 105, 0.95)', color: '#fff', fontWeight: 900, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', whiteSpace: 'nowrap' }} dir="rtl">
+                            <motion.div 
+                                initial={{ opacity: 0, y: 10, scale: 0.95, x: '-50%' }} 
+                                animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }} 
+                                exit={{ opacity: 0, y: -10, x: '-50%' }} 
+                                style={{ position: 'absolute', top: '20px', left: '50%', zIndex: 40, padding: '10px 20px', borderRadius: '50px', background: 'rgba(5, 150, 105, 0.95)', color: '#fff', fontWeight: 900, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', whiteSpace: 'nowrap' }} 
+                                dir="rtl"
+                            >
                                 <Check size={18} color="#fff" />
                                 {correctBanner.playerName} خمّن الكلمة! +{correctBanner.pts} نقطة 🎉
                             </motion.div>
                         )}
                         {wrongBanner && (
-                            <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1.2 }} exit={{ opacity: 0, scale: 0.5 }} style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.5, x: '-50%', y: '-50%' }} 
+                                animate={{ opacity: 1, scale: 1.2, x: '-50%', y: '-50%' }} 
+                                exit={{ opacity: 0, scale: 0.5, x: '-50%', y: '-50%' }} 
+                                style={{ position: 'absolute', top: '40%', left: '50%', zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%', pointerEvents: 'none' }}
+                            >
                                 <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px rgba(239, 68, 68, 0.4)' }}>
                                     <X size={48} color="#fff" strokeWidth={3} />
                                 </div>
-                                <span style={{ color: '#ef4444', fontWeight: 900, fontSize: '24px', textShadow: '0 2px 10px rgba(255,255,255,0.8)' }}>خطأ، حاول مرة أخرى!</span>
+                                <span style={{ color: '#ef4444', fontWeight: 900, fontSize: '24px', textShadow: '0 2px 10px rgba(255,255,255,0.8)', textAlign: 'center' }}>خطأ، حاول مرة أخرى!</span>
                             </motion.div>
                         )}
                     </AnimatePresence>
