@@ -727,32 +727,80 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }} />
                     <AnimatePresence>
                         {soloGuessedCorrectly && (
-                            <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(5, 150, 105, 0.9)', color: 'white', padding: '20px 40px', borderRadius: '50px', fontWeight: 900, zIndex: 100 }}>كفووو! إجابة صحيحة 🎉</motion.div>
+                            <div style={{ position: 'absolute', inset: 0, background: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(8px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                                <motion.div 
+                                    initial={{ scale: 0.8, opacity: 0, y: 20 }} 
+                                    animate={{ scale: 1, opacity: 1, y: 0 }} 
+                                    style={{ 
+                                        background: 'white', 
+                                        padding: '30px', 
+                                        borderRadius: '24px', 
+                                        textAlign: 'center', 
+                                        maxWidth: '350px', 
+                                        width: '100%', 
+                                        boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                                        border: '2px solid #10b981'
+                                    }}
+                                >
+                                    <div style={{ fontSize: '60px', marginBottom: '10px' }}>🎉</div>
+                                    <div style={{ fontSize: '24px', fontWeight: 900, color: '#065f46', marginBottom: '8px' }}>إجابة صحيحة!</div>
+                                    <div style={{ fontSize: '14px', fontWeight: 900, color: '#f59e0b', marginBottom: '4px' }}>
+                                        {challengeData?.category}
+                                    </div>
+                                    <div style={{ fontSize: '20px', color: '#374151', marginBottom: '24px' }}>
+                                        الكلمة هي: <span style={{ color: '#059669', fontWeight: 900 }}>{challengeData?.word}</span>
+                                    </div>
+                                    
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <button 
+                                            onClick={handleDrawBack}
+                                            style={{ 
+                                                width: '100%', 
+                                                padding: '16px', 
+                                                borderRadius: '14px', 
+                                                background: '#000', 
+                                                color: '#fff', 
+                                                border: 'none', 
+                                                fontWeight: 900, 
+                                                fontSize: '16px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '10px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            <Pencil size={20} />
+                                            رد التحدي (ارسم له)
+                                        </button>
+                                        
+                                        <button 
+                                            onClick={() => setSoloGuessedCorrectly(false)}
+                                            style={{ 
+                                                width: '100%', 
+                                                padding: '12px', 
+                                                borderRadius: '14px', 
+                                                background: '#f1f5f9', 
+                                                color: '#64748b', 
+                                                border: 'none', 
+                                                fontWeight: 'bold', 
+                                                fontSize: '14px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            بقاء في هذه الصفحة
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            </div>
                         )}
                     </AnimatePresence>
                 </div>
                 <div style={{ height: '20dvh', padding: '12px', background: 'white', borderTop: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {soloGuessedCorrectly ? (
-                        <button 
-                            onClick={handleDrawBack}
-                            style={{ 
-                                width: '100%', 
-                                padding: '14px', 
-                                borderRadius: '12px', 
-                                background: 'black', 
-                                color: 'white', 
-                                border: 'none', 
-                                fontWeight: 900, 
-                                fontSize: '16px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '10px'
-                            }}
-                        >
-                            <Pencil size={20} />
-                            ارسم تحدي جديد
-                        </button>
+                        <div style={{ width: '100%', textAlign: 'center', color: '#64748b', fontWeight: 'bold' }}>
+                            تم التخمين بنجاح! 🎉
+                        </div>
                     ) : (
                         <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px', width: '100%' }}>
                             <input type="text" value={guessInput} onChange={e => setGuessInput(e.target.value)} disabled={soloGuessedCorrectly} placeholder='خمّن الكلمة...' style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #eee', textAlign: 'right', fontSize: '16px' }} dir="rtl" />

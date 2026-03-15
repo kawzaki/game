@@ -99,6 +99,7 @@ export const useGameStore = create<GameState>((set) => {
     // Listen for room updates
     socket.on('room_data', (data) => {
         set({
+            roomId: data.id,
             players: data.players,
             gameStatus: data.gameStatus,
             questions: data.questions || [],
