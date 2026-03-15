@@ -1363,7 +1363,8 @@ io.on('connection', (socket) => {
         // Broadcast room data to EVERYONE but with the word hidden (null)
         const savedWord = room.drawingCurrentWord;
         room.drawingCurrentWord = null;
-        room.drawingWordLength = word.length;
+        // Mask word: preserve spaces and hyphens, turn other chars into underscores
+        room.drawingMaskedWord = savedWord.split('').map(char => (char === ' ' || char === '-') ? char : '_').join('');
         io.to(roomId).emit('room_data', room);
         // Restore word on server for guessing logic
         room.drawingCurrentWord = savedWord;

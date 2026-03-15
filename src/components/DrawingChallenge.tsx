@@ -24,7 +24,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         currentRound,
         roundCount,
         drawingCurrentWord,
-        drawingWordLength,
+        drawingMaskedWord,
         drawingDrawerId,
         drawingGuesses,
         drawingCategory,
@@ -58,13 +58,12 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         ...wrongGuesses.map(g => ({ ...g, type: 'wrong' as const }))
     ];
 
-    // Correct-answer flash banner (fix 4)
+    // Correct-answer flash banner
     const [correctBanner, setCorrectBanner] = useState<{ playerName: string; pts: number } | null>(null);
     const prevCorrectLen = React.useRef(0);
     useEffect(() => {
         if (correctGuesses.length > prevCorrectLen.current) {
             const latest = correctGuesses[correctGuesses.length - 1];
-            // estimate points: server uses Math.round((timeLeft/80)*60)+20, mirror here with timer
             const pts = Math.round((timer / 80) * 60) + 20;
             setCorrectBanner({ playerName: latest.playerName, pts });
             const t = setTimeout(() => setCorrectBanner(null), 4000);
@@ -102,8 +101,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     useEffect(() => {
         if (gameStatus !== 'countdown') return;
         const src = timer > 0
-            ? 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'   // tick
-            : 'https://assets.mixkit.co/active_storage/sfx/1084/1084-preview.mp3';  // go!
+            ? 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'
+            : 'https://assets.mixkit.co/active_storage/sfx/1084/1084-preview.mp3';
         const audio = new Audio(src);
         audio.volume = 0.5;
         audio.play().catch(() => { });
@@ -153,7 +152,6 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         const ctx = canvas?.getContext('2d');
         if (ctx) drawSegment(ctx, from, pos, activeColor, brushSize, isEraser);
 
-        // Send segment to server
         sendDrawingStroke(roomId, { type: 'segment', from, to: pos, color: activeColor, size: brushSize, eraser: isEraser });
 
         currentStroke.current.push(pos);
@@ -175,16 +173,12 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         sendDrawingClear(roomId);
     };
 
-    // ─── Guess submission ────────────────────────────────────────────
     const handleGuessSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!guessInput.trim() || hasGuessedCorrectly || gameStatus !== 'drawing_active') return;
         submitDrawingGuess(roomId, guessInput.trim());
         setGuessInput('');
     };
-
-    // ─── Blank display for word length ────────────────────────────────
-    const wordBlanks = Array(drawingWordLength).fill('_').join(' ');
 
     // ─── Countdown ────────────────────────────────────────────────────
     if (gameStatus === 'countdown') {
@@ -207,6 +201,9 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     if (gameStatus === 'drawing_active' || gameStatus === 'drawing_scoring') {
         const isScoring = gameStatus === 'drawing_scoring';
 
+        // Mask display logic (fix for dash count)
+        const maskedDisplay = drawingMaskedWord ? drawingMaskedWord.split('').map(c => c === ' ' ? '\u00A0\u00A0' : c === '-' ? '-' : '_').join(' ') : '';
+
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', maxWidth: '800px', margin: '0 auto', padding: '0 8px', boxSizing: 'border-box' }}>
                 {/* Round header */}
@@ -228,9 +225,9 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     {/* Vertical Toolbar - Side of Canvas */}
                     {isDrawer && !isScoring && (
                         <div style={{
-                            display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px',
+                            display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px 6px',
                             background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0',
-                            width: '50px', flexShrink: 0, height: 'fit-content'
+                            width: '56px', flexShrink: 0, height: '440px', boxSizing: 'border-box'
                         }}>
                             {/* Brush sizes */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
@@ -249,46 +246,55 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                 ))}
                             </div>
 
-                            <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
+                            <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0', flexShrink: 0 }} />
 
                             {/* Eraser & Clear */}
-                            <button
-                                onClick={() => setIsEraser(e => !e)}
-                                style={{
-                                    width: '32px', height: '32px', borderRadius: '8px', border: '2px solid #e2e8f0',
-                                    background: isEraser ? '#fef3c7' : 'white', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}
-                                title="ممحاة"
-                            >
-                                <Eraser size={18} />
-                            </button>
-                            <button
-                                onClick={handleClear}
-                                style={{
-                                    width: '32px', height: '32px', borderRadius: '8px', border: '2px solid #fca5a5',
-                                    background: '#fef2f2', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626'
-                                }}
-                                title="مسح الكل"
-                            >
-                                <Trash2 size={18} />
-                            </button>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                                <button
+                                    onClick={() => setIsEraser(e => !e)}
+                                    style={{
+                                        width: '32px', height: '32px', borderRadius: '8px', border: '2px solid #e2e8f0',
+                                        background: isEraser ? '#fef3c7' : 'white', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}
+                                    title="ممحاة"
+                                >
+                                    <Eraser size={18} />
+                                </button>
+                                <button
+                                    onClick={handleClear}
+                                    style={{
+                                        width: '32px', height: '32px', borderRadius: '8px', border: '2px solid #fca5a5',
+                                        background: '#fef2f2', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626'
+                                    }}
+                                    title="مسح الكل"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            </div>
 
-                            <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0' }} />
+                            <div style={{ height: '1px', background: '#e2e8f0', margin: '4px 0', flexShrink: 0 }} />
 
-                            {/* Colors */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center' }}>
+                            {/* Colors - SCROLLABLE */}
+                            <div style={{ 
+                                display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', 
+                                overflowY: 'auto', flex: 1, paddingRight: '2px',
+                                scrollbarWidth: 'none', msOverflowStyle: 'none'
+                            }}>
                                 {COLORS.map(c => (
                                     <button
                                         key={c}
                                         onClick={() => { setColor(c); setIsEraser(false); }}
                                         style={{
-                                            width: '24px', height: '24px', borderRadius: '50%',
+                                            width: '28px', height: '28px', borderRadius: '50%',
                                             background: c, border: (!isEraser && color === c) ? '2px solid #3b82f6' : '1px solid #cbd5e1',
                                             cursor: 'pointer', flexShrink: 0,
-                                            boxShadow: (!isEraser && color === c) ? '0 0 0 2px white' : 'none'
+                                            boxShadow: (!isEraser && color === c) ? '0 0 0 2px white' : 'none',
+                                            transition: 'transform 0.15s ease'
                                         }}
+                                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
+                                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                                     />
                                 ))}
                             </div>
@@ -297,40 +303,43 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
                     {/* Canvas and Controls */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px', minWidth: 0 }}>
-                        {/* Word display - SHRUNK */}
-                        {isDrawer && !isScoring ? (
-                            <div style={{
-                                textAlign: 'center', padding: '8px 16px', borderRadius: '12px',
-                                background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-                                border: '2px solid #f59e0b', fontWeight: 900, fontSize: '20px',
-                                color: '#92400e', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px'
-                            }}>
-                                <div>✏️ {drawingCurrentWord}</div>
-                                {drawingCategory && (
-                                    <div style={{ fontSize: '12px', fontWeight: 'bold', borderLeft: '1px solid #f59e0b', paddingLeft: '12px', color: '#b45309', opacity: 0.8 }}>
-                                        التصنيف: {drawingCategory}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div style={{
-                                textAlign: 'center', padding: '6px 16px', borderRadius: '12px',
-                                background: '#f1f5f9', fontWeight: 900, fontSize: '18px',
-                                color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px'
-                            }}>
-                                <div style={{ letterSpacing: isScoring ? '2px' : '4px' }}>
-                                    {isScoring
-                                        ? <span style={{ color: '#1e293b' }}>الكلمة: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span></span>
-                                        : wordBlanks
-                                    }
+                        {/* Word display - Refined */}
+                        <div style={{
+                            display: 'flex', alignItems: 'stretch', borderRadius: '12px', overflow: 'hidden',
+                            border: isDrawer && !isScoring ? '2px solid #f59e0b' : '1px solid #e2e8f0',
+                            background: isDrawer && !isScoring ? 'linear-gradient(135deg, #fef3c7, #fde68a)' : '#f1f5f9',
+                            minHeight: '44px'
+                        }}>
+                            {/* Category - Left aligned, clean */}
+                            {drawingCategory && (
+                                <div style={{ 
+                                    padding: '0 16px', display: 'flex', alignItems: 'center', borderRight: '1px solid rgba(0,0,0,0.1)',
+                                    fontSize: '13px', fontWeight: 900, color: isDrawer && !isScoring ? '#b45309' : '#64748b',
+                                    background: 'rgba(0,0,0,0.02)'
+                                }}>
+                                    {drawingCategory}
                                 </div>
-                                {!isScoring && drawingCategory && (
-                                    <div style={{ fontSize: '12px', fontWeight: 'bold', borderLeft: '1px solid #cbd5e1', paddingLeft: '12px', color: '#64748b', opacity: 0.8, letterSpacing: 'normal' }}>
-                                        تلميح: {drawingCategory}
+                            )}
+                            
+                            {/* Word/Mask - Centered */}
+                            <div style={{ 
+                                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                padding: '8px 16px', fontSize: isDrawer && !isScoring ? '20px' : '18px', 
+                                fontWeight: 900, color: isDrawer && !isScoring ? '#92400e' : '#475569',
+                                direction: 'rtl'
+                            }}>
+                                {isDrawer && !isScoring ? (
+                                    <div>✏️ {drawingCurrentWord}</div>
+                                ) : (
+                                    <div style={{ letterSpacing: isScoring ? '2px' : '4px' }}>
+                                        {isScoring
+                                            ? <span>الكلمة: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span></span>
+                                            : maskedDisplay
+                                        }
                                     </div>
                                 )}
                             </div>
-                        )}
+                        </div>
 
                         {/* Correct-answer flash banner */}
                         <AnimatePresence>

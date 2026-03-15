@@ -47,7 +47,7 @@ interface GameState {
     sibaTurn?: string; // Player ID
     // Drawing Challenge state
     drawingCurrentWord: string | null;  // only set for the current drawer
-    drawingWordLength: number;           // always set so guessers can show blanks
+    drawingMaskedWord: string | null;   // set for guessers (e.g. "___ ____")
     drawingDrawerId: string | null;
     drawingGuesses: Record<string, { correct: boolean; guess?: string; timeLeft?: number; pointsEarned?: number }>;
     drawingCategory: string | null;
@@ -113,7 +113,7 @@ export const useGameStore = create<GameState>((set) => {
             sibaPiecesPlaced: data.sibaPiecesPlaced,
             sibaTurn: data.sibaTurn,
             drawingCurrentWord: data.drawingCurrentWord ?? null,
-            drawingWordLength: data.drawingWordLength ?? 0,
+            drawingMaskedWord: data.drawingMaskedWord ?? null,
             drawingDrawerId: data.drawingDrawerId ?? null,
             drawingGuesses: data.drawingGuesses ?? {},
             drawingCategory: data.drawingCategory ?? null,
@@ -195,7 +195,7 @@ export const useGameStore = create<GameState>((set) => {
         sibaPiecesPlaced: {},
         sibaTurn: undefined,
         drawingCurrentWord: null,
-        drawingWordLength: 0,
+        drawingMaskedWord: null,
         drawingDrawerId: null,
         drawingGuesses: {},
         drawingCategory: null,
@@ -270,7 +270,7 @@ export const useGameStore = create<GameState>((set) => {
             sibaPiecesPlaced: {},
             sibaTurn: undefined,
             drawingCurrentWord: null,
-            drawingWordLength: 0,
+            drawingMaskedWord: null,
             drawingDrawerId: null,
             drawingGuesses: {},
             drawingCategory: null,
