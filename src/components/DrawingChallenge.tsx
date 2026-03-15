@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Timer, Eraser, Trash2, Check, Pencil } from 'lucide-react';
+import { Eraser, Trash2, Check, Pencil } from 'lucide-react';
 
 interface DrawingChallengeProps {
     roomId: string;
