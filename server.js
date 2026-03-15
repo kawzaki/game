@@ -143,6 +143,11 @@ const io = new Server(httpServer, {
 
 // In-memory room storage
 const rooms = new Map();
+const challenges = new Map();
+
+function generateChallengeId() {
+    return Math.random().toString(36).substring(2, 7).toUpperCase();
+}
 
 function checkHuroofWinner(grid, team) {
     const size = 5;
@@ -1612,6 +1617,23 @@ io.on('connection', (socket) => {
         room.sibaTurn = room.players[room.currentPlayerIndex].id;
 
         io.to(roomId).emit('room_data', room);
+    });
+
+    socket.on('create_challenge', ({ strokes, word, category }) => {
+        const id = generateChallengeId();
+        const challenge = { id, strokes, word, category, createdAt: Date.now() };
+        challenges.set(id, challenge);
+        socket.emit('challenge_created', challenge);
+        console.log(`[Challenge] Created challenge ${id} for word ${word}`);
+    });
+
+    socket.on('get_challenge', ({ challengeId }) => {
+        const challenge = challenges.get(challengeId);
+        if (challenge) {
+            socket.emit('challenge_data', challenge);
+        } else {
+            socket.emit('challenge_error', 'التحدي غير موجود أو انتهت صلاحيته');
+        }
     });
 
     socket.on('leave_room', ({ roomId }) => {

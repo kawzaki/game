@@ -56,6 +56,10 @@ interface GameState {
     drawingCorrectGuesses: { playerId: string; playerName: string }[];
     drawingWrongGuesses: { playerId: string; playerName: string; guess: string }[];
 
+    // Async Challenge state
+    challengeData: { strokes: any[]; word: string; category: string; id: string } | null;
+    challengeLoading: boolean;
+
     // Actions
     setRoomId: (id: string) => void;
     setGameType: (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge' | 'drawing_challenge') => void;
@@ -79,6 +83,8 @@ interface GameState {
     sendDrawingClear: (roomId: string) => void;
     submitDrawingGuess: (roomId: string, guess: string) => void;
     leaveRoom: (roomId: string) => void;
+    createChallenge: (strokes: any[], word: string, category: string) => void;
+    getChallenge: (challengeId: string) => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
@@ -123,6 +129,19 @@ export const useGameStore = create<GameState>((set) => {
             isConnected: true,
             roomDataLoading: false
         });
+    });
+
+    socket.on('challenge_created', (data) => {
+        set({ challengeData: data, challengeLoading: false });
+    });
+
+    socket.on('challenge_data', (data) => {
+        set({ challengeData: data, challengeLoading: false });
+    });
+
+    socket.on('challenge_error', (error) => {
+        console.error("Challenge error:", error);
+        set({ challengeLoading: false });
     });
 
     // Drawing Challenge live events
@@ -204,6 +223,8 @@ export const useGameStore = create<GameState>((set) => {
         drawingLiveStrokes: [],
         drawingCorrectGuesses: [],
         drawingWrongGuesses: [],
+        challengeData: null,
+        challengeLoading: false,
 
         setRoomId: (id) => set({ roomId: id }),
 
@@ -314,6 +335,14 @@ export const useGameStore = create<GameState>((set) => {
             socket.emit('leave_room', { roomId });
             const reset = useGameStore.getState().resetRoom;
             reset();
+        },
+        createChallenge: (strokes, word, category) => {
+            set({ challengeLoading: true });
+            socket.emit('create_challenge', { strokes, word, category });
+        },
+        getChallenge: (challengeId) => {
+            set({ challengeLoading: true });
+            socket.emit('get_challenge', { challengeId });
         }
     };
 });

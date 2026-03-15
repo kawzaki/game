@@ -73,7 +73,10 @@ const App: React.FC = () => {
     roomDataLoading,
     addPlayer,
     huroofHistory,
-    leaveRoom
+    leaveRoom,
+    challengeData,
+    getChallenge,
+    challengeLoading
   } = useGameStore();
 
   const [isCreator, setIsCreator] = useState(false);
@@ -187,10 +190,16 @@ const App: React.FC = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const urlRoom = urlParams.get('room');
+    const urlChallenge = urlParams.get('challenge');
+
     if (urlRoom && !roomId) {
       setRoomId(urlRoom);
     }
-  }, [roomId, setRoomId]);
+
+    if (urlChallenge && !challengeData && !challengeLoading) {
+      getChallenge(urlChallenge);
+    }
+  }, [roomId, setRoomId, challengeData, challengeLoading, getChallenge]);
 
   useEffect(() => {
     document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
@@ -362,8 +371,32 @@ const App: React.FC = () => {
     }
   };
 
-  // UI RENDERING STARTS HERE
+  // SOLO CHALLENGE VIEW
+  if (challengeData) {
+    return (
+      <div className="game-wrapper" dir="rtl" style={{ minHeight: '100vh', padding: 0 }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: 'white', borderBottom: '1px solid #eee' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Pencil size={18} color="var(--brand-yellow)" />
+            <span style={{ fontWeight: 900 }}>تحدي رسم</span>
+          </div>
+          <button 
+            onClick={() => {
+              window.history.replaceState({}, '', window.location.pathname);
+              window.location.reload(); // Hard reset to home
+            }}
+            style={{ background: '#f1f5f9', border: 'none', padding: '6px 14px', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold' }}
+          >
+            الرئيسية
+          </button>
+        </header>
 
+        <main style={{ padding: 0 }}>
+          <DrawingChallenge roomId="solo-challenge" />
+        </main>
+      </div>
+    );
+  }
 
   if (gameStatus === 'lobby') {
     return (
