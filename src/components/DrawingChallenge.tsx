@@ -82,6 +82,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
             ctx?.clearRect(0, 0, canvas.width, canvas.height);
         }
         getSoloWord();
+        clearChallengeData();
     };
 
     useEffect(() => {
