@@ -1533,6 +1533,18 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('drawing_finish_round', (roomId) => {
+        const room = rooms.get(roomId);
+        if (!room || room.gameType !== 'drawing_challenge' || room.gameStatus !== 'drawing_active') return;
+        
+        // Only the current drawer can finish the round manually
+        if (room.drawingDrawerId !== socket.id) return;
+
+        console.log(`[Drawing] Manual round finish in room ${roomId} by drawer`);
+        room.timer = 0;
+        scoreDrawingRound(room, io, roomId);
+    });
+
     socket.on('siba_action', ({ roomId, action }) => {
         const room = rooms.get(roomId);
         if (!room || room.gameType !== 'siba' || room.gameStatus === 'game_over') return;

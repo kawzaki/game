@@ -372,7 +372,7 @@ const App: React.FC = () => {
   };
 
   // SOLO CHALLENGE VIEW
-  if (challengeData) {
+  if (challengeData && !roomId) {
     return (
       <div className="game-wrapper" dir="rtl" style={{ minHeight: '100vh', padding: 0 }}>
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: 'white', borderBottom: '1px solid #eee' }}>

@@ -30,9 +30,11 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         sendDrawingStroke,
         sendDrawingClear,
         submitDrawingGuess,
+        finishDrawingRound,
         createChallenge,
         challengeData,
-        challengeLoading
+        challengeLoading,
+        clearChallengeData
     } = useGameStore();
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -197,7 +199,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         // Ink depletion logic
         if (isSoloInkMode && !isEraser) {
             const dist = Math.sqrt(Math.pow(pos.x - from.x, 2) + Math.pow(pos.y - from.y, 2));
-            const consumption = (dist * (brushSize / 10)) / 300; // Increased capacity (slower consumption)
+            const consumption = (dist * (brushSize / 10)) / 5000; // 5x more ink than before (reduced consumption)
             setInk(prev => Math.max(0, prev - consumption));
         }
 
@@ -306,6 +308,28 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
             return;
         }
         createChallenge(drawerStrokes.current, drawingCurrentWord, drawingCategory || '');
+    };
+
+    const handleShareChallenge = async () => {
+        if (!challengeData) return;
+        const link = `${window.location.origin}${window.location.pathname}?challenge=${challengeData.id}`;
+        
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'تحدى أصدقاءك!',
+                    text: 'خمنوا ايش رسمت في هذا اللعبة!',
+                    url: link
+                });
+            } catch (err) {
+                console.error('Share failed:', err);
+                navigator.clipboard.writeText(link);
+                alert('تم نسخ الرابط!');
+            }
+        } else {
+            navigator.clipboard.writeText(link);
+            alert('تم نسخ الرابط!');
+        }
     };
 
     // ─── Countdown UI ───────────────────────────────────────────────────
@@ -455,10 +479,16 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                     <Share2 size={16} />
                                     مشاركة
                                 </button>
-                                <button onClick={handleCreateChallenge} disabled={challengeLoading} title="وضع التحدي" style={{ padding: '10px 20px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold', fontSize: '14px', gap: '8px', flex: 1 }}>
+                                <button onClick={handleCreateChallenge} disabled={challengeLoading} title="وضع التحدي" style={{ padding: '10px 20px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 'bold', fontSize: '14px', gap: '8px' }}>
                                     {challengeLoading ? <Loader2 size={16} className="animate-spin" /> : <LinkIcon size={16} />}
                                     تحدي صديق
                                 </button>
+                                {isSoloInkMode && (
+                                    <button onClick={() => finishDrawingRound(roomId)} style={{ padding: '10px 20px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold', fontSize: '14px', gap: '8px', flex: 1 }}>
+                                        <Check size={16} />
+                                        الكلمة التالية
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -492,10 +522,13 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ background: 'white', padding: '24px', borderRadius: '20px', textAlign: 'center', maxWidth: '400px', width: '100%', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>
                                 <div style={{ fontSize: '18px', fontWeight: 900, marginBottom: '12px' }}>تم إنشاء التحدي! 🎉</div>
                                 <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>ارسل هذا الرابط لصديقك ليعرف ماذا رسمت!</p>
-                                <div style={{ background: '#f1f5f9', padding: '10px', borderRadius: '10px', fontSize: '11px', wordBreak: 'break-all', marginBottom: '20px', cursor: 'pointer', border: '1px dashed #cbd5e1' }} onClick={() => { const link = `${window.location.origin}${window.location.pathname}?challenge=${challengeData.id}`; navigator.clipboard.writeText(link); alert('تم نسخ الرابط!'); }}>
+                                <div style={{ background: '#f1f5f9', padding: '10px', borderRadius: '10px', fontSize: '11px', wordBreak: 'break-all', marginBottom: '20px', cursor: 'pointer', border: '1px dashed #cbd5e1' }} onClick={handleShareChallenge}>
                                     {window.location.origin}{window.location.pathname}?challenge={challengeData.id}
+                                    <div style={{ marginTop: '8px', color: '#3b82f6', fontWeight: 'bold', fontSize: '12px' }}>
+                                        {typeof navigator.share === 'function' ? 'اضغط للمشاركة' : 'اضغط للنسخ'}
+                                    </div>
                                 </div>
-                                <button onClick={() => setShowChallengeModal(false)} style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>حسناً</button>
+                                <button onClick={() => { setShowChallengeModal(false); clearChallengeData(); }} style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>إغلاق</button>
                             </motion.div>
                         </div>
                     )}

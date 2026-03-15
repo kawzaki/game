@@ -82,9 +82,11 @@ interface GameState {
     sendDrawingStroke: (roomId: string, stroke: any) => void;
     sendDrawingClear: (roomId: string) => void;
     submitDrawingGuess: (roomId: string, guess: string) => void;
+    finishDrawingRound: (roomId: string) => void;
     leaveRoom: (roomId: string) => void;
     createChallenge: (strokes: any[], word: string, category: string) => void;
     getChallenge: (challengeId: string) => void;
+    clearChallengeData: () => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
@@ -331,6 +333,9 @@ export const useGameStore = create<GameState>((set) => {
         submitDrawingGuess: (roomId, guess) => {
             socket.emit('drawing_guess', { roomId, guess });
         },
+        finishDrawingRound: (roomId) => {
+            socket.emit('drawing_finish_round', roomId);
+        },
         leaveRoom: (roomId) => {
             socket.emit('leave_room', { roomId });
             const reset = useGameStore.getState().resetRoom;
@@ -343,6 +348,7 @@ export const useGameStore = create<GameState>((set) => {
         getChallenge: (challengeId) => {
             set({ challengeLoading: true });
             socket.emit('get_challenge', { challengeId });
-        }
+        },
+        clearChallengeData: () => set({ challengeData: null })
     };
 });
