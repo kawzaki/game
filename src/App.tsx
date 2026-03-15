@@ -76,7 +76,9 @@ const App: React.FC = () => {
     leaveRoom,
     challengeData,
     getChallenge,
-    challengeLoading
+    challengeLoading,
+    joinChallengeSession,
+    playerName: storedPlayerName,
   } = useGameStore();
 
   const [isCreator, setIsCreator] = useState(false);
@@ -88,7 +90,14 @@ const App: React.FC = () => {
   const activePlayer = players[currentPlayerIndex];
   const activePlayerName = activePlayer ? `${activePlayer.name} (#${activePlayer.number || currentPlayerIndex + 1})` : '...';
 
-  const [playerName, setPlayerName] = React.useState('');
+  const [playerName, setPlayerName] = React.useState(storedPlayerName || '');
+  
+  // Keep local playerName in sync with store (e.g. if loaded from localStorage)
+  useEffect(() => {
+    if (storedPlayerName && !playerName) {
+      setPlayerName(storedPlayerName);
+    }
+  }, [storedPlayerName]);
   const [joinCode, setJoinCode] = React.useState('');
   const [qCount, setQCount] = React.useState(10);
   const handleQCountChange = (newCount: number) => {
@@ -198,8 +207,10 @@ const App: React.FC = () => {
 
     if (urlChallenge && !challengeData && !challengeLoading) {
       getChallenge(urlChallenge);
+      // Join the real-time session room for this challenge
+      joinChallengeSession(urlChallenge, storedPlayerName || playerName || 'لاعب');
     }
-  }, [roomId, setRoomId, challengeData, challengeLoading, getChallenge]);
+  }, [roomId, setRoomId, challengeData, challengeLoading, getChallenge, storedPlayerName, playerName, joinChallengeSession]);
 
   useEffect(() => {
     document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';

@@ -88,6 +88,7 @@ interface GameState {
     getChallenge: (challengeId: string) => void;
     getSoloWord: () => void;
     clearChallengeData: () => void;
+    joinChallengeSession: (challengeId: string, playerName: string) => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
@@ -207,7 +208,7 @@ export const useGameStore = create<GameState>((set) => {
         gameStatus: 'lobby',
         timer: 30,
         winner: null,
-        playerName: null,
+        playerName: localStorage.getItem('draw_game_playerName') || null,
         questionsPerCategory: 10,
         gameType: 'jeopardy',
         currentLetter: null,
@@ -238,6 +239,7 @@ export const useGameStore = create<GameState>((set) => {
         setGameType: (type) => set({ gameType: type }),
 
         addPlayer: (name, roomId, questionsPerCategory = 10) => {
+            if (name) localStorage.setItem('draw_game_playerName', name);
             socket.emit('join_room', { roomId, playerName: name, questionsPerCategory });
             set({ roomId, playerName: name });
         },
@@ -367,6 +369,9 @@ export const useGameStore = create<GameState>((set) => {
         getSoloWord: () => {
             socket.emit('get_solo_word');
         },
-        clearChallengeData: () => set({ challengeData: null })
+        clearChallengeData: () => set({ challengeData: null }),
+        joinChallengeSession: (challengeId, playerName) => {
+            socket.emit('join_challenge_session', { challengeId, playerName });
+        }
     };
 });

@@ -1660,15 +1660,75 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('join_challenge_session', ({ challengeId, playerName }) => {
+        const roomId = `session_${challengeId}`;
+        let room = rooms.get(roomId);
+        
+        if (!room) {
+            room = {
+                id: roomId,
+                gameType: 'drawing_challenge',
+                gameStatus: 'drawing_active',
+                players: [],
+                currentRound: 1,
+                roundCount: 999,
+                drawingDrawerId: null,
+                drawingStrokes: [],
+                drawingGuesses: {},
+                drawingCurrentWord: null,
+                isPrivate: true,
+                isSession: true,
+                createdAt: Date.now()
+            };
+            rooms.set(roomId, room);
+        }
+
+        // Add player if not already in
+        if (!room.players.find(p => p.id === socket.id)) {
+            const player = { id: socket.id, name: playerName || 'لاعب', score: 0 };
+            room.players.push(player);
+        }
+
+        socket.join(roomId);
+        io.to(roomId).emit('room_data', room);
+        console.log(`[Session] Player joined session ${challengeId}`);
+    });
+
     socket.on('get_solo_word', () => {
         if (drawingWordsPool.length === 0) return;
         const randomItem = drawingWordsPool[Math.floor(Math.random() * drawingWordsPool.length)];
+        
+        // Check if player is in a session room
+        let sessionRoom = null;
+        for (const room of socket.rooms) {
+            if (room.startsWith('session_')) {
+                sessionRoom = rooms.get(room);
+                break;
+            }
+        }
+
+        if (sessionRoom) {
+            sessionRoom.drawingDrawerId = socket.id;
+            sessionRoom.drawingStrokes = [];
+            sessionRoom.drawingGuesses = {};
+            sessionRoom.drawingCurrentWord = randomItem.word;
+            sessionRoom.drawingCategory = randomItem.category;
+            sessionRoom.gameStatus = 'drawing_active';
+            sessionRoom.timer = -1; // Solo/Session is infinite time
+            
+            // Mask word for others
+            sessionRoom.drawingMaskedWord = randomItem.word.split('').map(char => (char === ' ' || char === '-') ? char : '_').join('');
+            
+            io.to(sessionRoom.id).emit('room_data', sessionRoom);
+            console.log(`[Session] Started new round in ${sessionRoom.id} for ${socket.id}`);
+        }
+
         socket.emit('drawing_your_word', { 
             word: randomItem.word, 
             category: randomItem.category,
             isSolo: true 
         });
-        console.log(`[Solo] Sent random word ${randomItem.answer} to ${socket.id}`);
+        console.log(`[Solo/Session] Sent word ${randomItem.word} to ${socket.id}`);
     });
 
     socket.on('get_challenge', ({ challengeId }) => {

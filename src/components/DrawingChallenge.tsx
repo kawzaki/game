@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eraser, Trash2, Check, Pencil, Palette, Share2, Link as LinkIcon, Loader2, Droplets } from 'lucide-react';
+import { Eraser, Trash2, Check, Pencil, Palette, Share2, Link as LinkIcon, Loader2, Droplets, X } from 'lucide-react';
 import { isFuzzyMatch } from '../utils/arabicUtils';
 
 interface DrawingChallengeProps {
@@ -36,7 +36,9 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         getSoloWord,
         challengeData,
         challengeLoading,
-        clearChallengeData
+        clearChallengeData,
+        joinChallengeSession,
+        playerName
     } = useGameStore();
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -74,9 +76,13 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const handleDrawBack = () => {
         // Clear the URL challenge parameter to prevent App.tsx from refetching the old challenge
         const url = new URL(window.location.href);
-        if (url.searchParams.has('challenge')) {
+        const challengeId = url.searchParams.get('challenge');
+        if (challengeId) {
             url.searchParams.delete('challenge');
             window.history.replaceState({}, '', url.toString());
+            
+            // Join the persistent session for back-and-forth play
+            joinChallengeSession(challengeId, playerName || 'لاعب');
         }
 
         setSoloGuessedCorrectly(false);
@@ -129,8 +135,11 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     // Clear banner immediately when drawer changes
     useEffect(() => {
         setCorrectBanner(null);
+        setWrongBanner(false);
         prevCorrectLen.current = correctGuesses.length;
     }, [drawingDrawerId]);
+
+    const [wrongBanner, setWrongBanner] = useState(false);
 
     // ─── Canvas helpers ──────────────────────────────────────────────
     const getCanvasPos = (e: React.PointerEvent | PointerEvent) => {
@@ -293,7 +302,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 setSoloGuessedCorrectly(true);
                 import('canvas-confetti').then(confetti => confetti.default());
             } else {
-                alert('خطأ، حاول مرة أخرى!');
+                setWrongBanner(true);
+                setTimeout(() => setWrongBanner(false), 2000);
             }
         } else {
             submitDrawingGuess(roomId, guess);
@@ -486,6 +496,14 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                             <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10 }} style={{ position: 'absolute', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 40, padding: '10px 20px', borderRadius: '50px', background: 'rgba(5, 150, 105, 0.95)', color: '#fff', fontWeight: 900, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', whiteSpace: 'nowrap' }} dir="rtl">
                                 <Check size={18} color="#fff" />
                                 {correctBanner.playerName} خمّن الكلمة! +{correctBanner.pts} نقطة 🎉
+                            </motion.div>
+                        )}
+                        {wrongBanner && (
+                            <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1.2 }} exit={{ opacity: 0, scale: 0.5 }} style={{ position: 'absolute', top: '40%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(239, 68, 68, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px rgba(239, 68, 68, 0.4)' }}>
+                                    <X size={48} color="#fff" strokeWidth={3} />
+                                </div>
+                                <span style={{ color: '#ef4444', fontWeight: 900, fontSize: '24px', textShadow: '0 2px 10px rgba(255,255,255,0.8)' }}>خطأ، حاول مرة أخرى!</span>
                             </motion.div>
                         )}
                     </AnimatePresence>
