@@ -64,6 +64,7 @@ interface GameState {
     drawingWrongGuesses: { playerId: string; playerName: string; guess: string }[];
 
     activeRooms: ActiveRoom[];
+    isServerWakingUp: boolean;
 
     // Async Challenge state
     challengeData: { strokes: any[]; word: string; category: string; id: string } | null;
@@ -143,12 +144,13 @@ export const useGameStore = create<GameState>((set) => {
             drawingStrokes: data.drawingStrokes ?? [],
             myId: socket.id || null,
             isConnected: true,
-            roomDataLoading: false
+            roomDataLoading: false,
+            isServerWakingUp: false
         });
     });
 
     socket.on('active_rooms', (rooms) => {
-        set({ activeRooms: rooms, roomDataLoading: false });
+        set({ activeRooms: rooms, roomDataLoading: false, isServerWakingUp: false });
     });
 
     socket.on('challenge_created', (data) => {
@@ -162,35 +164,35 @@ export const useGameStore = create<GameState>((set) => {
     socket.on('challenge_error', (error) => {
         console.error("Challenge error:", error);
         alert(error); // Show error to user
-        useGameStore.setState({ challengeLoading: false });
+        set({ challengeLoading: false });
     });
 
     // Drawing Challenge live events
     socket.on('drawing_stroke', (stroke: any) => {
-        useGameStore.setState(state => ({
+        set(state => ({
             drawingLiveStrokes: [...(state.drawingLiveStrokes || []), stroke]
         }));
     });
     socket.on('drawing_clear', () => {
-        useGameStore.setState({ drawingLiveStrokes: [] });
+        set({ drawingLiveStrokes: [] });
     });
     socket.on('drawing_timer', ({ timer }: { timer: number }) => {
-        useGameStore.setState({ timer });
+        set({ timer });
     });
     socket.on('drawing_correct_guess', (payload: { playerId: string; playerName: string }) => {
-        useGameStore.setState(state => ({
+        set(state => ({
             drawingCorrectGuesses: [...(state.drawingCorrectGuesses || []), payload]
         }));
     });
     // Drawer receives their secret word via this dedicated event (not in room_data)
     socket.on('drawing_your_word', ({ word, category }: { word: string; category?: string }) => {
-        useGameStore.setState({ 
+        set({ 
             drawingCurrentWord: word,
             drawingCategory: category || null 
         });
     });
     socket.on('drawing_wrong_guess', (payload: { playerId: string; playerName: string; guess: string }) => {
-        useGameStore.setState(state => ({
+        set(state => ({
             drawingWrongGuesses: [...(state.drawingWrongGuesses || []), payload]
         }));
     });
@@ -201,19 +203,28 @@ export const useGameStore = create<GameState>((set) => {
         if (state.roomId && state.playerName) {
             socket.emit('rejoin_room', { roomId: state.roomId, playerName: state.playerName });
         }
-        set({ myId: socket.id || null, isConnected: true });
+        set({ myId: socket.id || null, isConnected: true, isServerWakingUp: false });
     });
 
     socket.on('disconnect', () => {
         set({ isConnected: false });
     });
 
+    // Initial Wake-up check
+    setTimeout(() => {
+        if (!socket.connected) {
+            set({ isServerWakingUp: true });
+            // Try to touch the server to trigger spin-up
+            fetch('/api/health').catch(() => {});
+        }
+    }, 1500);
+
     return {
         roomId: urlRoomId || null,
         players: [],
         currentPlayerIndex: 0,
         questions: [],
-        huroofGrid: null, // Initialize huroofGrid in the store's initial state
+        huroofGrid: null,
         activeQuestion: null,
         selectedCategory: null,
         buzzedPlayerId: null,
@@ -251,130 +262,61 @@ export const useGameStore = create<GameState>((set) => {
         challengeData: null,
         challengeLoading: false,
         isChallengeCreator: false,
+        isServerWakingUp: false,
 
         setRoomId: (id) => set({ roomId: id }),
-
         setGameType: (type) => set({ gameType: type }),
-
         addPlayer: (name, roomId, questionsPerCategory = 10) => {
             if (name) localStorage.setItem('draw_game_playerName', name);
             socket.emit('join_room', { roomId, playerName: name, questionsPerCategory });
             set({ roomId, playerName: name });
         },
-
-        startGame: (roomId) => {
-            socket.emit('start_game', roomId);
-        },
-
-        pickCategory: (roomId, category) => {
-            socket.emit('pick_category', { roomId, category });
-        },
-
-        pickValue: (roomId, value) => {
-            socket.emit('pick_value', { roomId, value });
-        },
-
-        buzz: (roomId) => {
-            socket.emit('buzz', roomId);
-        },
-
-        submitAnswer: (roomId, answer) => {
-            socket.emit('submit_answer', { roomId, answer });
-        },
-
-        closeFeedback: (roomId) => {
-            socket.emit('close_feedback', roomId);
-        },
-
-        answerQuestion: (roomId, isCorrect) => {
-            socket.emit('answer_question', { roomId, isCorrect });
-        },
-
-        tickTimer: () => set((state) => ({
-            timer: state.timer > 0 ? state.timer - 1 : 0
-        })),
-
+        startGame: (roomId) => socket.emit('start_game', roomId),
+        pickCategory: (roomId, category) => socket.emit('pick_category', { roomId, category }),
+        pickValue: (roomId, value) => socket.emit('pick_value', { roomId, value }),
+        buzz: (roomId) => socket.emit('buzz', roomId),
+        submitAnswer: (roomId, answer) => socket.emit('submit_answer', { roomId, answer }),
+        closeFeedback: (roomId) => socket.emit('close_feedback', roomId),
+        answerQuestion: (roomId, isCorrect) => socket.emit('answer_question', { roomId, isCorrect }),
+        tickTimer: () => set((state) => ({ timer: state.timer > 0 ? state.timer - 1 : 0 })),
         resetTimer: (seconds) => set({ timer: seconds }),
-
         resetRoom: () => set({
-            roomId: null,
-            players: [],
-            currentPlayerIndex: 0,
-            questions: [],
-            hasJoined: false,
-            huroofGrid: null,
-            activeQuestion: null,
-            selectedCategory: null,
-            buzzedPlayerId: null,
-            attempts: [],
-            feedback: null,
-            gameStatus: 'lobby',
-            winner: null,
-            currentLetter: null,
-            currentRound: 0,
-            roundResults: [],
-            huroofHistory: [],
-            sibaBoard: Array(9).fill(null),
-            sibaPhase: 'setup',
-            sibaPiecesPlaced: {},
-            sibaTurn: undefined,
-            drawingCurrentWord: null,
-            drawingMaskedWord: null,
-            drawingDrawerId: null,
-            drawingGuesses: {},
-            drawingCategory: null,
-            drawingStrokes: [],
-            drawingLiveStrokes: [],
-            drawingCorrectGuesses: [],
-            drawingWrongGuesses: []
+            roomId: null, players: [], currentPlayerIndex: 0, questions: [], hasJoined: false,
+            huroofGrid: null, activeQuestion: null, selectedCategory: null, buzzedPlayerId: null,
+            attempts: [], feedback: null, gameStatus: 'lobby', winner: null, currentLetter: null,
+            currentRound: 0, roundResults: [], huroofHistory: [], sibaBoard: Array(9).fill(null),
+            sibaPhase: 'setup', sibaPiecesPlaced: {}, sibaTurn: undefined,
+            drawingCurrentWord: null, drawingMaskedWord: null, drawingDrawerId: null,
+            drawingGuesses: {}, drawingCategory: null, drawingStrokes: [], drawingLiveStrokes: [],
+            drawingCorrectGuesses: [], drawingWrongGuesses: []
         }),
-
-        submitRoundBinOWalad: (roomId, inputs) => {
-            socket.emit('submit_round_bin_o_walad', { roomId, inputs });
-        },
-
-        getRoomStatus: (roomId: string) => {
+        submitRoundBinOWalad: (roomId, inputs) => socket.emit('submit_round_bin_o_walad', { roomId, inputs }),
+        getRoomStatus: (roomId) => {
             set({ roomDataLoading: true });
             socket.emit('get_room_status', roomId);
         },
-
-        createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge' | 'drawing_challenge', questionsPerCategory: number) => {
+        createRoom: (roomId, gameType, questionsPerCategory) => {
             socket.emit('create_room', { roomId, gameType, questionsPerCategory });
             set({ roomId, gameType, questionsPerCategory });
         },
-
-        submitWordMeaningAnswer: (roomId, answer) => {
-            socket.emit('submit_word_meaning_answer', { roomId, answer });
-        },
-        submitPixelAnswer: (roomId, answer) => {
-            socket.emit('submit_pixel_answer', { roomId, answer });
-        },
-        sendDrawingStroke: (roomId, stroke) => {
-            socket.emit('drawing_stroke', { roomId, stroke });
-        },
-        sendDrawingClear: (roomId) => {
-            socket.emit('drawing_clear', { roomId });
-        },
-        submitDrawingGuess: (roomId, guess) => {
-            socket.emit('drawing_guess', { roomId, guess });
-        },
-        finishDrawingRound: (roomId) => {
-            socket.emit('drawing_finish_round', roomId);
-        },
+        submitWordMeaningAnswer: (roomId, answer) => socket.emit('submit_word_meaning_answer', { roomId, answer }),
+        submitPixelAnswer: (roomId, answer) => socket.emit('submit_pixel_answer', { roomId, answer }),
+        sendDrawingStroke: (roomId, stroke) => socket.emit('drawing_stroke', { roomId, stroke }),
+        sendDrawingClear: (roomId) => socket.emit('drawing_clear', { roomId }),
+        submitDrawingGuess: (roomId, guess) => socket.emit('drawing_guess', { roomId, guess }),
+        finishDrawingRound: (roomId) => socket.emit('drawing_finish_round', roomId),
         leaveRoom: (roomId) => {
             socket.emit('leave_room', { roomId });
-            const reset = useGameStore.getState().resetRoom;
-            reset();
+            set((state) => {
+                state.resetRoom();
+                return {};
+            });
         },
         createChallenge: (strokes, word, category) => {
             set({ challengeLoading: true });
             socket.emit('create_challenge', { strokes, word, category });
-            
-            // Safety timeout: if server doesn't respond in 10s, reset loading
             setTimeout(() => {
-                const currentState = useGameStore.getState();
-                if (currentState.challengeLoading) {
-                    console.warn("Challenge creation timed out");
+                if (useGameStore.getState().challengeLoading) {
                     set({ challengeLoading: false });
                     alert("نعتذر، حدث تأخير في إنشاء الرابط. يرجى المحاولة مرة أخرى.");
                 }
@@ -384,13 +326,9 @@ export const useGameStore = create<GameState>((set) => {
             set({ challengeLoading: true });
             socket.emit('get_challenge', { challengeId });
         },
-        getSoloWord: () => {
-            socket.emit('get_solo_word');
-        },
+        getSoloWord: () => socket.emit('get_solo_word'),
         clearChallengeData: () => set({ challengeData: null, isChallengeCreator: false }),
-        joinChallengeSession: (challengeId, playerName) => {
-            socket.emit('drawing_join_challenge', { challengeId, playerName });
-        },
+        joinChallengeSession: (challengeId, playerName) => socket.emit('drawing_join_challenge', { challengeId, playerName }),
         fetchActiveRooms: () => {
             set({ roomDataLoading: true });
             socket.emit('get_active_rooms');

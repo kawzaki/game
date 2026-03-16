@@ -125,6 +125,8 @@ app.put('/api/admin/pixel-challenge/:id', requireAuth, (req, res) => {
 // -----------------------
 
 
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
 // Serve static files from the build folder
 app.use(express.static(path.join(__dirname, 'dist')));
 

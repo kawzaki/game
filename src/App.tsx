@@ -81,6 +81,7 @@ const App: React.FC = () => {
     joinChallengeSession,
     playerName: storedPlayerName,
     fetchActiveRooms,
+    isServerWakingUp,
   } = useGameStore();
 
   const [isCreator, setIsCreator] = useState(false);
@@ -384,6 +385,30 @@ const App: React.FC = () => {
       default: return "";
     }
   };
+
+  if (isServerWakingUp) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
+          <div style={{ position: 'relative' }}>
+            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }} style={{ width: '80px', height: '80px', borderRadius: '50%', border: '4px solid #f1f5f9', borderTopColor: 'var(--brand-yellow)' }} />
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap size={32} fill="var(--brand-yellow)" color="var(--brand-yellow)" />
+            </div>
+          </div>
+          <div>
+            <h2 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '8px', color: '#0f172a' }}>يرجى الانتظار لتجهيز منصة الألعاب...</h2>
+            <p style={{ fontSize: '15px', color: '#64748b', maxWidth: '300px', lineHeight: 1.6 }}>الخادم يأخذ غفوة وسيقوم بالعمل خلال ثوانٍ قليلة. شكراً لانتظارك! ☕</p>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {[0, 1, 2].map((i) => (
+              <motion.div key={i} animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }} style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--brand-yellow)' }} />
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   // SOLO CHALLENGE VIEW
   if (challengeData && !roomId) {
