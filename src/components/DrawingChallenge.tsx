@@ -779,6 +779,75 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 )}
 
                 <AnimatePresence>
+                    {(soloGuessedCorrectly && (roomId === 'solo-challenge' || currentRoomId?.startsWith('session_'))) && (
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(8px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                            <motion.div 
+                                initial={{ scale: 0.8, opacity: 0, y: 20 }} 
+                                animate={{ scale: 1, opacity: 1, y: 0 }} 
+                                style={{ 
+                                    background: 'white', 
+                                    padding: '30px', 
+                                    borderRadius: '24px', 
+                                    textAlign: 'center', 
+                                    maxWidth: '350px', 
+                                    width: '100%', 
+                                    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                                    border: '2px solid #10b981'
+                                }}
+                            >
+                                <div style={{ fontSize: '60px', marginBottom: '10px' }}>🎉</div>
+                                <div style={{ fontSize: '24px', fontWeight: 900, color: '#065f46', marginBottom: '8px' }}>إجابة صحيحة!</div>
+                                <div style={{ fontSize: '14px', fontWeight: 900, color: '#f59e0b', marginBottom: '4px' }}>
+                                    {drawingCategory || challengeData?.category}
+                                </div>
+                                <div style={{ fontSize: '20px', color: '#374151', marginBottom: '24px' }}>
+                                    الكلمة هي: <span style={{ color: '#059669', fontWeight: 900 }}>{drawingCurrentWord || challengeData?.word}</span>
+                                </div>
+                                
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <button 
+                                        onClick={handleDrawBack}
+                                        style={{ 
+                                            width: '100%', 
+                                            padding: '16px', 
+                                            borderRadius: '14px', 
+                                            background: '#000', 
+                                            color: '#fff', 
+                                            border: 'none', 
+                                            fontWeight: 900, 
+                                            fontSize: '16px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '10px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <Pencil size={20} />
+                                        رد التحدي (ارسم له)
+                                    </button>
+                                    
+                                    <button 
+                                        onClick={() => setSoloGuessedCorrectly(false)}
+                                        style={{ 
+                                            width: '100%', 
+                                            padding: '12px', 
+                                            borderRadius: '14px', 
+                                            background: '#f1f5f9', 
+                                            color: '#64748b', 
+                                            border: 'none', 
+                                            fontWeight: 'bold', 
+                                            fontSize: '14px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        بقاء في هذه الصفحة
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+
                     {showChallengeModal && challengeData && (
                         <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
                             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ background: 'white', padding: '24px', borderRadius: '20px', textAlign: 'center', maxWidth: '400px', width: '100%', boxShadow: '0 10px 40px rgba(0,0,0,0.2)' }}>

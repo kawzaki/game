@@ -1683,9 +1683,11 @@ io.on('connection', (socket) => {
                 }
             }
 
-            // First correct guess ends the round immediately
-            room.timer = 0;
-            scoreDrawingRound(room, io, roomId);
+            // First correct guess ends the round immediately (except for session/solo challenges)
+            if (!roomId.startsWith('session_')) {
+                room.timer = 0;
+                scoreDrawingRound(room, io, roomId);
+            }
         } else {
             room.drawingGuesses[socket.id] = { correct: false, guess };
             // Broadcast wrong guess to all (for the chat log)
