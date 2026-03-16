@@ -279,6 +279,60 @@ function isCorrectAnswer(input, correct) {
     return normalizeArabic(input) === normalizeArabic(correct);
 }
 
+function startQuestionTimer(room, io, roomId) {
+    if (room._questionInterval) clearInterval(room._questionInterval);
+    
+    room._questionInterval = setInterval(() => {
+        if (room.gameStatus !== 'question') {
+            clearInterval(room._questionInterval);
+            return;
+        }
+
+        if (room.timer > 0) {
+            room.timer--;
+            io.to(roomId).emit('room_data', room);
+        } else {
+            // Timer expired
+            if (room.buzzedPlayerId) {
+                // Buzzed player timed out
+                const player = room.players.find(p => p.id === room.buzzedPlayerId);
+                if (player) player.score -= (room.activeQuestion?.value || 0);
+                
+                if (!room.attempts) room.attempts = [];
+                room.attempts.push(room.buzzedPlayerId);
+                room.buzzedPlayerId = null;
+                
+                if (room.attempts.length >= room.players.length) {
+                    room.feedback = {
+                        type: 'all_wrong',
+                        message: `انتهى الوقت! لم يتم الإجابة على السؤال.`,
+                        answer: room.correctAnswer
+                    };
+                    if (room.gameType === 'huroof' && room.huroofHistory && room.huroofHistory.length > 0) {
+                        room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "لا أحد";
+                    }
+                    clearInterval(room._questionInterval);
+                } else {
+                    room.timer = 5; // Give others a small window to buzz
+                }
+                io.to(roomId).emit('room_data', room);
+            } else {
+                // Overall question timeout
+                room.feedback = {
+                    type: 'all_wrong',
+                    message: `انتهى الوقت! لم يتم الإجابة على السؤال.`,
+                    answer: room.correctAnswer
+                };
+                if (room.gameType === 'huroof' && room.huroofHistory && room.huroofHistory.length > 0) {
+                    room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "لا أحد";
+                }
+                io.to(roomId).emit('room_data', room);
+                clearInterval(room._questionInterval);
+            }
+        }
+    }, 1000);
+}
+
 // Helper for Arabic normalization
 function normalizeArabic(text) {
     if (!text) return "";
@@ -1092,6 +1146,7 @@ io.on('connection', (socket) => {
                     room.selectedCategory = category;
                     room.timer = 15; // Reset timer for consistency
                     room.gameStatus = 'question';
+                    startQuestionTimer(room, io, roomId);
 
                     // Check for team win if claimed
                     if (randomReward.claim && checkHuroofWinner(room.huroofGrid, player.team)) {
@@ -1147,6 +1202,9 @@ io.on('connection', (socket) => {
                         correctAnswer: correctAnswer,
                         answeredBy: null // Will be filled when answered
                     });
+                    room.timer = 15;
+                    room.gameStatus = 'question';
+                    startQuestionTimer(room, io, roomId);
                 }
             }
             io.to(roomId).emit('room_data', room);
@@ -1203,6 +1261,7 @@ io.on('connection', (socket) => {
                     room.correctAnswer = null;
                     room.timer = 15; // Reset timer for luck questions as well
                     room.gameStatus = 'question';
+                    startQuestionTimer(room, io, roomId);
                     io.to(roomId).emit('room_data', room);
                 } else {
                     let safeQuestion = { ...question };
@@ -1215,10 +1274,11 @@ io.on('connection', (socket) => {
                     room.activeQuestion = safeQuestion;
                     room.correctAnswer = question.answer;
                     room.gameStatus = 'question';
-                    room.timer = 15;
+                    room.timer = 20; // 20 seconds for Jeopardy question
                     room.attempts = [];
                     room.feedback = null;
                     room.buzzedPlayerId = null;
+                    startQuestionTimer(room, io, roomId);
                     io.to(roomId).emit('room_data', room);
                 }
             }
@@ -1230,6 +1290,8 @@ io.on('connection', (socket) => {
         if (room && room.gameStatus === 'question' && !room.buzzedPlayerId) {
             if (room.attempts && room.attempts.includes(socket.id)) return;
             room.buzzedPlayerId = socket.id;
+            room.timer = 10; // 10 seconds to answer once buzzed
+            startQuestionTimer(room, io, roomId); // Restart timer for buzzed player
             io.to(roomId).emit('room_data', room);
         }
     });
@@ -1241,6 +1303,7 @@ io.on('connection', (socket) => {
             const isCorrect = isCorrectAnswer(answer, room.correctAnswer);
 
             if (isCorrect) {
+                if (room._questionInterval) clearInterval(room._questionInterval);
                 if (player) player.score += room.activeQuestion.value;
                 room.feedback = { type: 'correct', message: `إجابة صحيحة! ${player?.name} حصل على ${room.activeQuestion.value} عملة.`, answer: room.correctAnswer };
 
@@ -1271,6 +1334,7 @@ io.on('connection', (socket) => {
                 room.buzzedPlayerId = null;
 
                 if (room.attempts.length >= room.players.length) {
+                    if (room._questionInterval) clearInterval(room._questionInterval);
                     room.feedback = {
                         type: 'all_wrong',
                         message: `عذراً، المحاولات انتهت والإجابات خاطئة.`,
@@ -1286,7 +1350,8 @@ io.on('connection', (socket) => {
                     }
                 } else {
                     room.feedback = { type: 'wrong', message: `خطأ! ${player?.name} فقد نقاطاً. بإمكان الآخرين المحاولة الآن!` };
-                    room.timer = 10;
+                    room.timer = 5; // Return to pool for others
+                    startQuestionTimer(room, io, roomId); // Restart timer for others to buzz
                 }
             }
             io.to(roomId).emit('room_data', room);
@@ -1296,9 +1361,21 @@ io.on('connection', (socket) => {
     socket.on('answer_question', ({ roomId, isCorrect }) => {
         const room = rooms.get(roomId);
         if (room && room.activeQuestion) {
+            // Identity check: If buzzed, only the buzzed player can answer.
+            // If NOT buzzed, this is likely a client-side timeout event.
+            // With server-side timers, we should probably ignore client timeout events entirely,
+            // or at least validate them.
+
+            if (room.buzzedPlayerId && room.buzzedPlayerId !== socket.id) return;
+
+            // If it's a timeout (isCorrect === false) and the server hasn't timed out yet,
+            // we ignore it to let the server timer be the source of truth.
+            if (!isCorrect && room.timer > 0) return;
+
             const player = room.players.find(p => p.id === socket.id);
 
             if (isCorrect) {
+                if (room._questionInterval) clearInterval(room._questionInterval);
                 if (player) player.score += room.activeQuestion.value;
                 room.feedback = { type: 'correct', message: `إجابة صحيحة! ${player?.name} حصل على ${room.activeQuestion.value} عملة.`, answer: room.correctAnswer };
 

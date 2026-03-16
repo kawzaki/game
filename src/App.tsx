@@ -61,8 +61,6 @@ const App: React.FC = () => {
     buzz,
     submitAnswer,
     closeFeedback,
-    answerQuestion,
-    tickTimer,
     currentPlayerIndex,
     selectedCategory,
     feedback,
@@ -220,24 +218,6 @@ const App: React.FC = () => {
     document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
   }, [i18n.language]);
 
-  useEffect(() => {
-    if (feedback) {
-      if (feedback.type === 'correct' || feedback.type === 'luck') playSound('correct');
-      if (feedback.type === 'wrong') playSound('wrong');
-    }
-  }, [feedback]);
-
-  useEffect(() => {
-    let interval: any;
-    if (gameStatus === 'question' && timer > 0) {
-      interval = setInterval(() => tickTimer(), 1000);
-    } else if (timer === 0 && gameStatus === 'question') {
-      playSound('timeout');
-      if (roomId) answerQuestion(roomId, false);
-    }
-    return () => clearInterval(interval);
-  }, [gameStatus, timer, roomId, answerQuestion, tickTimer]);
-
   const playSound = (type: 'buzzer' | 'correct' | 'wrong' | 'timeout' | 'game_over_win' | 'game_over_lose') => {
     const sounds = {
       buzzer: 'https://assets.mixkit.co/active_storage/sfx/1084/1084-preview.mp3',
@@ -248,8 +228,29 @@ const App: React.FC = () => {
       game_over_lose: 'https://www.myinstants.com/media/sounds/wah-wah-sound-effect.mp3'
     };
     const audio = new Audio(sounds[type]);
-    audio.play().catch(e => console.error("Audio play failed:", e));
+    audio.play().catch(e => console.log("Sound play error", e));
   };
+
+  useEffect(() => {
+    if (feedback) {
+      if (feedback.type === 'correct' || feedback.type === 'luck') playSound('correct');
+      if (feedback.type === 'wrong') playSound('wrong');
+    }
+  }, [feedback]);
+
+  useEffect(() => {
+    // QUESTION TIMER (Server-managed)
+    // We no longer manage the question timer client-side to avoid race conditions.
+    // The server emits room_data updates every second which syncs the timer.
+    // However, if we're the only player and it's solo, we might need a fallback, 
+    // but Jeopardy/Huroof are multiplayer-first.
+    
+    if (timer === 0 && gameStatus === 'question') {
+      playSound('timeout');
+      // No need to call answerQuestion(roomId, false) anymore, 
+      // the server will handle the timeout and push room_data.
+    }
+  }, [gameStatus, timer]);
 
   const finalizeCreateRoom = (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge' | 'drawing_challenge') => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
