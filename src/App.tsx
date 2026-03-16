@@ -648,14 +648,46 @@ const App: React.FC = () => {
                     </div>
                   )}
 
-                  <button
-                    disabled={!playerName || hasJoined}
-                    onClick={() => roomId && addPlayer(playerName, roomId, qCount)}
-                    className="btn-primary-battle"
-                    style={{ width: '100%', marginBottom: '8px', opacity: (hasJoined || !playerName) ? 0.6 : 1 }}
-                  >
-                    {hasJoined ? 'تم الانضمام ✓' : 'انضم الآن'}
-                  </button>
+                  {hasJoined ? (
+                    (players[0]?.id === myId || isCreator) ? (
+                      <button
+                        disabled={players.length === 0}
+                        onClick={() => roomId && startGame(roomId)}
+                        className="btn-primary-battle"
+                        style={{ width: '100%', marginBottom: '8px', background: '#10b981', color: '#fff', position: 'relative', overflow: 'hidden' }}
+                      >
+                        {/* countdown bar */}
+                        {players.length > 0 && lobbyCountdown > 0 && (
+                          <motion.div
+                            initial={{ width: '100%' }}
+                            animate={{ width: `${(lobbyCountdown / 60) * 100}%` }}
+                            transition={{ duration: 1, ease: 'linear' }}
+                            style={{ position: 'absolute', left: 0, top: 0, height: '100%', background: 'rgba(0,0,0,0.12)', zIndex: 0 }}
+                          />
+                        )}
+                        <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                          <Zap size={24} />
+                          ابدأ اللعبة!
+                          {players.length > 0 && lobbyCountdown > 0 && (
+                            <span style={{ fontSize: '13px', fontWeight: 'bold', opacity: 0.8 }}>({lobbyCountdown})</span>
+                          )}
+                        </span>
+                      </button>
+                    ) : (
+                      <button disabled className="btn-primary-battle" style={{ width: '100%', marginBottom: '8px', opacity: 0.6 }}>
+                        تم الانضمام ✓
+                      </button>
+                    )
+                  ) : (
+                    <button
+                      disabled={!playerName}
+                      onClick={() => roomId && addPlayer(playerName, roomId, qCount)}
+                      className="btn-primary-battle"
+                      style={{ width: '100%', marginBottom: '8px' }}
+                    >
+                      انضم الآن
+                    </button>
+                  )}
                 </>
               )}
 
@@ -705,32 +737,6 @@ const App: React.FC = () => {
                 )}
               </AnimatePresence>
 
-              {(players[0]?.id === myId || isCreator) && hasJoined && (
-                <button
-                  disabled={players.length === 0}
-                  onClick={() => roomId && startGame(roomId)}
-                  className="btn-primary-battle"
-                  style={{ marginTop: '20px', background: '#10b981', color: '#fff', position: 'relative', overflow: 'hidden' }}
-                >
-                  {/* countdown bar */}
-                  {players.length > 0 && lobbyCountdown > 0 && (
-                    <motion.div
-                      initial={{ width: '100%' }}
-                      animate={{ width: `${(lobbyCountdown / 60) * 100}%` }}
-                      transition={{ duration: 1, ease: 'linear' }}
-                      style={{ position: 'absolute', left: 0, top: 0, height: '100%', background: 'rgba(0,0,0,0.12)', zIndex: 0 }}
-                    />
-                  )}
-                  <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Zap size={24} />
-                    ابدأ اللعبة!
-                    {players.length > 0 && lobbyCountdown > 0 && (
-                      <span style={{ fontSize: '13px', fontWeight: 'bold', opacity: 0.8 }}>({lobbyCountdown})</span>
-                    )}
-                  </span>
-                </button>
-              )}
-              
               {!(players[0]?.id === myId || isCreator) && (
                 <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', position: 'relative' }}>
                   {/* countdown badge top-left */}
