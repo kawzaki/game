@@ -936,13 +936,13 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
         return (
             <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100dvh', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none' }}>
-                <div style={{ height: '50px', background: 'white', padding: '12px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ height: '54px', flexShrink: 0, background: 'white', padding: '0 16px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: '13px', fontWeight: 900, color: '#f59e0b' }}>{challengeData?.category}</div>
                     <div style={{ fontSize: '20px', fontWeight: 900, color: '#451a03' }}>
                         {soloGuessedCorrectly ? <span style={{ color: '#059669' }}>{challengeData?.word}</span> : soloMasked}
                     </div>
                 </div>
-                <div style={{ height: 'calc(80dvh - 50px)', position: 'relative', background: 'white', overflow: 'hidden', paddingBottom: 'env(safe-area-inset-bottom, 20px)' }}>
+                <div style={{ flex: 1, position: 'relative', background: 'white', overflow: 'hidden' }}>
                     <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }} />
                     <AnimatePresence>
                         {soloGuessedCorrectly && (
@@ -1015,15 +1015,15 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         )}
                     </AnimatePresence>
                 </div>
-                <div style={{ height: '20dvh', padding: '12px', background: 'white', borderTop: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ height: 'auto', minHeight: '90px', padding: '12px 16px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 12px))', background: 'white', borderTop: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {soloGuessedCorrectly ? (
                         <div style={{ width: '100%', textAlign: 'center', color: '#64748b', fontWeight: 'bold' }}>
                             تم التخمين بنجاح! 🎉
                         </div>
                     ) : (
-                        <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                            <input type="text" value={guessInput} onChange={e => setGuessInput(e.target.value)} disabled={soloGuessedCorrectly} placeholder='خمّن الكلمة...' style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #eee', textAlign: 'right', fontSize: '16px' }} dir="rtl" />
-                            <button type="submit" style={{ padding: '12px 24px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 900, fontSize: '16px' }}>خمّن</button>
+                        <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px', width: '100%', maxWidth: '500px' }}>
+                            <input type="text" value={guessInput} onChange={e => setGuessInput(e.target.value)} disabled={soloGuessedCorrectly} placeholder='خمّن الكلمة...' style={{ flex: 1, padding: '14px', borderRadius: '14px', border: '2px solid #f1f5f9', textAlign: 'right', fontSize: '16px', fontWeight: 'bold', outline: 'none' }} dir="rtl" />
+                            <button type="submit" style={{ padding: '0 24px', borderRadius: '14px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 900, fontSize: '16px', transition: 'transform 0.1s active', height: '52px' }}>خمّن</button>
                         </form>
                     )}
                 </div>

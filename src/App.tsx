@@ -417,7 +417,7 @@ const App: React.FC = () => {
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: 'white', borderBottom: '1px solid #eee' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Pencil size={18} color="var(--brand-yellow)" />
-            <span style={{ fontWeight: 900 }}>تحدي رسم</span>
+            <span style={{ fontWeight: 900 }}>تحدي المعلومات</span>
           </div>
           <button 
             onClick={() => {

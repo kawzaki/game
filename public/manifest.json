@@ -1,7 +1,7 @@
 {
-  "name": "Draw & Guess - تحدي الرسم",
-  "short_name": "Draw&Guess",
-  "description": "استمتع بتحدي الرسم مع أصدقائك!",
+  "name": "تحدي المعلومات",
+  "short_name": "تحدي",
+  "description": "استمتع بمنافسة أصدقائك في تحدي المعلومات!",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
