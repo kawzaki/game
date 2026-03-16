@@ -224,10 +224,10 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
             ctx.globalCompositeOperation = 'multiply';
             ctx.globalAlpha = 0.5;
         } else {
-            // Standard "Watercolor" effect: subtle transparency + soft edges
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.globalAlpha = 0.85; 
-            ctx.shadowBlur = Math.max(1, scaledSize / 8);
+            // "Darken" prevents the "dotted" joints issue on the same stroke
+            ctx.globalCompositeOperation = 'darken';
+            ctx.globalAlpha = 1.0; 
+            ctx.shadowBlur = scaledSize / 2.5; // Softer, more watercolor-like edge
             ctx.shadowColor = strokeColor;
         }
         
@@ -584,7 +584,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 </div>
 
                 <div style={{ height: 'calc(80dvh - 70px)', position: 'relative', background: '#fff', overflow: 'hidden' }}>
-                    <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', background: 'white', cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default', touchAction: 'none' }} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onPointerLeave={handlePointerUp} />
+                        <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', background: 'white', cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default', touchAction: 'none', paddingBottom: 'env(safe-area-inset-bottom, 20px)' }} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onPointerLeave={handlePointerUp} />
                     <AnimatePresence>
                         {correctBanner && (
                             <motion.div 
@@ -805,7 +805,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         </div>
                     </div>
 
-                    <div style={{ height: 'calc(80dvh - 70px)', position: 'relative', background: 'white', overflow: 'hidden', touchAction: 'none' }}>
+                    <div style={{ height: 'calc(80dvh - 70px)', position: 'relative', background: 'white', overflow: 'hidden', touchAction: 'none', paddingBottom: 'env(safe-area-inset-bottom, 20px)' }}>
                         <canvas
                             ref={canvasRef}
                             onPointerDown={handlePointerDown}
@@ -913,7 +913,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         {soloGuessedCorrectly ? <span style={{ color: '#059669' }}>{challengeData?.word}</span> : soloMasked}
                     </div>
                 </div>
-                <div style={{ height: 'calc(80dvh - 50px)', position: 'relative', background: 'white', overflow: 'hidden' }}>
+                <div style={{ height: 'calc(80dvh - 50px)', position: 'relative', background: 'white', overflow: 'hidden', paddingBottom: 'env(safe-area-inset-bottom, 20px)' }}>
                     <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }} />
                     <AnimatePresence>
                         {soloGuessedCorrectly && (
