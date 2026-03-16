@@ -201,20 +201,35 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         const fromY = (from.y / 1000) * canvas.height;
         const toX = (to.x / 1000) * canvas.width;
         const toY = (to.y / 1000) * canvas.height;
-        const scaledSize = (size / 1000) * canvas.width;
+        
+        // Highlighter is naturally wider (2.5x)
+        const effectiveSize = (highlighter && !eraser) ? size * 2.5 : size;
+        const scaledSize = (effectiveSize / 1000) * canvas.width;
 
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(fromX, fromY);
         ctx.lineTo(toX, toY);
+        
         ctx.strokeStyle = eraser ? '#ffffff' : strokeColor;
         ctx.lineWidth = scaledSize;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         
-        // Highlighter "paints under" via destination-over
-        ctx.globalCompositeOperation = eraser ? 'source-over' : (highlighter ? 'destination-over' : 'source-over');
-        ctx.globalAlpha = (highlighter && !eraser) ? 0.4 : 1.0;
+        if (eraser) {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = 1.0;
+        } else if (highlighter) {
+            // "Multiply" mode makes colors darken as they overlap, like real markers
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.globalAlpha = 0.5;
+        } else {
+            // Standard "Watercolor" effect: subtle transparency + soft edges
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.globalAlpha = 0.85; 
+            ctx.shadowBlur = Math.max(1, scaledSize / 8);
+            ctx.shadowColor = strokeColor;
+        }
         
         ctx.stroke();
         ctx.restore();
@@ -324,8 +339,12 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const handlePointerUp = () => {
         setIsDrawing(false);
         lastPos.current = null;
-        if (currentStrokeGroup.current.length > 0) {
-            setHistory(prev => [...prev, [...currentStrokeGroup.current]]);
+        
+        // Capture a snapshot of the current group before clearing it
+        const finishedGroup = [...currentStrokeGroup.current];
+        
+        if (finishedGroup.length > 0) {
+            setHistory(prev => [...prev, finishedGroup]);
             setRedoStack([]);
             currentStrokeGroup.current = [];
         }
