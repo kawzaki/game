@@ -710,7 +710,7 @@ const App: React.FC = () => {
                   disabled={!hasJoined || players.length === 0}
                   onClick={() => roomId && startGame(roomId)}
                   className="btn-primary-battle"
-                  style={{ marginTop: '20px', background: 'var(--brand-yellow)', color: '#000', position: 'relative', overflow: 'hidden' }}
+                  style={{ marginTop: '20px', background: hasJoined ? '#10b981' : '#cbd5e1', color: hasJoined ? '#fff' : '#64748b', position: 'relative', overflow: 'hidden' }}
                 >
                   {/* countdown bar */}
                   {hasJoined && players.length > 0 && lobbyCountdown > 0 && (
