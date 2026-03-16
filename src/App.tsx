@@ -7,7 +7,7 @@ import WordMeaningGame from './components/WordMeaningGame';
 import SibaGame from './components/SibaGame';
 import PixelChallenge from './components/PixelChallenge';
 import DrawingChallenge from './components/DrawingChallenge';
-import { InstallPrompt } from './components/InstallPrompt';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import { QRScannerModal } from './components/QRScannerModal';
 import confetti from 'canvas-confetti';
 import {
@@ -709,7 +709,7 @@ const App: React.FC = () => {
           <div className="nav-item"><User size={24} /><span>الملف</span></div>
         </nav>
 
-        <InstallPrompt />
+        <PWAInstallPrompt />
       </div >
     );
   }
@@ -1047,7 +1047,7 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <InstallPrompt />
+      <PWAInstallPrompt />
     </div>
   );
 };

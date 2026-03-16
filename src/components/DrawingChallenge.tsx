@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eraser, Trash2, Check, Pencil, Palette, Share2, Link as LinkIcon, Loader2, Droplets, X } from 'lucide-react';
+import { Eraser, Trash2, Check, Pencil, Palette, Link as LinkIcon, Loader2, Droplets, X, Undo2, Redo2, Highlighter } from 'lucide-react';
 import { isFuzzyMatch } from '../utils/arabicUtils';
 
 interface DrawingChallengeProps {
@@ -9,12 +9,17 @@ interface DrawingChallengeProps {
 }
 
 const COLORS = [
-    '#000000', '#ef4444', '#f97316', '#eab308',
-    '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899',
-    '#ffffff', '#a16207', '#0e7490', '#64748b'
+    '#000000', '#4b5563', '#ffffff', // Black, Gray, White
+    '#ef4444', '#f87171', '#991b1b', // Reds
+    '#f97316', '#fbbf24', '#f59e0b', // Oranges/Yellows
+    '#22c55e', '#4ade80', '#166534', // Greens
+    '#3b82f6', '#60a5fa', '#1e40af', // Blues
+    '#8b5cf6', '#a78bfa', '#5b21b6', // Purples
+    '#ec4899', '#f472b6', '#9d174d', // Pinks
+    '#a16207', '#d97706', '#713f12', // Browns
 ];
 
-const BRUSH_SIZES = [3, 6, 12, 20];
+const BRUSH_SIZES = [2, 5, 10, 20, 40];
 
 const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const {
@@ -48,11 +53,17 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
     // Drawing state
     const [color, setColor] = useState('#000000');
-    const [brushSize, setBrushSize] = useState(6);
+    const [brushSize, setBrushSize] = useState(5);
     const [isEraser, setIsEraser] = useState(false);
+    const [isHighlighter, setIsHighlighter] = useState(false);
     const [isDrawing, setIsDrawing] = useState(false);
     const lastPos = useRef<{ x: number; y: number } | null>(null);
     const drawerStrokes = useRef<any[]>([]); // To track drawer strokes locally
+    
+    // Undo/Redo history
+    const [history, setHistory] = useState<any[][]>([]); 
+    const [redoStack, setRedoStack] = useState<any[][]>([]);
+    const currentStrokeGroup = useRef<any[]>([]);
 
     // Ink state (for solo play)
     const [ink, setInk] = useState(100);
@@ -129,6 +140,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         prevCorrectLen.current = correctGuesses.length;
     }, [correctGuesses.length, timer]);
 
+    const [wrongBanner, setWrongBanner] = useState(false);
+
     // Wrong-answer flash banner (Session)
     const prevWrongLen = React.useRef(0);
     useEffect(() => {
@@ -140,6 +153,13 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         }
         prevWrongLen.current = wrongGuesses.length;
     }, [wrongGuesses.length]);
+
+    // Reset success state on new round
+    useEffect(() => {
+        if (drawingDrawerId === myId) {
+            setSoloGuessedCorrectly(false);
+        }
+    }, [drawingDrawerId, players.length, myId]);
 
     // Sync soloGuessedCorrectly with session state
     useEffect(() => {
@@ -156,8 +176,6 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         prevCorrectLen.current = correctGuesses.length;
     }, [drawingDrawerId]);
 
-    const [wrongBanner, setWrongBanner] = useState(false);
-
     // ─── Canvas helpers ──────────────────────────────────────────────
     const getCanvasPos = (e: React.PointerEvent | PointerEvent) => {
         const canvas = canvasRef.current;
@@ -171,7 +189,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         };
     };
 
-    const drawSegment = useCallback((ctx: CanvasRenderingContext2D, from: { x: number; y: number }, to: { x: number; y: number }, strokeColor: string, size: number, eraser: boolean) => {
+    const drawSegment = useCallback((ctx: CanvasRenderingContext2D, from: { x: number; y: number }, to: { x: number; y: number }, strokeColor: string, size: number, eraser: boolean, highlighter?: boolean) => {
         const canvas = ctx.canvas;
         if (!canvas) return;
 
@@ -182,6 +200,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         const toY = (to.y / 1000) * canvas.height;
         const scaledSize = (size / 1000) * canvas.width;
 
+        ctx.save();
         ctx.beginPath();
         ctx.moveTo(fromX, fromY);
         ctx.lineTo(toX, toY);
@@ -189,7 +208,13 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         ctx.lineWidth = scaledSize;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
+        
+        // Highlighter "paints under" via destination-over
+        ctx.globalCompositeOperation = eraser ? 'source-over' : (highlighter ? 'destination-over' : 'source-over');
+        ctx.globalAlpha = (highlighter && !eraser) ? 0.4 : 1.0;
+        
         ctx.stroke();
+        ctx.restore();
     }, []);
 
     // Countdown tick sound
@@ -227,7 +252,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 
                 strokesToDraw.forEach(stroke => {
                     if (stroke.type === 'segment' && stroke.from && stroke.to) {
-                        drawSegment(ctx, stroke.from, stroke.to, stroke.color, stroke.size, stroke.eraser);
+                        drawSegment(ctx, stroke.from, stroke.to, stroke.color, stroke.size, stroke.eraser, stroke.highlighter);
                     }
                 });
             }
@@ -249,7 +274,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         if (!stroke) return;
 
         if (stroke.type === 'segment' && stroke.from && stroke.to) {
-            drawSegment(ctx, stroke.from, stroke.to, stroke.color, stroke.size, stroke.eraser);
+            drawSegment(ctx, stroke.from, stroke.to, stroke.color, stroke.size, stroke.eraser, stroke.highlighter);
         }
     }, [drawingLiveStrokes, isDrawer, drawSegment, roomId]);
 
@@ -278,17 +303,18 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         // Ink depletion logic
         if (isSoloInkMode && !isEraser) {
             const dist = Math.sqrt(Math.pow(pos.x - from.x, 2) + Math.pow(pos.y - from.y, 2));
-            const consumption = (dist * (brushSize / 10)) / 5000; // 5x more ink than before (reduced consumption)
+            const consumption = (dist * (brushSize / 10)) / 5000; 
             setInk(prev => Math.max(0, prev - consumption));
         }
 
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
-        if (ctx) drawSegment(ctx, from, pos, activeColor, brushSize, isEraser);
+        if (ctx) drawSegment(ctx, from, pos, activeColor, brushSize, isEraser, isHighlighter);
 
-        const stroke = { type: 'segment', from, to: pos, color: activeColor, size: brushSize, eraser: isEraser };
+        const stroke = { type: 'segment', from, to: pos, color: activeColor, size: brushSize, eraser: isEraser, highlighter: isHighlighter };
         sendDrawingStroke(roomId, stroke);
         drawerStrokes.current.push(stroke);
+        currentStrokeGroup.current.push(stroke);
 
         lastPos.current = pos;
     };
@@ -296,6 +322,57 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const handlePointerUp = () => {
         setIsDrawing(false);
         lastPos.current = null;
+        if (currentStrokeGroup.current.length > 0) {
+            setHistory(prev => [...prev, [...currentStrokeGroup.current]]);
+            setRedoStack([]);
+            currentStrokeGroup.current = [];
+        }
+    };
+
+    const handleUndo = () => {
+        if (history.length === 0) return;
+        const newHistory = [...history];
+        const lastAction = newHistory.pop()!;
+        setRedoStack(prev => [...prev, lastAction]);
+        setHistory(newHistory);
+        
+        // Rebuild flat strokes
+        drawerStrokes.current = newHistory.flat();
+        
+        // Sync with server: Clear and resend all (simpler than complex undo protocol)
+        sendDrawingClear(roomId);
+        drawerStrokes.current.forEach(s => sendDrawingStroke(roomId, s));
+        
+        // Redraw canvas
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawerStrokes.current.forEach(s => drawSegment(ctx, s.from, s.to, s.color, s.size, s.eraser, s.highlighter));
+        }
+    };
+
+    const handleRedo = () => {
+        if (redoStack.length === 0) return;
+        const newRedo = [...redoStack];
+        const actionToRestore = newRedo.pop()!;
+        setHistory(prev => [...prev, actionToRestore]);
+        setRedoStack(newRedo);
+        
+        // Append to flat strokes
+        drawerStrokes.current = [...drawerStrokes.current, ...actionToRestore];
+        
+        // Sync with server: Resend the restored segments
+        actionToRestore.forEach(s => sendDrawingStroke(roomId, s));
+        
+        // Redraw action on canvas
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            actionToRestore.forEach(s => drawSegment(ctx, s.from, s.to, s.color, s.size, s.eraser, s.highlighter));
+        }
     };
 
     const handleClear = () => {
@@ -328,59 +405,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         setGuessInput('');
     };
 
-    const handleDownload = () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        
-        // Ensure background is strictly white before capture
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        if (tempCtx) {
-            tempCtx.fillStyle = '#ffffff';
-            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            tempCtx.drawImage(canvas, 0, 0);
-            
-            const link = document.createElement('a');
-            link.download = `drawing-${drawingCurrentWord || 'challenge'}.png`;
-            link.href = tempCanvas.toDataURL('image/png');
-            link.click();
-        }
-    };
 
-    const handleShare = async () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        
-        try {
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
-            const tempCtx = tempCanvas.getContext('2d');
-            if (!tempCtx) return;
-            
-            tempCtx.fillStyle = '#ffffff';
-            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            tempCtx.drawImage(canvas, 0, 0);
-
-            const blob = await new Promise<Blob | null>(resolve => tempCanvas.toBlob(resolve, 'image/png'));
-            if (!blob) return;
-            const file = new File([blob], 'drawing.png', { type: 'image/png' });
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: 'تحدي الرسم!',
-                    text: 'خمنوا ايش رسمت'
-                });
-            } else {
-                handleDownload();
-            }
-        } catch (err) {
-            console.error('Sharing failed:', err);
-            handleDownload();
-        }
-    };
 
     const handleCreateChallenge = () => {
         if (!drawingCurrentWord || drawerStrokes.current.length === 0) {
@@ -459,34 +484,63 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     </div>
 
                     {isDrawer && !isScoring && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
-                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
-                                <button onClick={() => setIsEraser(e => !e)} title="ممحاة" style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid transparent', background: isEraser ? '#fef3c7' : 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isEraser ? '0 0 0 2px #d97706' : '0 1px 2px rgba(0,0,0,0.05)' }}>
-                                    <Eraser size={16} color={isEraser ? '#d97706' : '#64748b'} />
+                        <div style={{ display: 'flex', flexDirection: 'column', background: '#f8fafc', borderTop: '1px solid #f1f5f9' }}>
+                            {/* Action Row */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderBottom: '1px solid #f1f5f9' }}>
+                                <button onClick={() => { setIsEraser(e => !e); setIsHighlighter(false); }} title="ممحاة" style={{ width: '36px', height: '36px', borderRadius: '10px', border: '1px solid transparent', background: isEraser ? '#fef3c7' : 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isEraser ? '0 0 0 2px #d97706' : '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                    <Eraser size={18} color={isEraser ? '#d97706' : '#64748b'} />
                                 </button>
-                                <button onClick={handleClear} title="مسح الكل" style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'white', border: '1px solid #fee2e2', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
-                                    <Trash2 size={16} />
+                                <button onClick={() => { setIsHighlighter(h => !h); setIsEraser(false); }} title="تحديد (خلف الرسم)" style={{ width: '36px', height: '36px', borderRadius: '10px', border: '1px solid transparent', background: isHighlighter ? '#dcfce7' : 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isHighlighter ? '0 0 0 2px #10b981' : '0 1px 2px rgba(0,0,0,0.05)' }}>
+                                    <Highlighter size={18} color={isHighlighter ? '#10b981' : '#64748b'} />
                                 </button>
-                                <div style={{ width: '1px', height: '20px', background: '#e2e8f0', margin: '0 2px' }} />
-                                <div style={{ display: 'flex', gap: '4px' }}>
+                                <div style={{ width: '1px', height: '24px', background: '#e2e8f0', margin: '0 4px' }} />
+                                <button onClick={handleUndo} disabled={history.length === 0} title="إلغاء الخطوة" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'white', border: '1px solid #e2e8f0', cursor: history.length === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: history.length === 0 ? 0.3 : 1 }}>
+                                    <Undo2 size={18} color="#64748b" />
+                                </button>
+                                <button onClick={handleRedo} disabled={redoStack.length === 0} title="إعادة الخطوة" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'white', border: '1px solid #e2e8f0', cursor: redoStack.length === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: redoStack.length === 0 ? 0.3 : 1 }}>
+                                    <Redo2 size={18} color="#64748b" />
+                                </button>
+                                <div style={{ width: '1px', height: '24px', background: '#e2e8f0', margin: '0 4px' }} />
+                                <button onClick={handleClear} title="مسح الكل" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'white', border: '1px solid #fee2e2', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
+                                    <Trash2 size={18} />
+                                </button>
+                                <div style={{ flex: 1 }} />
+                                {/* Brush Sizes Row Inline */}
+                                <div style={{ display: 'flex', gap: '4px', background: '#fff', padding: '4px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
                                     {BRUSH_SIZES.map(s => (
-                                        <button key={s} onClick={() => { setBrushSize(s); setIsEraser(false); }} style={{ width: '26px', height: '26px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid transparent', background: (!isEraser && brushSize === s) ? '#3b82f6' : 'white', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-                                            <div style={{ width: Math.min(s/2 + 2, 12), height: Math.min(s/2 + 2, 12), borderRadius: '50%', background: (!isEraser && brushSize === s) ? 'white' : color }} />
+                                        <button key={s} onClick={() => setBrushSize(s)} style={{ width: '28px', height: '28px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid transparent', background: brushSize === s ? '#3b82f6' : 'white', cursor: 'pointer' }}>
+                                            <div style={{ width: Math.min(s/3 + 3, 16), height: Math.min(s/3 + 3, 16), borderRadius: '50%', background: brushSize === s ? 'white' : '#64748b' }} />
                                         </button>
                                     ))}
                                 </div>
                             </div>
-                            <div style={{ width: '1px', height: '20px', background: '#e2e8f0' }} />
-                            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', padding: '2px 0', flex: 1, scrollbarWidth: 'none' }}>
+                            
+                            {/* Color Row */}
+                            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '10px 12px', flex: 1, scrollbarWidth: 'none', background: '#fff' }}>
                                 {COLORS.map(c => (
-                                    <button key={c} onClick={() => { setColor(c); setIsEraser(false); }} style={{ width: '24px', height: '24px', borderRadius: '50%', background: c, border: (!isEraser && color === c) ? '2px solid #fff' : '1px solid rgba(0,0,0,0.1)', cursor: 'pointer', flexShrink: 0, boxShadow: (!isEraser && color === c) ? '0 0 0 2px #3b82f6' : 'none' }} />
+                                    <button 
+                                        key={c} 
+                                        onClick={() => { setColor(c); setIsEraser(false); }} 
+                                        style={{ 
+                                            width: '28px', 
+                                            height: '28px', 
+                                            borderRadius: '50%', 
+                                            background: c, 
+                                            border: (color === c && !isEraser) ? '3px solid #f1f5f9' : '1px solid rgba(0,0,0,0.1)', 
+                                            cursor: 'pointer', 
+                                            flexShrink: 0, 
+                                            boxShadow: (color === c && !isEraser) ? '0 0 0 2px #3b82f6' : 'none',
+                                            transform: (color === c && !isEraser) ? 'scale(1.1)' : 'scale(1)',
+                                            transition: 'transform 0.1s'
+                                        }} 
+                                    />
                                 ))}
                             </div>
                         </div>
                     )}
 
                     {isSoloInkMode && isDrawer && !isScoring && (
-                        <div style={{ padding: '0 12px 8px 12px', background: '#f8fafc' }}>
+                        <div style={{ padding: '0 12px 8px 12px', background: '#fff', borderTop: '1px solid #f1f5f9' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#fff', padding: '6px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#3b82f6', flexShrink: 0 }}>
                                     <Droplets size={14} />
@@ -507,7 +561,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 </div>
 
                 <div style={{ height: 'calc(80dvh - 70px)', position: 'relative', background: '#fff', overflow: 'hidden' }}>
-                    <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default', touchAction: 'none' }} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp} />
+                    <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', background: 'white', cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default', touchAction: 'none' }} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp} />
                     <AnimatePresence>
                         {correctBanner && (
                             <motion.div 
@@ -535,7 +589,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                             </motion.div>
                         )}
 
-                        {soloGuessedCorrectly && !isDrawer && !isScoring && (
+                        {soloGuessedCorrectly && !isDrawer && !isScoring && players.length === 1 && (
                             <div style={{ position: 'absolute', inset: 0, background: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(8px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
                                 <motion.div 
                                     initial={{ scale: 0.8, opacity: 0, y: 20 }} 
@@ -639,11 +693,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         
                         {isDrawer && !isScoring && (
                             <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'center' }}>
-                                <button onClick={handleShare} title="مشاركة الصورة" style={{ padding: '10px 16px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', gap: '6px', fontSize: '13px', fontWeight: 'bold' }}>
-                                    <Share2 size={16} />
-                                    مشاركة
-                                </button>
-                                <button onClick={handleCreateChallenge} disabled={challengeLoading} title="وضع التحدي" style={{ padding: '10px 20px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 'bold', fontSize: '14px', gap: '8px' }}>
+                                <button onClick={handleCreateChallenge} disabled={challengeLoading} title="وضع التحدي" style={{ flex: 1, padding: '10px 20px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 'bold', fontSize: '14px', gap: '8px' }}>
                                     {challengeLoading ? <Loader2 size={16} className="animate-spin" /> : <LinkIcon size={16} />}
                                     تحدي صديق
                                 </button>
@@ -768,13 +818,9 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                             </div>
 
                             <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                                <button onClick={handleShare} style={{ padding: '10px 16px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', fontWeight: 'bold', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <Share2 size={16} />
-                                    مشاركة
-                                </button>
-                                <button onClick={handleCreateChallenge} disabled={challengeLoading} style={{ flex: 1, padding: '10px 20px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 900, fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                <button onClick={handleCreateChallenge} disabled={challengeLoading} style={{ flex: 1, padding: '12px 20px', borderRadius: '12px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 900, fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                     {challengeLoading ? <Loader2 size={16} className="animate-spin" /> : <LinkIcon size={16} />}
-                                    تحدي صديق
+                                    تحدي صديق وارسل الرسمة
                                 </button>
                             </div>
                         </div>
