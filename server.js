@@ -9,6 +9,9 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Increment this whenever a significant UI update is pushed to force PWA refresh
+const SERVER_VERSION = '1.0.5'; 
+
 // Pre-load questions for all rooms
 let questionPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
 const khaleejiWordsPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/khaleejiWords.json'), 'utf8'));
@@ -54,6 +57,10 @@ function selectJeopardyQuestions(questionsPerCategory) {
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.get('/api/version', (req, res) => {
+    res.json({ version: SERVER_VERSION });
+});
 
 // --- Admin API Routes ---
 const ADMIN_USERNAME = 'admin';

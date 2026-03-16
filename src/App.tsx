@@ -10,6 +10,7 @@ import DrawingChallenge from './components/DrawingChallenge';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import Competitions from './components/Competitions';
 import { QRScannerModal } from './components/QRScannerModal';
+import { VersionChecker } from './components/VersionChecker';
 import confetti from 'canvas-confetti';
 import {
   Timer as TimerIcon,
@@ -443,6 +444,7 @@ const App: React.FC = () => {
   if (isServerWakingUp) {
     return (
       <>
+        <VersionChecker />
         <NotificationToast />
         <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
@@ -471,6 +473,7 @@ const App: React.FC = () => {
   if (challengeData && !roomId) {
     return (
       <div className="game-wrapper" dir="rtl" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
+        <VersionChecker />
         <NotificationToast />
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: 'white', borderBottom: '1px solid #eee' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -498,6 +501,7 @@ const App: React.FC = () => {
   if (gameStatus === 'lobby') {
     return (
       <div className="home-container">
+        <VersionChecker />
         <NotificationToast />
         <header className="home-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', justifyContent: 'center' }}>
