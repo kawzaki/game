@@ -44,7 +44,10 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         isChallengeCreator,
         clearChallengeData,
         joinChallengeSession,
-        playerName
+        playerName,
+        soloChallengeSolved,
+        sendSessionChallenge,
+        roomId: currentRoomId
     } = useGameStore();
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -100,7 +103,9 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
         setSoloGuessedCorrectly(false);
         setIsSoloArtist(true);
-        setShowChallengeModal(false); // <--- Explicitly hide old modal
+        clearChallengeData();
+        getSoloWord();
+        setShowChallengeModal(false); 
         setGuessInput('');
         setInk(100);
         drawerStrokes.current = [];
@@ -351,6 +356,14 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         }
     };
 
+    useEffect(() => {
+        if (challengeData && isChallengeCreator && currentRoomId?.startsWith('session_')) {
+            sendSessionChallenge(challengeData.id, playerName || 'صديق');
+            // We can also show a small local feedback
+            setShowChallengeModal(true);
+        }
+    }, [challengeData, isChallengeCreator, currentRoomId, sendSessionChallenge, playerName]);
+
     const handleUndo = () => {
         if (history.length === 0) return;
         const newHistory = [...history];
@@ -422,9 +435,11 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         const guess = guessInput.trim();
         if (!guess || hasGuessedCorrectly || soloGuessedCorrectly) return;
 
-        if (roomId === 'solo-challenge' && challengeData) {
+        if (currentRoomId === 'solo-challenge' && challengeData) {
             if (isFuzzyMatch(guess, challengeData.word)) {
                 setSoloGuessedCorrectly(true);
+                // Notify the server so the creator gets a notification
+                soloChallengeSolved(challengeData.id, playerName || 'صديق');
                 import('canvas-confetti').then(confetti => confetti.default());
             } else {
                 setWrongBanner(true);
@@ -444,6 +459,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
             return;
         }
         createChallenge(drawerStrokes.current, drawingCurrentWord, drawingCategory || '');
+        
+        // If it's a session, we'll handle the sending in useEffect once challengeData arrives
     };
 
     const handleShareChallenge = async () => {
@@ -906,9 +923,26 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                 <motion.div animate={{ width: `${ink}%` }} style={{ height: '100%', background: ink > 20 ? 'linear-gradient(90deg, #3b82f6, #60a5fa)' : 'linear-gradient(90deg, #ef4444, #f87171)' }} />
                             </div>
 
-                            <button onClick={handleCreateChallenge} disabled={challengeLoading} style={{ width: '100%', padding: '14px 20px', borderRadius: '14px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 900, fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(251, 191, 36, 0.3)' }}>
-                                {challengeLoading ? <Loader2 size={18} className="animate-spin" /> : <LinkIcon size={18} />}
-                                تحدي صديق وارسل الرسمة
+                            <button 
+                                onClick={handleCreateChallenge} 
+                                disabled={challengeLoading} 
+                                style={{ 
+                                    width: '100%', 
+                                    padding: '14px 20px', 
+                                    borderRadius: '14px', 
+                                    background: 'var(--brand-yellow)', 
+                                    border: 'none', 
+                                    fontWeight: 900, 
+                                    fontSize: '15px', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    gap: '8px', 
+                                    boxShadow: '0 4px 12px rgba(251, 191, 36, 0.3)' 
+                                }}
+                            >
+                                {challengeLoading ? <Loader2 size={18} className="animate-spin" /> : (currentRoomId?.startsWith('session_') ? <Check size={18} /> : <LinkIcon size={18} />)}
+                                {currentRoomId?.startsWith('session_') ? 'ارسل الرسمة لصديقك' : 'تحدى صديق وارسل الرسمة'}
                             </button>
                         </div>
                     </div>

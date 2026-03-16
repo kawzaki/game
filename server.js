@@ -1806,7 +1806,15 @@ io.on('connection', (socket) => {
                 return socket.emit('challenge_error', 'يجب عليك الرسم أولاً');
             }
             const id = generateChallengeId();
-            const challenge = { id, strokes, word, category, createdAt: Date.now(), isAnswered: false };
+            const challenge = { 
+                id, 
+                strokes, 
+                word, 
+                category, 
+                creatorId: socket.id, // Store who created it
+                createdAt: Date.now(), 
+                isAnswered: false 
+            };
             challenges.set(id, challenge);
             saveChallenges();
             socket.emit('challenge_created', challenge);
@@ -1850,6 +1858,36 @@ io.on('connection', (socket) => {
         socket.join(roomId);
         io.to(roomId).emit('room_data', room);
         console.log(`[Session] Player joined session ${challengeId}`);
+    });
+
+    socket.on('solo_challenge_solved', ({ challengeId, solverName }) => {
+        const challenge = challenges.get(challengeId);
+        if (challenge) {
+            challenge.isAnswered = true;
+            challenge.answeredAt = Date.now();
+            saveChallenges();
+
+            // Notify the creator if they are still online
+            if (challenge.creatorId) {
+                const creatorSocket = io.sockets.sockets.get(challenge.creatorId);
+                if (creatorSocket) {
+                    creatorSocket.emit('challenge_solved_notification', {
+                        challengeId,
+                        solverName: solverName || 'صديق',
+                        word: challenge.word
+                    });
+                    console.log(`[Challenge] Notified creator ${challenge.creatorId} that challenge ${challengeId} was solved`);
+                }
+            }
+        }
+    });
+
+    socket.on('send_session_challenge', ({ roomId, challengeId, playerName }) => {
+        console.log(`[Session] Sending challenge ${challengeId} to room ${roomId}`);
+        socket.to(roomId).emit('session_challenge_notification', {
+            challengeId,
+            playerName: playerName || 'صديق'
+        });
     });
 
     socket.on('get_solo_word', () => {

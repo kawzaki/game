@@ -63,6 +63,8 @@ interface GameState {
     drawingCorrectGuesses: { playerId: string; playerName: string }[];
     drawingWrongGuesses: { playerId: string; playerName: string; guess: string }[];
 
+    notification: { message: string, type: 'success' | 'info' | 'error' } | null;
+
     activeRooms: ActiveRoom[];
     isServerWakingUp: boolean;
 
@@ -100,6 +102,10 @@ interface GameState {
     getSoloWord: () => void;
     clearChallengeData: () => void;
     joinChallengeSession: (challengeId: string, playerName: string) => void;
+    sendSessionChallenge: (challengeId: string, playerName: string) => void;
+    soloChallengeSolved: (challengeId: string, solverName: string) => void;
+    showNotification: (message: string, type: 'success' | 'info' | 'error') => void;
+    clearNotification: () => void;
     fetchActiveRooms: () => void;
 }
 
@@ -203,6 +209,31 @@ export const useGameStore = create<GameState>((set) => {
         }));
     });
 
+    socket.on('challenge_solved_notification', (data: { solverName: string, word: string }) => {
+        set({ 
+            notification: { 
+                message: `رائع! خمن ${data.solverName} رسمتك بنجاح: ${data.word}`, 
+                type: 'success' 
+            } 
+        });
+        // Auto-clear after 6 seconds
+        setTimeout(() => {
+            set({ notification: null });
+        }, 6000);
+    });
+    
+    socket.on('session_challenge_notification', (data: { challengeId: string, playerName: string }) => {
+        set({ 
+            notification: { 
+                message: `وصلتك رسمة جديدة من ${data.playerName}!`, 
+                type: 'info' 
+            } 
+        });
+        setTimeout(() => {
+            set({ notification: null });
+        }, 6000);
+    });
+
     // Handle reconnections
     socket.on('connect', () => {
         const state = useGameStore.getState();
@@ -269,6 +300,7 @@ export const useGameStore = create<GameState>((set) => {
         challengeLoading: false,
         isChallengeCreator: false,
         isServerWakingUp: false,
+        notification: null,
 
         setRoomId: (id) => set({ roomId: id }),
         setGameType: (type) => set({ gameType: type }),
@@ -294,7 +326,8 @@ export const useGameStore = create<GameState>((set) => {
             sibaPhase: 'setup', sibaPiecesPlaced: {}, sibaTurn: undefined,
             drawingCurrentWord: null, drawingMaskedWord: null, drawingDrawerId: null,
             drawingGuesses: {}, drawingCategory: null, drawingStrokes: [], drawingLiveStrokes: [],
-            drawingCorrectGuesses: [], drawingWrongGuesses: []
+            drawingCorrectGuesses: [], drawingWrongGuesses: [],
+            notification: null
         }),
         submitRoundBinOWalad: (roomId, inputs) => socket.emit('submit_round_bin_o_walad', { roomId, inputs }),
         getRoomStatus: (roomId) => {
@@ -334,7 +367,34 @@ export const useGameStore = create<GameState>((set) => {
         },
         getSoloWord: () => socket.emit('get_solo_word'),
         clearChallengeData: () => set({ challengeData: null, isChallengeCreator: false }),
-        joinChallengeSession: (challengeId, playerName) => socket.emit('drawing_join_challenge', { challengeId, playerName }),
+
+        joinChallengeSession: (challengeId, playerName) => {
+            socket.emit('join_challenge_session', { challengeId, playerName });
+        },
+
+        soloChallengeSolved: (challengeId, solverName) => {
+            socket.emit('solo_challenge_solved', { challengeId, solverName });
+        },
+
+        showNotification: (message, type) => {
+            set({ notification: { message, type } });
+        },
+
+        sendSessionChallenge: (challengeId: string, playerName: string) => {
+            const state = useGameStore.getState();
+            if (state.roomId) {
+                socket.emit('send_session_challenge', { 
+                    roomId: state.roomId, 
+                    challengeId, 
+                    playerName 
+                });
+            }
+        },
+
+        clearNotification: () => {
+            set({ notification: null });
+        },
+
         fetchActiveRooms: () => {
             set({ roomDataLoading: true });
             socket.emit('get_active_rooms');

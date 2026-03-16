@@ -27,7 +27,8 @@ import {
   BookOpen,
   Image as ImageIcon,
   Pencil,
-  Camera
+  Camera,
+  X as CloseIcon
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,6 +41,58 @@ const BIN_O_WALAD_CATEGORIES = [
   { key: 'animal', label: 'حيوان' },
   { key: 'location', label: 'بلاد' }
 ];
+
+const NotificationToast: React.FC = () => {
+  const { notification, clearNotification } = useGameStore();
+
+  return (
+    <AnimatePresence>
+      {notification && (
+        <motion.div
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -100, opacity: 0 }}
+          style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            x: '-50%',
+            zIndex: 10000,
+            width: '90%',
+            maxWidth: '400px',
+            padding: '16px 20px',
+            borderRadius: '20px',
+            background: '#fff',
+            border: `2px solid ${notification.type === 'success' ? '#10b981' : (notification.type === 'error' ? '#ef4444' : '#3b82f6')}`,
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            direction: 'rtl'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ 
+              background: notification.type === 'success' ? '#ecfdf5' : (notification.type === 'error' ? '#fef2f2' : '#eff6ff'), 
+              padding: '8px', 
+              borderRadius: '12px' 
+            }}>
+              {notification.type === 'success' ? <Trophy size={20} color="#10b981" /> : (notification.type === 'error' ? <Zap size={20} color="#ef4444" /> : <Plus size={20} color="#3b82f6" />)}
+            </div>
+            <span style={{ fontWeight: 900, fontSize: '14px', color: '#1e293b' }}>{notification.message}</span>
+          </div>
+          <button 
+            onClick={clearNotification}
+            style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px' }}
+          >
+            <CloseIcon size={18} />
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
 
 const App: React.FC = () => {
   const { i18n } = useTranslation();
@@ -389,7 +442,9 @@ const App: React.FC = () => {
 
   if (isServerWakingUp) {
     return (
-      <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
+      <>
+        <NotificationToast />
+        <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
           <div style={{ position: 'relative' }}>
             <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }} style={{ width: '80px', height: '80px', borderRadius: '50%', border: '4px solid #f1f5f9', borderTopColor: 'var(--brand-yellow)' }} />
@@ -408,6 +463,7 @@ const App: React.FC = () => {
           </div>
         </motion.div>
       </div>
+      </>
     );
   }
 
@@ -415,6 +471,7 @@ const App: React.FC = () => {
   if (challengeData && !roomId) {
     return (
       <div className="game-wrapper" dir="rtl" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
+        <NotificationToast />
         <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', background: 'white', borderBottom: '1px solid #eee' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Pencil size={18} color="var(--brand-yellow)" />
@@ -441,6 +498,7 @@ const App: React.FC = () => {
   if (gameStatus === 'lobby') {
     return (
       <div className="home-container">
+        <NotificationToast />
         <header className="home-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', justifyContent: 'center' }}>
             <span style={{ fontWeight: 900, fontSize: '18px' }}>تحدي المعلومات</span>
