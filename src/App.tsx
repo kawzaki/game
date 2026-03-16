@@ -705,15 +705,15 @@ const App: React.FC = () => {
                 )}
               </AnimatePresence>
 
-              {(players[0]?.id === myId || isCreator) ? (
+              {(players[0]?.id === myId || isCreator) && hasJoined && (
                 <button
-                  disabled={!hasJoined || players.length === 0}
+                  disabled={players.length === 0}
                   onClick={() => roomId && startGame(roomId)}
                   className="btn-primary-battle"
-                  style={{ marginTop: '20px', background: hasJoined ? '#10b981' : '#cbd5e1', color: hasJoined ? '#fff' : '#64748b', position: 'relative', overflow: 'hidden' }}
+                  style={{ marginTop: '20px', background: '#10b981', color: '#fff', position: 'relative', overflow: 'hidden' }}
                 >
                   {/* countdown bar */}
-                  {hasJoined && players.length > 0 && lobbyCountdown > 0 && (
+                  {players.length > 0 && lobbyCountdown > 0 && (
                     <motion.div
                       initial={{ width: '100%' }}
                       animate={{ width: `${(lobbyCountdown / 60) * 100}%` }}
@@ -724,12 +724,14 @@ const App: React.FC = () => {
                   <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Zap size={24} />
                     ابدأ اللعبة!
-                    {hasJoined && players.length > 0 && lobbyCountdown > 0 && (
+                    {players.length > 0 && lobbyCountdown > 0 && (
                       <span style={{ fontSize: '13px', fontWeight: 'bold', opacity: 0.8 }}>({lobbyCountdown})</span>
                     )}
                   </span>
                 </button>
-              ) : (
+              )}
+              
+              {!(players[0]?.id === myId || isCreator) && (
                 <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1', position: 'relative' }}>
                   {/* countdown badge top-left */}
                   {hasJoined && lobbyCountdown > 0 && (
