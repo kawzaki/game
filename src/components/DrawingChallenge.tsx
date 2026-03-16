@@ -11,7 +11,7 @@ interface DrawingChallengeProps {
 const COLORS = [
     '#000000', '#4b5563', '#ffffff', // Black, Gray, White
     '#ef4444', '#f87171', '#991b1b', // Reds
-    '#f97316', '#fbbf24', '#f59e0b', // Oranges/Yellows
+    '#ffff00', '#f97316', '#fbbf24', '#f59e0b', // Bright Yellow, Oranges/Yellows
     '#22c55e', '#4ade80', '#166534', // Greens
     '#3b82f6', '#60a5fa', '#1e40af', // Blues
     '#8b5cf6', '#a78bfa', '#5b21b6', // Purples
@@ -84,6 +84,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const [showChallengeModal, setShowChallengeModal] = useState(false);
     const [soloGuessedCorrectly, setSoloGuessedCorrectly] = useState(false);
     const [isSoloArtist, setIsSoloArtist] = useState(false);
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
 
     const handleDrawBack = () => {
         // Clear the URL challenge parameter to prevent App.tsx from refetching the old challenge
@@ -397,6 +398,12 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     };
 
     const handleClear = () => {
+        if (!showClearConfirm) {
+            setShowClearConfirm(true);
+            setTimeout(() => setShowClearConfirm(false), 3000);
+            return;
+        }
+
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
         if (!ctx || !canvas) return;
@@ -407,6 +414,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         setRedoStack([]);
         currentStrokeGroup.current = [];
         if (isSoloInkMode) setInk(100);
+        setShowClearConfirm(false);
     };
 
     const handleGuessSubmit = (e: React.FormEvent) => {
@@ -835,8 +843,29 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                     <Redo2 size={18} color="#64748b" />
                                 </button>
                                 <div style={{ width: '1px', height: '24px', background: '#e2e8f0', margin: '0 4px' }} />
-                                <button onClick={handleClear} title="مسح الكل" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'white', border: '1px solid #fee2e2', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444' }}>
-                                    <Trash2 size={18} />
+                                <button onClick={handleClear} title="مسح الكل" style={{ 
+                                    minWidth: showClearConfirm ? '80px' : '36px', 
+                                    height: '36px', 
+                                    padding: showClearConfirm ? '0 8px' : '0',
+                                    borderRadius: '10px', 
+                                    background: showClearConfirm ? '#fee2e2' : 'white', 
+                                    border: '1px solid #fee2e2', 
+                                    cursor: 'pointer', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    color: '#ef4444',
+                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    gap: '4px'
+                                }}>
+                                    {showClearConfirm ? (
+                                        <>
+                                            <Trash2 size={16} />
+                                            <span style={{ fontSize: '11px', fontWeight: 900 }}>تأكيد؟</span>
+                                        </>
+                                    ) : (
+                                        <Trash2 size={18} />
+                                    )}
                                 </button>
                                 <div style={{ flex: 1 }} />
                                 {/* Brush Sizes Inline */}
