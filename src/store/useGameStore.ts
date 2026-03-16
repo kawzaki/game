@@ -164,6 +164,12 @@ export const useGameStore = create<GameState>((set) => {
     socket.on('challenge_error', (error) => {
         console.error("Challenge error:", error);
         alert(error); // Show error to user
+        
+        // Remove challenge from URL to prevent infinite retry loop in App.tsx
+        const url = new URL(window.location.href);
+        url.searchParams.delete('challenge');
+        window.history.replaceState({}, '', url.toString());
+
         set({ challengeLoading: false });
     });
 
