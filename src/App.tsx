@@ -8,6 +8,7 @@ import SibaGame from './components/SibaGame';
 import PixelChallenge from './components/PixelChallenge';
 import DrawingChallenge from './components/DrawingChallenge';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import Competitions from './components/Competitions';
 import { QRScannerModal } from './components/QRScannerModal';
 import confetti from 'canvas-confetti';
 import {
@@ -79,12 +80,14 @@ const App: React.FC = () => {
     challengeLoading,
     joinChallengeSession,
     playerName: storedPlayerName,
+    fetchActiveRooms,
   } = useGameStore();
 
   const [isCreator, setIsCreator] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [currentView, setCurrentView] = useState<'home' | 'competitions' | 'profile'>('home');
 
   const isMyTurn = players[currentPlayerIndex]?.id === myId;
   const activePlayer = players[currentPlayerIndex];
@@ -428,7 +431,9 @@ const App: React.FC = () => {
         <h1 className="hero-title">هل أنت مستعد <span style={{ color: 'var(--brand-yellow)' }}>للمنافسة؟</span></h1>
         <p className="hero-subtitle">تحد أصدقاءك لإثبات معرفتك في مختلف الألعاب.</p>
 
-        <div className="join-section">
+        {currentView === 'home' ? (
+          <>
+            <div className="join-section">
           <span className="join-label">اختر لعبة للتحدي</span>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' }}>
             <button className="btn-primary-battle" onClick={() => finalizeCreateRoom('jeopardy')}>
@@ -700,13 +705,17 @@ const App: React.FC = () => {
             </div>
           </div>
         )}
+          </>
+        ) : (
+          <Competitions />
+        )}
 
         <nav className="bottom-nav">
-          <div className="nav-item active"><Home size={24} /><span>الرئيسية</span></div>
-          <div className="nav-item"><Trophy size={24} /><span>البطولات</span></div>
+          <div className={`nav-item ${currentView === 'home' ? 'active' : ''}`} onClick={() => setCurrentView('home')}><Home size={24} /><span>الرئيسية</span></div>
+          <div className={`nav-item ${currentView === 'competitions' ? 'active' : ''}`} onClick={() => { setCurrentView('competitions'); fetchActiveRooms(); }}><Trophy size={24} /><span>المنافسات</span></div>
           <div className="nav-plus"><Plus size={32} strokeWidth={3} /></div>
           <div className="nav-item" onClick={() => window.dispatchEvent(new Event('show-install-prompt'))} style={{ cursor: 'pointer' }}><Download size={24} /><span>تثبيت</span></div>
-          <div className="nav-item"><User size={24} /><span>الملف</span></div>
+          <div className={`nav-item ${currentView === 'profile' ? 'active' : ''}`} onClick={() => setCurrentView('profile')}><User size={24} /><span>الملف</span></div>
         </nav>
 
         <PWAInstallPrompt />

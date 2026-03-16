@@ -613,6 +613,21 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('get_active_rooms', () => {
+        const activeRooms = [];
+        for (const [id, room] of rooms.entries()) {
+            if (room.gameStatus !== 'game_over' && room.players.length > 0) {
+                activeRooms.push({
+                    id: id,
+                    gameType: room.gameType,
+                    playerCount: room.players.length,
+                    creatorName: room.players[0]?.name || 'لاعب غير معروف'
+                });
+            }
+        }
+        socket.emit('active_rooms', activeRooms);
+    });
+
     socket.on('start_game', (roomId) => {
         const room = rooms.get(roomId);
         if (room && (room.players[0]?.id === socket.id || room.creatorSocketId === socket.id)) {

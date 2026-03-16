@@ -3,6 +3,13 @@ import { io, Socket } from 'socket.io-client';
 
 export const socket: Socket = io();
 
+interface ActiveRoom {
+    id: string;
+    gameType: string;
+    playerCount: number;
+    creatorName: string;
+}
+
 interface Question {
     id: string;
     category: string;
@@ -56,6 +63,8 @@ interface GameState {
     drawingCorrectGuesses: { playerId: string; playerName: string }[];
     drawingWrongGuesses: { playerId: string; playerName: string; guess: string }[];
 
+    activeRooms: ActiveRoom[];
+
     // Async Challenge state
     challengeData: { strokes: any[]; word: string; category: string; id: string } | null;
     challengeLoading: boolean;
@@ -90,6 +99,7 @@ interface GameState {
     getSoloWord: () => void;
     clearChallengeData: () => void;
     joinChallengeSession: (challengeId: string, playerName: string) => void;
+    fetchActiveRooms: () => void;
 }
 
 export const useGameStore = create<GameState>((set) => {
@@ -135,6 +145,10 @@ export const useGameStore = create<GameState>((set) => {
             isConnected: true,
             roomDataLoading: false
         });
+    });
+
+    socket.on('active_rooms', (rooms) => {
+        set({ activeRooms: rooms, roomDataLoading: false });
     });
 
     socket.on('challenge_created', (data) => {
@@ -233,6 +247,7 @@ export const useGameStore = create<GameState>((set) => {
         drawingLiveStrokes: [],
         drawingCorrectGuesses: [],
         drawingWrongGuesses: [],
+        activeRooms: [],
         challengeData: null,
         challengeLoading: false,
         isChallengeCreator: false,
@@ -374,7 +389,11 @@ export const useGameStore = create<GameState>((set) => {
         },
         clearChallengeData: () => set({ challengeData: null, isChallengeCreator: false }),
         joinChallengeSession: (challengeId, playerName) => {
-            socket.emit('join_challenge_session', { challengeId, playerName });
+            socket.emit('drawing_join_challenge', { challengeId, playerName });
+        },
+        fetchActiveRooms: () => {
+            set({ roomDataLoading: true });
+            socket.emit('get_active_rooms');
         }
     };
 });
