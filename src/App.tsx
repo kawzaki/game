@@ -568,6 +568,7 @@ const App: React.FC = () => {
               type="text"
               placeholder="أدخل رمز الغرفة"
               className="join-input"
+              style={{ paddingLeft: '44px' }}
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
             />
@@ -576,7 +577,7 @@ const App: React.FC = () => {
               style={{
                 position: 'absolute',
                 top: '50%',
-                right: '76px', // position inside the input just right of the "join" button side (in RTL)
+                left: '12px', 
                 transform: 'translateY(-50%)',
                 background: 'transparent',
                 border: 'none',
@@ -621,7 +622,17 @@ const App: React.FC = () => {
                  gameType === 'drawing_challenge' ? 'غرفة تحدي الرسم' : 
                  'غرفة بنت وولد'}
               </h2>
-              <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '4px', margin: '4px 0' }}>{roomId}</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', margin: '12px 0' }}>
+                <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '4px' }}>{roomId}</div>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button onClick={shareInviteLink} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }} title="مشاركة الرابط">
+                    <Share2 size={18} />
+                  </button>
+                  <button onClick={() => setShowQR(true)} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '8px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }} title="QR Code">
+                    <QrCode size={18} />
+                  </button>
+                </div>
+              </div>
 
               {roomDataLoading ? (
                 <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -715,17 +726,7 @@ const App: React.FC = () => {
                 </div>
               )}
 
-              {/* Share / QR — below players */}
-              <div style={{ display: 'flex', gap: '8px', width: '100%', marginTop: '16px' }}>
-                <button onClick={shareInviteLink} style={{ background: 'transparent', border: '1px solid #ccc', padding: '12px', borderRadius: '12px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <Share2 size={18} />
-                  <span>مشاركة رابط الدعوة</span>
-                </button>
-                <button onClick={() => setShowQR(true)} style={{ background: 'transparent', border: '1px solid #ccc', padding: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '80px' }}>
-                  <QrCode size={18} />
-                  <span style={{ fontSize: '12px', fontWeight: 'bold' }}>QR</span>
-                </button>
-              </div>
+
 
               <AnimatePresence>
                 {showQR && (
