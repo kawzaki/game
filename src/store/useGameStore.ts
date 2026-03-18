@@ -62,6 +62,7 @@ interface GameState {
     drawingLiveStrokes: any[];          // incoming live strokes from server events
     drawingCorrectGuesses: { playerId: string; playerName: string }[];
     drawingWrongGuesses: { playerId: string; playerName: string; guess: string }[];
+    drawingScrambledLetters: string[];
 
     notification: { message: string, type: 'success' | 'info' | 'error' } | null;
 
@@ -148,6 +149,7 @@ export const useGameStore = create<GameState>((set) => {
             drawingGuesses: data.drawingGuesses ?? {},
             drawingCategory: data.drawingCategory ?? null,
             drawingStrokes: data.drawingStrokes ?? [],
+            drawingScrambledLetters: data.drawingScrambledLetters ?? [],
             myId: socket.id || null,
             isConnected: true,
             roomDataLoading: false,
@@ -197,10 +199,11 @@ export const useGameStore = create<GameState>((set) => {
         }));
     });
     // Drawer receives their secret word via this dedicated event (not in room_data)
-    socket.on('drawing_your_word', ({ word, category }: { word: string; category?: string }) => {
+    socket.on('drawing_your_word', ({ word, category, scrambledLetters }: { word: string; category?: string; scrambledLetters?: string[] }) => {
         set({ 
             drawingCurrentWord: word,
-            drawingCategory: category || null 
+            drawingCategory: category || null,
+            drawingScrambledLetters: scrambledLetters || []
         });
     });
     socket.on('drawing_wrong_guess', (payload: { playerId: string; playerName: string; guess: string }) => {
@@ -293,6 +296,7 @@ export const useGameStore = create<GameState>((set) => {
         drawingCategory: null,
         drawingStrokes: [],
         drawingLiveStrokes: [],
+        drawingScrambledLetters: [],
         drawingCorrectGuesses: [],
         drawingWrongGuesses: [],
         activeRooms: [],
@@ -326,6 +330,7 @@ export const useGameStore = create<GameState>((set) => {
             sibaPhase: 'setup', sibaPiecesPlaced: {}, sibaTurn: undefined,
             drawingCurrentWord: null, drawingMaskedWord: null, drawingDrawerId: null,
             drawingGuesses: {}, drawingCategory: null, drawingStrokes: [], drawingLiveStrokes: [],
+            drawingScrambledLetters: [],
             drawingCorrectGuesses: [], drawingWrongGuesses: [],
             notification: null
         }),

@@ -731,12 +731,110 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         </div>
                     )}
                     
-                    <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', alignItems: 'center' }}>
                         {!isDrawer && !isScoring && (
-                            <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px', flex: 1 }}>
-                                <input type="text" value={guessInput} onChange={e => setGuessInput(e.target.value)} disabled={!!hasGuessedCorrectly} placeholder={hasGuessedCorrectly ? '✅ تم التخمين!' : 'تخمين...'} style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', fontSize: '15px', border: hasGuessedCorrectly ? '2px solid #10b981' : '1px solid #e2e8f0', background: hasGuessedCorrectly ? '#f0fdf4' : '#fff', outline: 'none', textAlign: 'right', fontFamily: 'inherit' }} dir="rtl" autoComplete="off" />
-                                <button type="submit" disabled={!!hasGuessedCorrectly || !guessInput.trim()} style={{ padding: '10px 16px', borderRadius: '10px', fontWeight: 900, fontSize: '14px', background: 'var(--brand-yellow)', border: 'none', cursor: 'pointer', opacity: (hasGuessedCorrectly || !guessInput.trim()) ? 0.5 : 1 }}>أرسل</button>
-                            </form>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                                {/* Answer Slots */}
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', flexWrap: 'wrap', direction: 'rtl' }}>
+                                    {(drawingMaskedWord || '').split('').map((char, idx) => {
+                                        if (char === ' ' || char === '-') {
+                                            return <div key={idx} style={{ width: '20px' }} />;
+                                        }
+                                        const selectedChar = guessInput[idx] || '';
+                                        return (
+                                            <button
+                                                key={idx}
+                                                onClick={() => {
+                                                    const newGuess = guessInput.split('');
+                                                    newGuess[idx] = '';
+                                                    setGuessInput(newGuess.join(''));
+                                                }}
+                                                style={{
+                                                    width: '36px',
+                                                    height: '42px',
+                                                    borderRadius: '8px',
+                                                    border: '2px solid #e2e8f0',
+                                                    background: selectedChar ? '#fff' : '#f8fafc',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    fontSize: '20px',
+                                                    fontWeight: 900,
+                                                    color: '#1e293b',
+                                                    boxShadow: selectedChar ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                                                    cursor: selectedChar ? 'pointer' : 'default'
+                                                }}
+                                            >
+                                                {selectedChar}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Letter Bank */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+                                    {(useGameStore.getState().drawingScrambledLetters || []).map((char, idx) => {
+                                        // Simple logic to check if this specific instance of the letter is used
+                                        // We'll track usage by counting occurrences in guessInput
+                                        const totalInBank = useGameStore.getState().drawingScrambledLetters.filter(c => c === char).length;
+                                        const usedInGuess = guessInput.split('').filter(c => c === char).length;
+                                        
+                                        // This is a bit simplified, ideally we'd track bank indices
+                                        // But for now, let's just count.
+                                        const isUsed = usedInGuess >= totalInBank;
+
+                                        return (
+                                            <button
+                                                key={`${char}-${idx}`}
+                                                disabled={isUsed || !!hasGuessedCorrectly}
+                                                onClick={() => {
+                                                    const newGuess = guessInput.split('');
+                                                    const emptyIdx = (drawingMaskedWord || '').split('').findIndex((c, i) => c !== ' ' && c !== '-' && !newGuess[i]);
+                                                    if (emptyIdx !== -1) {
+                                                        newGuess[emptyIdx] = char;
+                                                        const updatedGuess = newGuess.join('');
+                                                        setGuessInput(updatedGuess);
+                                                        
+                                                        // Auto-submit if all slots are filled
+                                                        const isFilled = (drawingMaskedWord || '').split('').every((c, i) => (c === ' ' || c === '-') || newGuess[i]);
+                                                        if (isFilled) {
+                                                            const finalGuess = newGuess.join('');
+                                                            if (currentRoomId === 'solo-challenge' && challengeData) {
+                                                                if (isFuzzyMatch(finalGuess, challengeData.word)) {
+                                                                    setSoloGuessedCorrectly(true);
+                                                                    soloChallengeSolved(challengeData.id, playerName || 'صديق');
+                                                                    import('canvas-confetti').then(confetti => confetti.default());
+                                                                } else {
+                                                                    setGuessInput(''); // Clear on wrong guess
+                                                                    setWrongBanner(true);
+                                                                    setTimeout(() => setWrongBanner(false), 2000);
+                                                                }
+                                                            } else {
+                                                                submitDrawingGuess(roomId, finalGuess);
+                                                                setGuessInput(''); // Clear for next try
+                                                            }
+                                                        }
+                                                    }
+                                                }}
+                                                style={{
+                                                    height: '42px',
+                                                    borderRadius: '8px',
+                                                    background: isUsed ? '#e2e8f0' : 'var(--brand-yellow)',
+                                                    border: 'none',
+                                                    color: isUsed ? '#94a3b8' : '#000',
+                                                    fontSize: '18px',
+                                                    fontWeight: 900,
+                                                    cursor: isUsed ? 'default' : 'pointer',
+                                                    boxShadow: isUsed ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
+                                                    opacity: isUsed ? 0.5 : 1
+                                                }}
+                                            >
+                                                {char}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         )}
                         
                         {isDrawer && !isScoring && (

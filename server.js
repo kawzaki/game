@@ -37,6 +37,23 @@ const ARABIC_LETTERS = [
     'هـ', 'و', 'ي', 'لا', 'ة'
 ];
 
+function generateScrambledLetters(word) {
+    if (!word) return [];
+    // Remove spaces and hyphens for the letter bank
+    const letters = word.split('').filter(char => char !== ' ' && char !== '-');
+    
+    // Target total of 14 letters for the bank
+    const totalTarget = 14;
+    const decoysNeeded = Math.max(4, totalTarget - letters.length);
+    
+    const decoys = [];
+    for (let i = 0; i < decoysNeeded; i++) {
+        decoys.push(ARABIC_LETTERS[Math.floor(Math.random() * ARABIC_LETTERS.length)]);
+    }
+    
+    return [...letters, ...decoys].sort(() => Math.random() - 0.5);
+}
+
 function selectJeopardyQuestions(questionsPerCategory) {
     const selectedQuestions = [];
     // Filter out the "الحروف" category specifically used for Huroof game
@@ -1517,6 +1534,7 @@ io.on('connection', (socket) => {
         room.drawingDrawerId = drawer.id;
         room.drawingGuesses = {};
         room.drawingStrokes = [];
+        room.drawingScrambledLetters = generateScrambledLetters(word);
         room.gameStatus = 'drawing_active';
         room.timer = room.players.length === 1 ? -1 : 90;
         room.feedback = null;
@@ -1815,11 +1833,13 @@ io.on('connection', (socket) => {
                 return socket.emit('challenge_error', 'يجب عليك الرسم أولاً');
             }
             const id = generateChallengeId();
+            const scrambledLetters = generateScrambledLetters(word);
             const challenge = { 
                 id, 
                 strokes, 
                 word, 
                 category, 
+                scrambledLetters,
                 creatorId: socket.id, // Store who created it
                 createdAt: Date.now(), 
                 isAnswered: false 
@@ -1851,6 +1871,7 @@ io.on('connection', (socket) => {
                 drawingGuesses: {},
                 drawingCurrentWord: challenge ? challenge.word : null,
                 drawingCategory: challenge ? challenge.category : null,
+                drawingScrambledLetters: challenge ? challenge.scrambledLetters : [],
                 isPrivate: true,
                 isSession: true,
                 createdAt: Date.now()
@@ -1928,9 +1949,11 @@ io.on('connection', (socket) => {
             console.log(`[Session] Started new round in ${sessionRoom.id} for ${socket.id}`);
         }
 
+        const scrambled = generateScrambledLetters(randomItem.word);
         socket.emit('drawing_your_word', { 
             word: randomItem.word, 
             category: randomItem.category,
+            scrambledLetters: scrambled,
             isSolo: true 
         });
         console.log(`[Solo/Session] Sent word ${randomItem.word} to ${socket.id}`);
