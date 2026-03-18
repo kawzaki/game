@@ -545,7 +545,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                             <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>تخمين الكلمة في تصنيف:</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', fontWeight: 900, color: '#f59e0b', direction: 'rtl' }}>
                                 <Palette size={18} />
-                                <span>{drawingCategory || 'غير معروف'}</span>
+                                <span>{drawingCategory || 'تحت الرسم...'}</span>
                             </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -778,7 +778,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
                                 {/* Answer Slots */}
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', direction: 'rtl' }}>
-                                    {(drawingMaskedWord || '').split('').map((char, idx) => {
+                                    {((drawingMaskedWord || (isDrawer && drawingCurrentWord ? drawingCurrentWord.split('').map(c => (c === ' ' || c === '-') ? c : '_').join('') : ''))).split('').map((char, idx) => {
                                         if (char === ' ' || char === '-') {
                                             return <div key={idx} style={{ width: '20px' }} />;
                                         }

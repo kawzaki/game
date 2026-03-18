@@ -516,7 +516,9 @@ io.on('connection', (socket) => {
                 drawingCurrentWord: null,
                 drawingCategory: null,
                 drawingGuesses: {},
-                drawingStrokes: []
+                drawingStrokes: [],
+                drawingScrambledLetters: [],
+                drawingMaskedWord: null
             });
         }
 
@@ -1527,7 +1529,9 @@ io.on('connection', (socket) => {
 
         const wordEntry = room.questions[(room.currentRound - 1) % room.questions.length];
         const word = wordEntry ? wordEntry.word : 'كلمة';
-        const category = wordEntry ? wordEntry.category : 'غير معروف';
+        const category = wordEntry ? (wordEntry.category || 'غير معروف') : 'تحت الرسم...';
+        
+        console.log(`[Drawing Log] Selecting word: ${word}, Category: ${category} for room ${roomId}`);
 
         room.drawingCurrentWord = word;
         room.drawingCategory = category;
@@ -1554,7 +1558,11 @@ io.on('connection', (socket) => {
         // Send secret word only to the drawer via a separate event
         const drawerSocket = io.sockets.sockets.get(drawer.id);
         if (drawerSocket) {
-            drawerSocket.emit('drawing_your_word', { word });
+            drawerSocket.emit('drawing_your_word', { 
+                word, 
+                category, 
+                scrambledLetters: room.drawingScrambledLetters 
+            });
         }
 
         const roundInterval = setInterval(() => {
