@@ -430,6 +430,35 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         setShowClearConfirm(false);
     };
 
+    const triggerSelection = (char: string) => {
+        if (hasGuessedCorrectly || soloGuessedCorrectly) return;
+        const newGuess = guessInput.split('');
+        const emptyIdx = (drawingMaskedWord || '').split('').findIndex((c, i) => c !== ' ' && c !== '-' && !newGuess[i]);
+        if (emptyIdx !== -1) {
+            newGuess[emptyIdx] = char;
+            const updatedGuess = newGuess.join('');
+            setGuessInput(updatedGuess);
+            
+            const isFilled = (drawingMaskedWord || '').split('').every((c, i) => (c === ' ' || c === '-') || newGuess[i]);
+            if (isFilled) {
+                if (currentRoomId === 'solo-challenge' && challengeData) {
+                    if (isFuzzyMatch(updatedGuess, challengeData.word)) {
+                        setSoloGuessedCorrectly(true);
+                        soloChallengeSolved(challengeData.id, playerName || 'صديق');
+                        import('canvas-confetti').then(confetti => confetti.default());
+                    } else {
+                        setGuessInput('');
+                        setWrongBanner(true);
+                        setTimeout(() => setWrongBanner(false), 2000);
+                    }
+                } else {
+                    submitDrawingGuess(roomId, updatedGuess);
+                    setGuessInput('');
+                }
+            }
+        }
+    };
+
     const handleGuessSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const guess = guessInput.trim();
@@ -752,9 +781,22 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                         return (
                                             <motion.button
                                                 key={idx}
+                                                // Drag to remove
+                                                drag={!!selectedChar}
+                                                dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                                                dragElastic={0.5}
+                                                onDragEnd={(_, info) => {
+                                                    // If dragged a significant amount (e.g. 50px away), remove it
+                                                    if (Math.abs(info.offset.y) > 60 || Math.abs(info.offset.x) > 60) {
+                                                        const newGuess = guessInput.split('');
+                                                        newGuess[idx] = '';
+                                                        setGuessInput(newGuess.join(''));
+                                                    }
+                                                }}
                                                 whileHover={selectedChar ? { scale: 1.05 } : {}}
                                                 whileTap={selectedChar ? { scale: 0.95 } : {}}
                                                 onClick={() => {
+                                                    if (!selectedChar) return;
                                                     const newGuess = guessInput.split('');
                                                     newGuess[idx] = '';
                                                     setGuessInput(newGuess.join(''));
@@ -773,7 +815,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                                     color: '#1e293b',
                                                     boxShadow: selectedChar ? '0 4px 6px rgba(0,0,0,0.05)' : 'none',
                                                     cursor: selectedChar ? 'pointer' : 'default',
-                                                    lineHeight: 1
+                                                    lineHeight: 1,
+                                                    zIndex: selectedChar ? 10 : 1
                                                 }}
                                             >
                                                 {selectedChar}
@@ -790,59 +833,49 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                         const isUsed = usedInGuess >= totalInBank;
 
                                         return (
-                                            <motion.button
-                                                key={`${char}-${idx}`}
-                                                whileHover={!isUsed ? { scale: 1.1 } : {}}
-                                                whileTap={!isUsed ? { scale: 0.9 } : {}}
-                                                disabled={isUsed || !!hasGuessedCorrectly}
-                                                onClick={() => {
-                                                    const newGuess = guessInput.split('');
-                                                    const emptyIdx = (drawingMaskedWord || '').split('').findIndex((c, i) => c !== ' ' && c !== '-' && !newGuess[i]);
-                                                    if (emptyIdx !== -1) {
-                                                        newGuess[emptyIdx] = char;
-                                                        const updatedGuess = newGuess.join('');
-                                                        setGuessInput(updatedGuess);
-                                                        
-                                                        // Auto-submit if all slots are filled
-                                                        const isFilled = (drawingMaskedWord || '').split('').every((c, i) => (c === ' ' || c === '-') || newGuess[i]);
-                                                        if (isFilled) {
-                                                            const finalGuess = newGuess.join('');
-                                                            if (currentRoomId === 'solo-challenge' && challengeData) {
-                                                                if (isFuzzyMatch(finalGuess, challengeData.word)) {
-                                                                    setSoloGuessedCorrectly(true);
-                                                                    soloChallengeSolved(challengeData.id, playerName || 'صديق');
-                                                                    import('canvas-confetti').then(confetti => confetti.default());
-                                                                } else {
-                                                                    setGuessInput('');
-                                                                    setWrongBanner(true);
-                                                                    setTimeout(() => setWrongBanner(false), 2000);
-                                                                }
-                                                            } else {
-                                                                submitDrawingGuess(roomId, finalGuess);
-                                                                setGuessInput('');
+                                            <div key={`${char}-${idx}`} style={{ position: 'relative', width: '100%', height: '46px' }}>
+                                                {/* Background placeholder */}
+                                                <div style={{ position: 'absolute', inset: 0, borderRadius: '10px', background: '#e2e8f0', zIndex: 0 }} />
+                                                
+                                                {!isUsed && (
+                                                    <motion.button
+                                                        // Drag to select (visual only for now, real selection on click or tap)
+                                                        drag
+                                                        dragConstraints={{ left: -100, right: 100, top: -200, bottom: 50 }}
+                                                        onDragEnd={(_, info) => {
+                                                            // If dragged UP towards the slots area, trigger click logic
+                                                            if (info.offset.y < -40) {
+                                                                triggerSelection(char);
                                                             }
-                                                        }
-                                                    }
-                                                }}
-                                                style={{
-                                                    height: '46px',
-                                                    borderRadius: '10px',
-                                                    background: isUsed ? '#e2e8f0' : 'var(--brand-yellow)',
-                                                    border: 'none',
-                                                    color: isUsed ? '#94a3b8' : '#000',
-                                                    fontSize: '20px',
-                                                    fontWeight: 900,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    cursor: isUsed ? 'default' : 'pointer',
-                                                    boxShadow: isUsed ? 'none' : '0 4px 6px rgba(0,0,0,0.1)',
-                                                    opacity: isUsed ? 0.3 : 1,
-                                                    lineHeight: 1
-                                                }}
-                                            >
-                                                {char}
-                                            </motion.button>
+                                                        }}
+                                                        whileHover={{ scale: 1.1 }}
+                                                        whileTap={{ scale: 0.9 }}
+                                                        whileDrag={{ scale: 1.2, zIndex: 50, opacity: 0.8 }}
+                                                        disabled={!!hasGuessedCorrectly}
+                                                        onClick={() => triggerSelection(char)}
+                                                        style={{
+                                                            position: 'relative',
+                                                            zIndex: 1,
+                                                            width: '100%',
+                                                            height: '46px',
+                                                            borderRadius: '10px',
+                                                            background: 'var(--brand-yellow)',
+                                                            border: 'none',
+                                                            color: '#000',
+                                                            fontSize: '20px',
+                                                            fontWeight: 900,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            cursor: 'pointer',
+                                                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                                            lineHeight: 1
+                                                        }}
+                                                    >
+                                                        {char}
+                                                    </motion.button>
+                                                )}
+                                            </div>
                                         );
                                     })}
                                 </div>
