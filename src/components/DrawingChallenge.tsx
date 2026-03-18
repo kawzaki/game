@@ -541,19 +541,31 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
             <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100vw', height: '100dvh', overflow: 'hidden', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none' }}>
                 <div style={{ height: '70px', zIndex: 30, display: 'flex', flexDirection: 'column', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', width: '100%' }}>
-                        {drawingCategory && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 900, color: '#f59e0b', direction: 'rtl' }}>
-                                <Palette size={16} />
-                                <span>{drawingCategory}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px' }}>
+                            <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold' }}>تخمين الكلمة في تصنيف:</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '18px', fontWeight: 900, color: '#f59e0b', direction: 'rtl' }}>
+                                <Palette size={18} />
+                                <span>{drawingCategory || 'غير معروف'}</span>
                             </div>
-                        )}
+                        </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: 900, color: '#451a03', direction: 'rtl' }}>
                                 {isDrawer && !isScoring ? (
-                                    <><span>{drawingCurrentWord}</span><Pencil size={18} color="#f59e0b" /></>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#fefce8', padding: '4px 12px', borderRadius: '10px', border: '1px solid #fef08a' }}>
+                                        <span style={{ color: '#854d0e' }}>{drawingCurrentWord}</span>
+                                        <Pencil size={18} color="#854d0e" />
+                                    </div>
                                 ) : (
                                     <div style={{ letterSpacing: isScoring ? '2px' : '4px' }}>
-                                        {isScoring ? <span>الكلمة: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span></span> : maskedDisplay}
+                                        {isScoring ? (
+                                            <div style={{ fontSize: '16px' }}>
+                                                الكلمة: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span>
+                                            </div>
+                                        ) : (
+                                            <div style={{ padding: '4px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', color: '#64748b' }}>
+                                                {maskedDisplay}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -737,7 +749,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     </AnimatePresence>
                 </div>
 
-                <div style={{ height: '20dvh', zIndex: 30, background: '#fff', borderTop: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
+                <div style={{ height: '30dvh', zIndex: 30, background: '#fff', borderTop: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0, boxShadow: '0 -10px 30px rgba(0,0,0,0.05)' }}>
                     {!isScoring && chatLog.length > 0 && (
                         <div style={{ background: '#f8fafc', borderRadius: '10px', padding: '8px', maxHeight: '100px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             <AnimatePresence>
@@ -763,13 +775,6 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', alignItems: 'center' }}>
                         {!isDrawer && !isScoring && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-                                {/* Category Info */}
-                                <div style={{ textAlign: 'center' }}>
-                                    <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '2px' }}>تخمين الكلمة في تصنيف:</div>
-                                    <div style={{ fontSize: '18px', fontWeight: 900, color: 'var(--brand-yellow)' }}>
-                                        {drawingCategory || 'تحت الرسم...'}
-                                    </div>
-                                </div>
 
                                 {/* Answer Slots */}
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', direction: 'rtl' }}>
