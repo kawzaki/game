@@ -733,59 +733,67 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', alignItems: 'center' }}>
                         {!isDrawer && !isScoring && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+                                {/* Category Info */}
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '2px' }}>تخمين الكلمة في تصنيف:</div>
+                                    <div style={{ fontSize: '18px', fontWeight: 900, color: 'var(--brand-yellow)' }}>
+                                        {drawingCategory || 'تحت الرسم...'}
+                                    </div>
+                                </div>
+
                                 {/* Answer Slots */}
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', flexWrap: 'wrap', direction: 'rtl' }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', direction: 'rtl' }}>
                                     {(drawingMaskedWord || '').split('').map((char, idx) => {
                                         if (char === ' ' || char === '-') {
                                             return <div key={idx} style={{ width: '20px' }} />;
                                         }
                                         const selectedChar = guessInput[idx] || '';
                                         return (
-                                            <button
+                                            <motion.button
                                                 key={idx}
+                                                whileHover={selectedChar ? { scale: 1.05 } : {}}
+                                                whileTap={selectedChar ? { scale: 0.95 } : {}}
                                                 onClick={() => {
                                                     const newGuess = guessInput.split('');
                                                     newGuess[idx] = '';
                                                     setGuessInput(newGuess.join(''));
                                                 }}
                                                 style={{
-                                                    width: '36px',
-                                                    height: '42px',
-                                                    borderRadius: '8px',
-                                                    border: '2px solid #e2e8f0',
-                                                    background: selectedChar ? '#fff' : '#f8fafc',
+                                                    width: '42px',
+                                                    height: '48px',
+                                                    borderRadius: '10px',
+                                                    border: selectedChar ? '2px solid #e2e8f0' : '2px dashed #cbd5e1',
+                                                    background: selectedChar ? '#fff' : 'rgba(255,255,255,0.5)',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
-                                                    fontSize: '20px',
+                                                    fontSize: '24px',
                                                     fontWeight: 900,
                                                     color: '#1e293b',
-                                                    boxShadow: selectedChar ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
-                                                    cursor: selectedChar ? 'pointer' : 'default'
+                                                    boxShadow: selectedChar ? '0 4px 6px rgba(0,0,0,0.05)' : 'none',
+                                                    cursor: selectedChar ? 'pointer' : 'default',
+                                                    lineHeight: 1
                                                 }}
                                             >
                                                 {selectedChar}
-                                            </button>
+                                            </motion.button>
                                         );
                                     })}
                                 </div>
 
                                 {/* Letter Bank */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', width: '100%', maxWidth: '420px', margin: '0 auto' }}>
                                     {(useGameStore.getState().drawingScrambledLetters || []).map((char, idx) => {
-                                        // Simple logic to check if this specific instance of the letter is used
-                                        // We'll track usage by counting occurrences in guessInput
                                         const totalInBank = useGameStore.getState().drawingScrambledLetters.filter(c => c === char).length;
                                         const usedInGuess = guessInput.split('').filter(c => c === char).length;
-                                        
-                                        // This is a bit simplified, ideally we'd track bank indices
-                                        // But for now, let's just count.
                                         const isUsed = usedInGuess >= totalInBank;
 
                                         return (
-                                            <button
+                                            <motion.button
                                                 key={`${char}-${idx}`}
+                                                whileHover={!isUsed ? { scale: 1.1 } : {}}
+                                                whileTap={!isUsed ? { scale: 0.9 } : {}}
                                                 disabled={isUsed || !!hasGuessedCorrectly}
                                                 onClick={() => {
                                                     const newGuess = guessInput.split('');
@@ -805,32 +813,36 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                                                     soloChallengeSolved(challengeData.id, playerName || 'صديق');
                                                                     import('canvas-confetti').then(confetti => confetti.default());
                                                                 } else {
-                                                                    setGuessInput(''); // Clear on wrong guess
+                                                                    setGuessInput('');
                                                                     setWrongBanner(true);
                                                                     setTimeout(() => setWrongBanner(false), 2000);
                                                                 }
                                                             } else {
                                                                 submitDrawingGuess(roomId, finalGuess);
-                                                                setGuessInput(''); // Clear for next try
+                                                                setGuessInput('');
                                                             }
                                                         }
                                                     }
                                                 }}
                                                 style={{
-                                                    height: '42px',
-                                                    borderRadius: '8px',
+                                                    height: '46px',
+                                                    borderRadius: '10px',
                                                     background: isUsed ? '#e2e8f0' : 'var(--brand-yellow)',
                                                     border: 'none',
                                                     color: isUsed ? '#94a3b8' : '#000',
-                                                    fontSize: '18px',
+                                                    fontSize: '20px',
                                                     fontWeight: 900,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
                                                     cursor: isUsed ? 'default' : 'pointer',
-                                                    boxShadow: isUsed ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
-                                                    opacity: isUsed ? 0.5 : 1
+                                                    boxShadow: isUsed ? 'none' : '0 4px 6px rgba(0,0,0,0.1)',
+                                                    opacity: isUsed ? 0.3 : 1,
+                                                    lineHeight: 1
                                                 }}
                                             >
                                                 {char}
-                                            </button>
+                                            </motion.button>
                                         );
                                     })}
                                 </div>

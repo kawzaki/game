@@ -1538,6 +1538,7 @@ io.on('connection', (socket) => {
         room.gameStatus = 'drawing_active';
         room.timer = room.players.length === 1 ? -1 : 90;
         room.feedback = null;
+        room.drawingMaskedWord = word.split('').map(char => (char === ' ' || char === '-') ? char : '_').join('');
 
         console.log(`[Drawing] Round ${room.currentRound}/${room.roundCount} - Drawer: ${drawer.name}, Word: ${word}`);
 
