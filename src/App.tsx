@@ -262,8 +262,8 @@ const App: React.FC = () => {
 
     if (urlChallenge && !challengeData && !challengeLoading) {
       getChallenge(urlChallenge);
-      // Join the real-time session room for this challenge
-      joinChallengeSession(urlChallenge, storedPlayerName || playerName || 'لاعب');
+      // Removed: joinChallengeSession(urlChallenge, storedPlayerName || playerName || 'لاعب');
+      // We only join the session room if the user interacts (e.g. clicks "Challenge Back")
     }
   }, [roomId, setRoomId, challengeData, challengeLoading, getChallenge, storedPlayerName, playerName, joinChallengeSession]);
 

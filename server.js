@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Increment this whenever a significant UI update is pushed to force PWA refresh
-const SERVER_VERSION = '1.0.5'; 
+const SERVER_VERSION = '1.0.6'; 
 
 // Pre-load questions for all rooms
 let questionPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
@@ -39,10 +39,14 @@ const ARABIC_LETTERS = [
 
 function generateScrambledLetters(word) {
     if (!word) return [];
-    // Remove spaces and hyphens for the letter bank
+    
+    // Normalize and extract unique letters from the word
+    const normalizeForBank = (s) => s.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه');
+    
+    // Use the actual letters as they appear in the word, but also include normalized ones to be safe
     const letters = word.split('').filter(char => char !== ' ' && char !== '-');
     
-    // Target total of 14 letters for the bank
+    // Target total of 14 letters for the bank (2 rows of 7)
     const totalTarget = 14;
     const decoysNeeded = Math.max(4, totalTarget - letters.length);
     
@@ -51,6 +55,7 @@ function generateScrambledLetters(word) {
         decoys.push(ARABIC_LETTERS[Math.floor(Math.random() * ARABIC_LETTERS.length)]);
     }
     
+    // Shuffle all together
     return [...letters, ...decoys].sort(() => Math.random() - 0.5);
 }
 

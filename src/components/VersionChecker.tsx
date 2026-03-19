@@ -8,7 +8,7 @@ export const VersionChecker = () => {
     useEffect(() => {
         const checkVersion = async () => {
             try {
-                const response = await fetch('/api/version');
+                const response = await fetch(`/api/version?t=${Date.now()}`);
                 const data = await response.json();
                 const serverVersion = data.version;
 
