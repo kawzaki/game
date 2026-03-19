@@ -32,6 +32,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         drawingDrawerId,
         drawingGuesses,
         drawingCategory,
+        drawingScrambledLetters,
         drawingLiveStrokes = [],
         sendDrawingStroke,
         sendDrawingClear,
@@ -88,6 +89,20 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const [soloGuessedCorrectly, setSoloGuessedCorrectly] = useState(false);
     const [isSoloArtist, setIsSoloArtist] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
+    
+    // Derived state for fallbacks in Session/Solo mode
+    const isSoloOrSession = roomId === 'solo-challenge' || currentRoomId?.startsWith('session_');
+    const challenge = useGameStore(state => state.challengeData);
+    
+    // Mask word logic: preserve spaces and hyphens, turn other chars into underscores
+    const maskWord = (w: string) => w.split('').map(c => (c === ' ' || c === '-') ? c : '_').join('');
+    
+    const effectiveMaskedWord = drawingMaskedWord || 
+        (isDrawer && drawingCurrentWord ? maskWord(drawingCurrentWord) : 
+        (challenge?.word ? maskWord(challenge.word) : ''));
+        
+    const effectiveScrambledLetters = drawingScrambledLetters.length > 0 ? 
+        drawingScrambledLetters : (challenge?.scrambledLetters || []);
 
     const handleDrawBack = () => {
         // Clear the URL challenge parameter to prevent App.tsx from refetching the old challenge
@@ -433,13 +448,13 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const triggerSelection = (char: string) => {
         if (hasGuessedCorrectly || soloGuessedCorrectly) return;
         const newGuess = guessInput.split('');
-        const emptyIdx = (drawingMaskedWord || '').split('').findIndex((c, i) => c !== ' ' && c !== '-' && !newGuess[i]);
+        const emptyIdx = (effectiveMaskedWord || '').split('').findIndex((c, i) => c !== ' ' && c !== '-' && !newGuess[i]);
         if (emptyIdx !== -1) {
             newGuess[emptyIdx] = char;
             const updatedGuess = newGuess.join('');
             setGuessInput(updatedGuess);
             
-            const isFilled = (drawingMaskedWord || '').split('').every((c, i) => (c === ' ' || c === '-') || newGuess[i]);
+            const isFilled = (effectiveMaskedWord || '').split('').every((c, i) => (c === ' ' || c === '-') || newGuess[i]);
             if (isFilled) {
                 if (currentRoomId === 'solo-challenge' && challengeData) {
                     if (isFuzzyMatch(updatedGuess, challengeData.word)) {
@@ -778,7 +793,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
                                 {/* Answer Slots */}
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', direction: 'rtl' }}>
-                                    {((drawingMaskedWord || (isDrawer && drawingCurrentWord ? drawingCurrentWord.split('').map(c => (c === ' ' || c === '-') ? c : '_').join('') : ''))).split('').map((char, idx) => {
+                                    {(effectiveMaskedWord || '').split('').map((char, idx) => {
                                         if (char === ' ' || char === '-') {
                                             return <div key={idx} style={{ width: '20px' }} />;
                                         }
@@ -810,8 +825,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                                     width: '42px',
                                                     height: '48px',
                                                     borderRadius: '10px',
-                                                    border: selectedChar ? '2px solid #e2e8f0' : '2px dashed #cbd5e1',
-                                                    background: selectedChar ? '#fff' : 'rgba(255,255,255,0.5)',
+                                                    border: selectedChar ? '2px solid #fbbf24' : '2px dashed #fbbf24',
+                                                    background: selectedChar ? 'rgba(251, 191, 36, 0.1)' : 'transparent',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
@@ -832,8 +847,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
                                 {/* Letter Bank */}
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', width: '100%', maxWidth: '420px', margin: '0 auto' }}>
-                                    {(useGameStore.getState().drawingScrambledLetters || []).map((char, idx) => {
-                                        const totalInBank = useGameStore.getState().drawingScrambledLetters.filter(c => c === char).length;
+                                    {effectiveScrambledLetters.map((char, idx) => {
+                                        const totalInBank = effectiveScrambledLetters.filter(c => c === char).length;
                                         const usedInGuess = guessInput.split('').filter(c => c === char).length;
                                         const isUsed = usedInGuess >= totalInBank;
 
@@ -844,18 +859,21 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                                 
                                                 {!isUsed && (
                                                     <motion.button
-                                                        // Drag to select (visual only for now, real selection on click or tap)
+                                                        // Drag to select
                                                         drag
-                                                        dragConstraints={{ left: -100, right: 100, top: -200, bottom: 50 }}
+                                                        dragSnapToOrigin={true}
+                                                        dragElastic={0.1}
+                                                        dragConstraints={{ left: -100, right: 100, top: -400, bottom: 100 }}
                                                         onDragEnd={(_, info) => {
-                                                            // If dragged UP towards the slots area, trigger click logic
-                                                            if (info.offset.y < -40) {
+                                                            // Detect drop over slots area
+                                                            // We use a approximate threshold for the viewport
+                                                            if (info.point.y < window.innerHeight * 0.75) {
                                                                 triggerSelection(char);
                                                             }
                                                         }}
                                                         whileHover={{ scale: 1.1 }}
                                                         whileTap={{ scale: 0.9 }}
-                                                        whileDrag={{ scale: 1.2, zIndex: 50, opacity: 0.8 }}
+                                                        whileDrag={{ scale: 1.2, zIndex: 100, opacity: 0.9 }}
                                                         disabled={!!hasGuessedCorrectly}
                                                         onClick={() => triggerSelection(char)}
                                                         style={{
@@ -889,10 +907,12 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         
                         {isDrawer && !isScoring && (
                             <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'center' }}>
-                                <button onClick={handleCreateChallenge} disabled={challengeLoading} title="وضع التحدي" style={{ flex: 1, padding: '10px 20px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 'bold', fontSize: '14px', gap: '8px' }}>
-                                    {challengeLoading ? <Loader2 size={16} className="animate-spin" /> : <LinkIcon size={16} />}
-                                    تحدي صديق
-                                </button>
+                                {!isSoloOrSession && (
+                                    <button onClick={handleCreateChallenge} disabled={challengeLoading} title="وضع التحدي" style={{ flex: 1, padding: '10px 20px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 'bold', fontSize: '14px', gap: '8px' }}>
+                                        {challengeLoading ? <Loader2 size={16} className="animate-spin" /> : <LinkIcon size={16} />}
+                                        تحدي صديق
+                                    </button>
+                                )}
                                 {isSoloInkMode && (
                                     <button onClick={() => finishDrawingRound(roomId)} style={{ padding: '10px 20px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold', fontSize: '14px', gap: '8px', flex: 1 }}>
                                         <Check size={16} />

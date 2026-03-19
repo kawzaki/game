@@ -70,7 +70,7 @@ interface GameState {
     isServerWakingUp: boolean;
 
     // Async Challenge state
-    challengeData: { strokes: any[]; word: string; category: string; id: string } | null;
+    challengeData: { strokes: any[]; word: string; category: string; id: string; scrambledLetters?: string[] } | null;
     challengeLoading: boolean;
     isChallengeCreator: boolean;
 

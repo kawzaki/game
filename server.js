@@ -1953,6 +1953,7 @@ io.on('connection', (socket) => {
             
             // Mask word for others
             sessionRoom.drawingMaskedWord = randomItem.word.split('').map(char => (char === ' ' || char === '-') ? char : '_').join('');
+            sessionRoom.drawingScrambledLetters = generateScrambledLetters(randomItem.word);
             
             io.to(sessionRoom.id).emit('room_data', sessionRoom);
             console.log(`[Session] Started new round in ${sessionRoom.id} for ${socket.id}`);
