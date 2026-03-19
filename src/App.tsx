@@ -799,6 +799,10 @@ const App: React.FC = () => {
               }} style={{ marginTop: '10px', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '14px', textDecoration: 'underline' }}>
                 العودة لتغيير نوع اللعبة
               </button>
+
+              <div style={{ fontSize: '10px', color: '#64748b', textAlign: 'center', marginTop: '24px', opacity: 0.5 }}>
+                v1.0.1-365fe48
+              </div>
             </div>
           </div>
         )}

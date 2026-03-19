@@ -575,7 +575,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     {isDrawer && !isScoring && (
                         <div style={{ display: 'flex', flexDirection: 'column', background: '#f8fafc', borderTop: '1px solid #f1f5f9' }}>
                             {/* Action Row */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderBottom: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', borderBottom: '1px solid #f1f5f9' }}>
                                 <button onClick={() => { setIsEraser(e => !e); setIsHighlighter(false); }} title="ممحاة" style={{ width: '36px', height: '36px', borderRadius: '10px', border: '1px solid transparent', background: isEraser ? '#fef3c7' : 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isEraser ? '0 0 0 2px #d97706' : '0 1px 2px rgba(0,0,0,0.05)' }}>
                                     <Eraser size={18} color={isEraser ? '#d97706' : '#64748b'} />
                                 </button>
@@ -605,7 +605,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                             </div>
                             
                             {/* Color Row */}
-                            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '10px 12px', flex: 1, scrollbarWidth: 'none', background: '#fff' }}>
+                            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', padding: '6px 8px', flex: 1, scrollbarWidth: 'none', background: '#fff' }}>
                                 {COLORS.map(c => (
                                     <button 
                                         key={c} 
@@ -629,7 +629,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     )}
 
                     {isSoloInkMode && isDrawer && !isScoring && (
-                        <div style={{ padding: '0 12px 8px 12px', background: '#fff', borderTop: '1px solid #f1f5f9' }}>
+                        <div style={{ padding: '0 8px 4px 8px', background: '#fff', borderTop: '1px solid #f1f5f9' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#fff', padding: '6px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#3b82f6', flexShrink: 0 }}>
                                     <Droplets size={14} />
@@ -649,7 +649,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     )}
                 </div>
 
-                <div style={{ height: 'calc(80dvh - 70px)', position: 'relative', background: '#fff', overflow: 'hidden' }}>
+                <div style={{ flex: 1, position: 'relative', background: '#fff', overflow: 'hidden' }}>
                         <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', background: 'white', cursor: isDrawer && !isScoring ? (isEraser ? 'cell' : 'crosshair') : 'default', touchAction: 'none', paddingBottom: 'env(safe-area-inset-bottom, 20px)' }} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} onPointerLeave={handlePointerUp} />
                     <AnimatePresence>
                         {correctBanner && (
@@ -749,7 +749,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     </AnimatePresence>
                 </div>
 
-                <div style={{ height: '30dvh', zIndex: 30, background: '#fff', borderTop: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0, boxShadow: '0 -10px 30px rgba(0,0,0,0.05)' }}>
+                <div style={{ height: isDrawer ? '130px' : '30dvh', zIndex: 30, background: '#fff', borderTop: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0, boxShadow: '0 -10px 30px rgba(0,0,0,0.05)' }}>
                     {!isScoring && chatLog.length > 0 && (
                         <div style={{ background: '#f8fafc', borderRadius: '10px', padding: '8px', maxHeight: '100px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             <AnimatePresence>
@@ -1047,7 +1047,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         </div>
                     </div>
 
-                    <div style={{ height: 'calc(80dvh - 70px)', position: 'relative', background: 'white', overflow: 'hidden', touchAction: 'none', paddingBottom: 'env(safe-area-inset-bottom, 20px)' }}>
+                    <div style={{ flex: 1, position: 'relative', background: 'white', overflow: 'hidden', touchAction: 'none' }}>
                         <canvas
                             ref={canvasRef}
                             onPointerDown={handlePointerDown}
@@ -1062,7 +1062,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                     <div style={{ zIndex: 30, background: '#fff', borderTop: '1px solid #e2e8f0', flexShrink: 0 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', background: '#f8fafc' }}>
                             {/* Action Row */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderBottom: '1px solid #f1f5f9' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', borderBottom: '1px solid #f1f5f9' }}>
                                 <button onClick={() => { setIsEraser(e => !e); setIsHighlighter(false); }} title="ممحاة" style={{ width: '36px', height: '36px', borderRadius: '10px', border: '1px solid transparent', background: isEraser ? '#fef3c7' : 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: isEraser ? '0 0 0 2px #d97706' : '0 1px 2px rgba(0,0,0,0.05)' }}>
                                     <Eraser size={18} color={isEraser ? '#d97706' : '#64748b'} />
                                 </button>
@@ -1113,7 +1113,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                             </div>
                             
                             {/* Color Row */}
-                            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '10px 12px', scrollbarWidth: 'none', background: '#fff' }}>
+                            <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', padding: '6px 8px', scrollbarWidth: 'none', background: '#fff' }}>
                                 {COLORS.map(c => (
                                     <button 
                                         key={c} 
@@ -1136,7 +1136,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         </div>
 
                         <div style={{ padding: '12px' }}>
-                            <div style={{ width: '100%', height: '8px', background: '#f1f5f9', borderRadius: '4px', marginBottom: '12px', overflow: 'hidden', border: '1px solid #f1f5f9' }}>
+                            <div style={{ width: '100%', height: '6px', background: '#f1f5f9', borderRadius: '4px', marginBottom: '8px', overflow: 'hidden', border: '1px solid #f1f5f9' }}>
                                 <motion.div animate={{ width: `${ink}%` }} style={{ height: '100%', background: ink > 20 ? 'linear-gradient(90deg, #3b82f6, #60a5fa)' : 'linear-gradient(90deg, #ef4444, #f87171)' }} />
                             </div>
 
@@ -1145,7 +1145,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                 disabled={challengeLoading} 
                                 style={{ 
                                     width: '100%', 
-                                    padding: '14px 20px', 
+                                    padding: '10px 20px', 
                                     borderRadius: '14px', 
                                     background: 'var(--brand-yellow)', 
                                     border: 'none', 
