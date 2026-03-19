@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Increment this whenever a significant UI update is pushed to force PWA refresh
-const SERVER_VERSION = '1.0.9'; 
+const SERVER_VERSION = '1.1.0'; 
 
 // Pre-load questions for all rooms
 let questionPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
