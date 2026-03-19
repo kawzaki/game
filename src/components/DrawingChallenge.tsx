@@ -68,6 +68,10 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const [isReplaying, setIsReplaying] = useState(false);
     const [hasStartedReplay, setHasStartedReplay] = useState(false);
     const replayTimerRef = useRef<any>(null);
+    const replayStartedRef = useRef(false);
+
+    // Answer feedback
+    const [isGuessWrong, setIsGuessWrong] = useState(false);
 
     const lastPos = useRef<{ x: number; y: number } | null>(null);
     const drawerStrokes = useRef<any[]>([]); // To track drawer strokes locally
@@ -181,7 +185,11 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     useEffect(() => {
         if (wrongGuesses.length > prevWrongLen.current) {
             setWrongBanner(true);
-            const t = setTimeout(() => setWrongBanner(false), 2000);
+            setIsGuessWrong(true);
+            const t = setTimeout(() => {
+                setWrongBanner(false);
+                setIsGuessWrong(false);
+            }, 2000);
             prevWrongLen.current = wrongGuesses.length;
             return () => clearTimeout(t);
         }
@@ -273,30 +281,31 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         }
     }, [gameStatus, timer]);
 
+
     // Challenge Replay Logic
     useEffect(() => {
-        if (challengeData && !isChallengeCreator && !isArtist && !isReplaying && replayIndex === 0 && hasStartedReplay) {
-            setIsReplaying(true);
-            const total = challengeData.strokes.length;
-            
-            // Replay with chunking for performance
-            let current = 0;
-            const CHUNK_SIZE = 15; // segments per tick
-            
-            replayTimerRef.current = setInterval(() => {
-                current += CHUNK_SIZE;
-                if (current >= total) {
-                    current = total;
-                    if (replayTimerRef.current) clearInterval(replayTimerRef.current);
-                    setIsReplaying(false);
-                }
-                setReplayIndex(current);
-            }, 16); // ~60fps
-            return () => {
+        if (!challengeData || isChallengeCreator || isArtist || !hasStartedReplay || replayStartedRef.current) return;
+
+        replayStartedRef.current = true;
+        setIsReplaying(true);
+        const total = challengeData.strokes.length;
+        let current = 0;
+        const CHUNK_SIZE = 15; 
+
+        replayTimerRef.current = setInterval(() => {
+            current += CHUNK_SIZE;
+            if (current >= total) {
+                current = total;
                 if (replayTimerRef.current) clearInterval(replayTimerRef.current);
-            };
-        }
-    }, [challengeData, isChallengeCreator, isArtist, isReplaying, hasStartedReplay]);
+                setIsReplaying(false);
+            }
+            setReplayIndex(current);
+        }, 16);
+
+        return () => {
+            if (replayTimerRef.current) clearInterval(replayTimerRef.current);
+        };
+    }, [challengeData?.id, isChallengeCreator, isArtist, hasStartedReplay]);
 
     // Reset replay when a new challenge is loaded
     useEffect(() => {
@@ -304,6 +313,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
             setReplayIndex(0);
             setIsReplaying(false);
             setHasStartedReplay(false);
+            replayStartedRef.current = false;
+            if (replayTimerRef.current) clearInterval(replayTimerRef.current);
         }
     }, [challengeData?.id]);
 
@@ -501,8 +512,19 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         setShowClearConfirm(false);
     };
 
+    const handleRemoveLetter = (index: number) => {
+        if (hasGuessedCorrectly || soloGuessedCorrectly) return;
+        const newGuess = guessInput.split('');
+        if (newGuess[index]) {
+            newGuess[index] = '';
+            setGuessInput(newGuess.join(''));
+            setIsGuessWrong(false);
+        }
+    };
+
     const triggerSelection = (char: string) => {
         if (hasGuessedCorrectly || soloGuessedCorrectly) return;
+        setIsGuessWrong(false);
         const newGuess = guessInput.split('');
         const emptyIdx = (effectiveMaskedWord || '').split('').findIndex((c, i) => c !== ' ' && c !== '-' && !newGuess[i]);
         if (emptyIdx !== -1) {
@@ -518,13 +540,15 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         soloChallengeSolved(challengeData.id, playerName || 'صديق');
                         import('canvas-confetti').then(confetti => confetti.default());
                     } else {
-                        setGuessInput('');
+                        setIsGuessWrong(true);
+                        setTimeout(() => setIsGuessWrong(false), 2000);
                         setWrongBanner(true);
                         setTimeout(() => setWrongBanner(false), 2000);
                     }
                 } else {
                     submitDrawingGuess(roomId, updatedGuess);
-                    setGuessInput('');
+                    // In session, we'll listen for drawing_correct_guess or drawing_wrong_guess
+                    // To handle the red border in session, we can use the existing wrongGuesses store
                 }
             }
         }
@@ -1348,8 +1372,24 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 </div>
                 <div style={{ minHeight: '35dvh', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: 30, background: '#fff', borderTop: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0, boxShadow: '0 -10px 30px rgba(0,0,0,0.05)' }}>
                     {soloGuessedCorrectly ? (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', fontWeight: 900, fontSize: '20px' }}>
-                            تم التخمين بنجاح! 🎉
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', fontWeight: 900, fontSize: '20px', flexDirection: 'column', gap: '16px' }}>
+                            <div>تم التخمين بنجاح! 🎉</div>
+                            <button 
+                                onClick={() => setSoloGuessedCorrectly(false)}
+                                style={{ 
+                                    width: '100%', 
+                                    padding: '12px', 
+                                    borderRadius: '14px', 
+                                    background: '#f1f5f9', 
+                                    color: '#64748b', 
+                                    border: 'none', 
+                                    fontWeight: 'bold', 
+                                    fontSize: '14px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                بقاء في هذه الصفحة
+                            </button>
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
@@ -1368,29 +1408,29 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                             dragElastic={0.5}
                                             onDragEnd={(_, info) => {
                                                 if (Math.abs(info.offset.y) > 60 || Math.abs(info.offset.x) > 60) {
-                                                    const newGuess = guessInput.split('');
-                                                    newGuess[idx] = '';
-                                                    setGuessInput(newGuess.join(''));
+                                                    handleRemoveLetter(idx);
                                                 }
                                             }}
-                                            onClick={() => {
-                                                if (!selectedChar) return;
-                                                const newGuess = guessInput.split('');
-                                                newGuess[idx] = '';
-                                                setGuessInput(newGuess.join(''));
-                                            }}
+                                            onClick={() => handleRemoveLetter(idx)}
+                                            animate={isGuessWrong && selectedChar ? { x: [-2, 2, -2, 2, 0] } : {}}
+                                            transition={{ duration: 0.4 }}
                                             style={{
                                                 width: '42px',
                                                 height: '48px',
                                                 borderRadius: '10px',
-                                                border: selectedChar ? '2px solid #fbbf24' : '2px dashed #fbbf24',
-                                                background: selectedChar ? 'rgba(251, 191, 36, 0.1)' : 'transparent',
+                                                border: isGuessWrong && selectedChar 
+                                                    ? '2px solid #ef4444' 
+                                                    : (selectedChar ? '2px solid #fbbf24' : '2px dashed #fbbf24'),
+                                                background: isGuessWrong && selectedChar
+                                                    ? 'rgba(239, 68, 68, 0.1)'
+                                                    : (selectedChar ? 'rgba(251, 191, 36, 0.1)' : 'transparent'),
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 fontSize: '24px',
                                                 fontWeight: 900,
-                                                color: '#1e293b'
+                                                color: isGuessWrong && selectedChar ? '#ef4444' : '#1e293b',
+                                                boxShadow: isGuessWrong && selectedChar ? '0 0 8px rgba(239, 68, 68, 0.3)' : 'none'
                                             }}
                                         >
                                             {selectedChar}
