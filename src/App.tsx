@@ -801,7 +801,7 @@ const App: React.FC = () => {
               </button>
 
               <div style={{ fontSize: '10px', color: '#64748b', textAlign: 'center', marginTop: '24px', opacity: 0.5 }}>
-                v1.0.1-365fe48
+                v1.0.1-{__GIT_HASH__}
               </div>
             </div>
           </div>
