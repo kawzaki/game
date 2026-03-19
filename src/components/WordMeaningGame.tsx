@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Check, X } from 'lucide-react';
+import { playSound } from '../utils/soundUtils';
 
 interface WordMeaningProps {
     roomId: string;
@@ -28,6 +29,13 @@ const WordMeaningGame: React.FC<WordMeaningProps> = ({ roomId }) => {
         if (submittedAnswer || gameStatus !== 'word_meaning_active') return;
         submitWordMeaningAnswer(roomId, opt);
     };
+
+    // Countdown sound synchronization
+    useEffect(() => {
+        if (gameStatus === 'countdown' && timer === 3) {
+            playSound('countdown');
+        }
+    }, [gameStatus, timer]);
 
     if (gameStatus === 'countdown') {
         return (

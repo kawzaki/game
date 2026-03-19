@@ -3,6 +3,7 @@ import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eraser, Trash2, Check, Pencil, Palette, Link as LinkIcon, Loader2, Droplets, X, Undo2, Redo2, Highlighter } from 'lucide-react';
 import { isFuzzyMatch } from '../utils/arabicUtils';
+import { playSound } from '../utils/soundUtils';
 
 interface DrawingChallengeProps {
     roomId: string;
@@ -255,16 +256,12 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         ctx.restore();
     }, []);
 
-    // Countdown tick sound
+    // Countdown sound synchronization
     useEffect(() => {
-        if (gameStatus !== 'countdown') return;
-        const src = timer > 0
-            ? 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'
-            : 'https://assets.mixkit.co/active_storage/sfx/1084/1084-preview.mp3';
-        const audio = new Audio(src);
-        audio.volume = 0.5;
-        audio.play().catch(() => { });
-    }, [timer, gameStatus]);
+        if (gameStatus === 'countdown' && timer === 3) {
+            playSound('countdown');
+        }
+    }, [gameStatus, timer]);
 
     // Dynamic canvas sizing
     useEffect(() => {

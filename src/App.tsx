@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { playSound } from './utils/soundUtils';
 import { useTranslation } from 'react-i18next';
 import { useGameStore, socket } from './store/useGameStore';
 import HuroofGame from './components/HuroofGame';
@@ -167,9 +168,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (players.length > prevPlayersCount.current && prevPlayersCount.current > 0) {
       // New player joined — play ding and highlight
-      const audio = new Audio('https://www.myinstants.com/media/sounds/ding-sound-effect.mp3');
-      audio.volume = 0.6;
-      audio.play().catch(() => { });
+      playSound('ding');
       setNewestPlayerId(players[players.length - 1]?.id || null);
       setTimeout(() => setNewestPlayerId(null), 2500);
     }
@@ -272,18 +271,6 @@ const App: React.FC = () => {
     document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
   }, [i18n.language]);
 
-  const playSound = (type: 'buzzer' | 'correct' | 'wrong' | 'timeout' | 'game_over_win' | 'game_over_lose') => {
-    const sounds = {
-      buzzer: 'https://assets.mixkit.co/active_storage/sfx/1084/1084-preview.mp3',
-      correct: 'https://www.myinstants.com/media/sounds/correct.mp3',
-      wrong: 'https://www.myinstants.com/media/sounds/wrong-answer-buzzer.mp3',
-      timeout: 'https://assets.mixkit.co/active_storage/sfx/2658/2658-preview.mp3',
-      game_over_win: 'https://www.myinstants.com/media/sounds/award-winners-fanfare_SXgBSYC.mp3',
-      game_over_lose: 'https://www.myinstants.com/media/sounds/wah-wah-sound-effect.mp3'
-    };
-    const audio = new Audio(sounds[type]);
-    audio.play().catch(e => console.log("Sound play error", e));
-  };
 
   useEffect(() => {
     if (feedback) {

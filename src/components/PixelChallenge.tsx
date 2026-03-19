@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Image as ImageIcon } from 'lucide-react';
+import { playSound } from '../utils/soundUtils';
 
 interface PixelChallengeProps {
     roomId: string;
@@ -20,15 +21,6 @@ const PixelChallenge: React.FC<PixelChallengeProps> = ({ roomId }) => {
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [imageLoaded, setImageLoaded] = useState(false);
 
-    const playSound = (type: 'countdown' | 'correct' | 'wrong') => {
-        const sounds = {
-            countdown: 'https://www.myinstants.com/media/sounds/count-down-sound-effekt.mp3',
-            correct: 'https://www.myinstants.com/media/sounds/correct.mp3',
-            wrong: 'https://www.myinstants.com/media/sounds/wrong-answer-buzzer.mp3'
-        };
-        const audio = new Audio(sounds[type]);
-        audio.play().catch(e => console.error("Audio play failed:", e));
-    };
 
     // Countdown sound synchronization
     useEffect(() => {

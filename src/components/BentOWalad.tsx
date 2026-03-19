@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion } from 'framer-motion';
 import { User, Heart, Package, Utensils, Dog, MapPin, Timer } from 'lucide-react';
+import { playSound } from '../utils/soundUtils';
 
 interface BentOWaladProps {
     roomId: string;
@@ -66,6 +67,13 @@ const BentOWalad: React.FC<BentOWaladProps> = ({ roomId }) => {
         submitRoundBinOWalad(roomId, inputs);
         setHasSubmitted(true);
     };
+
+    // Countdown sound synchronization
+    useEffect(() => {
+        if (gameStatus === 'countdown' && timer === 3) {
+            playSound('countdown');
+        }
+    }, [gameStatus, timer]);
 
     if (gameStatus === 'countdown') {
         return (

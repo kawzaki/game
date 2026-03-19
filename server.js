@@ -716,7 +716,7 @@ io.on('connection', (socket) => {
             console.log(`[Start Game] Room: ${roomId}, Type: ${room.gameType}`);
             if (room.gameType === 'bin_o_walad') {
                 room.gameStatus = 'countdown';
-                room.timer = 10;
+                room.timer = 3;
                 room.currentRound = 1;
 
                 const countdownInterval = setInterval(() => {
@@ -730,7 +730,7 @@ io.on('connection', (socket) => {
                 }, 1000);
             } else if (room.gameType === 'word_meaning') {
                 room.gameStatus = 'countdown';
-                room.timer = 5;
+                room.timer = 3;
                 room.currentRound = 1;
 
                 const countdownInterval = setInterval(() => {
