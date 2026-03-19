@@ -518,26 +518,6 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         }
     };
 
-    const handleGuessSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const guess = guessInput.trim();
-        if (!guess || hasGuessedCorrectly || soloGuessedCorrectly) return;
-
-        if (currentRoomId === 'solo-challenge' && challengeData) {
-            if (isFuzzyMatch(guess, challengeData.word)) {
-                setSoloGuessedCorrectly(true);
-                // Notify the server so the creator gets a notification
-                soloChallengeSolved(challengeData.id, playerName || 'صديق');
-                import('canvas-confetti').then(confetti => confetti.default());
-            } else {
-                setWrongBanner(true);
-                setTimeout(() => setWrongBanner(false), 2000);
-            }
-        } else {
-            submitDrawingGuess(roomId, guess);
-        }
-        setGuessInput('');
-    };
 
 
 
@@ -1328,16 +1308,105 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         )}
                     </AnimatePresence>
                 </div>
-                <div style={{ height: 'auto', minHeight: '90px', padding: '12px 16px', paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 12px))', background: 'white', borderTop: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div style={{ height: '30dvh', zIndex: 30, background: '#fff', borderTop: '1px solid #e2e8f0', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0, boxShadow: '0 -10px 30px rgba(0,0,0,0.05)' }}>
                     {soloGuessedCorrectly ? (
-                        <div style={{ width: '100%', textAlign: 'center', color: '#64748b', fontWeight: 'bold' }}>
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', fontWeight: 900, fontSize: '20px' }}>
                             تم التخمين بنجاح! 🎉
                         </div>
                     ) : (
-                        <form onSubmit={handleGuessSubmit} style={{ display: 'flex', gap: '8px', width: '100%', maxWidth: '500px' }}>
-                            <input type="text" value={guessInput} onChange={e => setGuessInput(e.target.value)} disabled={soloGuessedCorrectly} placeholder='خمّن الكلمة...' style={{ flex: 1, padding: '14px', borderRadius: '14px', border: '2px solid #f1f5f9', textAlign: 'right', fontSize: '16px', fontWeight: 'bold', outline: 'none' }} dir="rtl" />
-                            <button type="submit" style={{ padding: '0 24px', borderRadius: '14px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 900, fontSize: '16px', transition: 'transform 0.1s active', height: '52px' }}>خمّن</button>
-                        </form>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+                            {/* Answer Slots */}
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', direction: 'rtl' }}>
+                                {(effectiveMaskedWord || '').split('').map((char, idx) => {
+                                    if (char === ' ' || char === '-') {
+                                        return <div key={idx} style={{ width: '20px' }} />;
+                                    }
+                                    const selectedChar = guessInput[idx] || '';
+                                    return (
+                                        <motion.button
+                                            key={idx}
+                                            drag={!!selectedChar}
+                                            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                                            dragElastic={0.5}
+                                            onDragEnd={(_, info) => {
+                                                if (Math.abs(info.offset.y) > 60 || Math.abs(info.offset.x) > 60) {
+                                                    const newGuess = guessInput.split('');
+                                                    newGuess[idx] = '';
+                                                    setGuessInput(newGuess.join(''));
+                                                }
+                                            }}
+                                            onClick={() => {
+                                                if (!selectedChar) return;
+                                                const newGuess = guessInput.split('');
+                                                newGuess[idx] = '';
+                                                setGuessInput(newGuess.join(''));
+                                            }}
+                                            style={{
+                                                width: '42px',
+                                                height: '48px',
+                                                borderRadius: '10px',
+                                                border: selectedChar ? '2px solid #fbbf24' : '2px dashed #fbbf24',
+                                                background: selectedChar ? 'rgba(251, 191, 36, 0.1)' : 'transparent',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '24px',
+                                                fontWeight: 900,
+                                                color: '#1e293b'
+                                            }}
+                                        >
+                                            {selectedChar}
+                                        </motion.button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Letter Bank */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', width: '100%', maxWidth: '420px', margin: '0 auto' }}>
+                                {effectiveScrambledLetters.map((char, idx) => {
+                                    const totalInBank = effectiveScrambledLetters.filter(c => c === char).length;
+                                    const usedInGuess = guessInput.split('').filter(c => c === char).length;
+                                    const isUsed = usedInGuess >= totalInBank;
+
+                                    return (
+                                        <div key={`${char}-${idx}`} style={{ position: 'relative', width: '100%', height: '46px' }}>
+                                            <div style={{ position: 'absolute', inset: 0, borderRadius: '10px', background: '#e2e8f0', zIndex: 0 }} />
+                                            {!isUsed && (
+                                                <motion.button
+                                                    drag
+                                                    dragSnapToOrigin={true}
+                                                    dragElastic={0.1}
+                                                    onDragEnd={(_, info) => {
+                                                        if (info.point.y < window.innerHeight * 0.75) {
+                                                            triggerSelection(char);
+                                                        }
+                                                    }}
+                                                    onClick={() => triggerSelection(char)}
+                                                    style={{
+                                                        position: 'relative',
+                                                        zIndex: 1,
+                                                        width: '100%',
+                                                        height: '46px',
+                                                        borderRadius: '10px',
+                                                        background: 'var(--brand-yellow)',
+                                                        border: 'none',
+                                                        color: '#000',
+                                                        fontSize: '20px',
+                                                        fontWeight: 900,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    {char}
+                                                </motion.button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     )}
                     {/* Skip Replay Button */}
                     {isReplaying && (
