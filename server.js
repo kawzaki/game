@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Increment this whenever a significant UI update is pushed to force PWA refresh
-const SERVER_VERSION = '1.0.6'; 
+const SERVER_VERSION = '1.0.9'; 
 
 // Pre-load questions for all rooms
 let questionPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
@@ -34,7 +34,7 @@ const ARABIC_LETTERS = [
     'ز', 'س', 'ش', 'ص', 'ض',
     'ط', 'ظ', 'ع', 'غ', 'ف',
     'ق', 'ك', 'ل', 'م', 'ن',
-    'ه', 'و', 'ي', 'لا', 'ة'
+    'ه', 'و', 'ي', 'ة'
 ];
 
 function generateScrambledLetters(word) {
@@ -1685,6 +1685,7 @@ io.on('connection', (socket) => {
                 .replace(/ة/g, 'ه')
                 .replace(/ى/g, 'ي')
                 .replace(/[ـ\u064B-\u0652]/g, '')
+                .replace(/\uFEFB|\uFEFC|\uFEF9|\uFEFA/g, 'لا') // Normalize Lam-Alif ligatures
                 .toLowerCase();
         };
 
@@ -1692,9 +1693,7 @@ io.on('connection', (socket) => {
         const nWord = normalizeArabic(room.drawingCurrentWord);
         
         // Match if exact, or if guess is a significant part of the word (e.g. "ايفل" in "برج ايفل")
-        const isCorrect = nGuess === nWord || 
-                          (nGuess.length >= 3 && nWord.includes(nGuess)) ||
-                          (nWord.length >= 3 && nGuess.includes(nWord));
+        const isCorrect = nGuess === nWord;
 
         if (isCorrect) {
             room.drawingGuesses[socket.id] = { correct: true, timeLeft: room.timer, guess };

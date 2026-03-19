@@ -442,8 +442,8 @@ const App: React.FC = () => {
             </div>
           </div>
           <div>
-            <h2 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '8px', color: '#0f172a' }}>يرجى الانتظار لتجهيز منصة الألعاب...</h2>
-            <p style={{ fontSize: '15px', color: '#64748b', maxWidth: '300px', lineHeight: 1.6 }}>الخادم يأخذ غفوة وسيقوم بالعمل خلال ثوانٍ قليلة. شكراً لانتظارك! ☕</p>
+            <h2 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '8px', color: '#0f172a' }}>شكراً لصبركم</h2>
+            <p style={{ fontSize: '15px', color: '#64748b', maxWidth: '300px', lineHeight: 1.6 }}>جري تشغيل المنصة، شكراً لانتظارك! ☕</p>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {[0, 1, 2].map((i) => (

@@ -10,7 +10,7 @@ interface DrawingChallengeProps {
 }
 
 const COLORS = [
-    '#000000', '#4b5563', '#ffffff', // Black, Gray, White
+    '#000000', '#4b5563', '#d1d5db', '#ffffff', // Black, Gray, Light Gray, White
     '#ef4444', '#f87171', '#991b1b', // Reds
     '#ffff00', '#f97316', '#fbbf24', '#f59e0b', // Bright Yellow, Oranges/Yellows
     '#22c55e', '#4ade80', '#166534', // Greens
@@ -292,12 +292,20 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 }
                 setReplayIndex(current);
             }, 16); // ~60fps
-            
             return () => {
                 if (replayTimerRef.current) clearInterval(replayTimerRef.current);
             };
         }
-    }, [challengeData, isChallengeCreator, isDrawer, isSoloArtist, isReplaying, replayIndex, hasStartedReplay]);
+    }, [challengeData, isChallengeCreator, isArtist, isReplaying, hasStartedReplay]);
+
+    // Reset replay when a new challenge is loaded
+    useEffect(() => {
+        if (challengeData?.id) {
+            setReplayIndex(0);
+            setIsReplaying(false);
+            setHasStartedReplay(false);
+        }
+    }, [challengeData?.id]);
 
     const skipReplay = () => {
         if (replayTimerRef.current) clearInterval(replayTimerRef.current);
@@ -1071,8 +1079,6 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
             // For simplicity, we can reuse most of the drawing logic here
             // or just render the standard drawing_active view if we tweak the conditions.
         }
-
-        const soloMasked = (challengeData?.word || '').split('').map(c => c === ' ' ? '\u00A0\u00A0' : '_').join(' ');
         
         // Let's adjust the logic: If we have a drawingCurrentWord and we are in solo-challenge room, we are drawing.
         if (drawingCurrentWord && (roomId === 'solo-challenge' || isSoloArtist)) {
@@ -1236,7 +1242,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 <div style={{ height: '54px', flexShrink: 0, background: 'white', padding: '0 16px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: '13px', fontWeight: 900, color: '#f59e0b' }}>{challengeData?.category}</div>
                     <div style={{ fontSize: '20px', fontWeight: 900, color: '#451a03' }}>
-                        {soloGuessedCorrectly ? <span style={{ color: '#059669' }}>{challengeData?.word}</span> : soloMasked}
+                        {soloGuessedCorrectly && <span style={{ color: '#059669' }}>{challengeData?.word}</span>}
                     </div>
                 </div>
                 <div style={{ flex: 1, position: 'relative', background: 'white', overflow: 'hidden' }}>
