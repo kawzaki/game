@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eraser, Trash2, Check, Pencil, Palette, Link as LinkIcon, Loader2, Droplets, X, Undo2, Redo2, Highlighter } from 'lucide-react';
+import { Eraser, Trash2, Check, Pencil, Palette, Link as LinkIcon, Loader2, Droplets, X, Undo2, Redo2, Highlighter, ChevronRight } from 'lucide-react';
 import { isFuzzyMatch } from '../utils/arabicUtils';
 import { playSound } from '../utils/soundUtils';
 
@@ -62,6 +62,12 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const [isEraser, setIsEraser] = useState(false);
     const [isHighlighter, setIsHighlighter] = useState(false);
     const [isDrawing, setIsDrawing] = useState(false);
+    
+    // Replay State for Challenges
+    const [replayIndex, setReplayIndex] = useState(0);
+    const [isReplaying, setIsReplaying] = useState(false);
+    const replayTimerRef = useRef<any>(null);
+
     const lastPos = useRef<{ x: number; y: number } | null>(null);
     const drawerStrokes = useRef<any[]>([]); // To track drawer strokes locally
     
@@ -263,6 +269,41 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         }
     }, [gameStatus, timer]);
 
+    // Challenge Replay Logic
+    useEffect(() => {
+        const isArtist = isDrawer || isSoloArtist;
+        if (challengeData && !isChallengeCreator && !isArtist && !isReplaying && replayIndex === 0) {
+            setIsReplaying(true);
+            const total = challengeData.strokes.length;
+            
+            // Replay with chunking for performance
+            let current = 0;
+            const CHUNK_SIZE = 15; // segments per tick
+            
+            replayTimerRef.current = setInterval(() => {
+                current += CHUNK_SIZE;
+                if (current >= total) {
+                    current = total;
+                    if (replayTimerRef.current) clearInterval(replayTimerRef.current);
+                    setIsReplaying(false);
+                }
+                setReplayIndex(current);
+            }, 16); // ~60fps
+            
+            return () => {
+                if (replayTimerRef.current) clearInterval(replayTimerRef.current);
+            };
+        }
+    }, [challengeData, isChallengeCreator, isDrawer, isSoloArtist, isReplaying, replayIndex]);
+
+    const skipReplay = () => {
+        if (replayTimerRef.current) clearInterval(replayTimerRef.current);
+        if (challengeData) {
+            setReplayIndex(challengeData.strokes.length);
+        }
+        setIsReplaying(false);
+    };
+
     // Dynamic canvas sizing
     useEffect(() => {
         const updateSize = () => {
@@ -280,10 +321,17 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 
                 // Prioritize local strokes if we ARE the artist, else show challenge or live strokes
                 const isArtist = isDrawer || isSoloArtist;
-                const strokesToDraw = isArtist 
+                const isChallengeView = !!challengeData && !isChallengeCreator && !isArtist;
+                
+                let strokesToDraw = isArtist 
                     ? drawerStrokes.current 
                     : (drawingLiveStrokes.length > 0 ? drawingLiveStrokes : (challengeData?.strokes || []));
                 
+                // If replaying a challenge, only draw up to the current index
+                if (isChallengeView && isReplaying) {
+                    strokesToDraw = strokesToDraw.slice(0, replayIndex);
+                }
+
                 strokesToDraw.forEach(stroke => {
                     if (stroke.type === 'segment' && stroke.from && stroke.to) {
                         drawSegment(ctx, stroke.from, stroke.to, stroke.color, stroke.size, stroke.eraser, stroke.highlighter);
@@ -295,11 +343,11 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         window.addEventListener('resize', updateSize);
         updateSize();
         return () => window.removeEventListener('resize', updateSize);
-    }, [gameStatus, drawingLiveStrokes, drawSegment, roomId, challengeData, isDrawer]);
+    }, [gameStatus, drawingLiveStrokes, drawSegment, roomId, challengeData, isDrawer, replayIndex, isReplaying]);
 
     // Draw incoming strokes live
     useEffect(() => {
-        if (isDrawer || roomId === 'solo-challenge') return;
+        if (isDrawer || roomId === 'solo-challenge' || isReplaying) return;
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
         if (!ctx || !canvas || drawingLiveStrokes.length === 0) return;
@@ -1290,6 +1338,37 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                             <input type="text" value={guessInput} onChange={e => setGuessInput(e.target.value)} disabled={soloGuessedCorrectly} placeholder='خمّن الكلمة...' style={{ flex: 1, padding: '14px', borderRadius: '14px', border: '2px solid #f1f5f9', textAlign: 'right', fontSize: '16px', fontWeight: 'bold', outline: 'none' }} dir="rtl" />
                             <button type="submit" style={{ padding: '0 24px', borderRadius: '14px', background: 'var(--brand-yellow)', border: 'none', fontWeight: 900, fontSize: '16px', transition: 'transform 0.1s active', height: '52px' }}>خمّن</button>
                         </form>
+                    )}
+                    {/* Skip Replay Button */}
+                    {isReplaying && (
+                        <motion.button
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            onClick={skipReplay}
+                            style={{
+                                position: 'absolute',
+                                bottom: '20px',
+                                right: '20px',
+                                padding: '12px 20px',
+                                background: 'rgba(255,255,255,0.9)',
+                                backdropFilter: 'blur(8px)',
+                                border: '2px solid var(--brand-blue)',
+                                borderRadius: '12px',
+                                color: 'var(--brand-blue)',
+                                fontWeight: 'bold',
+                                fontSize: '14px',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                cursor: 'pointer',
+                                zIndex: 100,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            انتقل للرسمة النهائية
+                            <ChevronRight size={18} />
+                        </motion.button>
                     )}
                 </div>
             </div>
