@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eraser, Trash2, Check, Pencil, Palette, Link as LinkIcon, Loader2, Droplets, X, Undo2, Redo2, Highlighter, ChevronRight } from 'lucide-react';
+import { Eraser, Trash2, Check, Pencil, Palette, Link as LinkIcon, Loader2, Droplets, X, Undo2, Redo2, Highlighter, ChevronRight, Play } from 'lucide-react';
 import { isFuzzyMatch } from '../utils/arabicUtils';
 import { playSound } from '../utils/soundUtils';
 
@@ -66,6 +66,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     // Replay State for Challenges
     const [replayIndex, setReplayIndex] = useState(0);
     const [isReplaying, setIsReplaying] = useState(false);
+    const [hasStartedReplay, setHasStartedReplay] = useState(false);
     const replayTimerRef = useRef<any>(null);
 
     const lastPos = useRef<{ x: number; y: number } | null>(null);
@@ -97,6 +98,9 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     const [isSoloArtist, setIsSoloArtist] = useState(false);
     const [showClearConfirm, setShowClearConfirm] = useState(false);
     
+    // Derived state for the current user's role
+    const isArtist = isDrawer || isSoloArtist;
+
     // Derived state for fallbacks in Session/Solo mode
     const challenge = useGameStore(state => state.challengeData);
     
@@ -271,8 +275,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
 
     // Challenge Replay Logic
     useEffect(() => {
-        const isArtist = isDrawer || isSoloArtist;
-        if (challengeData && !isChallengeCreator && !isArtist && !isReplaying && replayIndex === 0) {
+        if (challengeData && !isChallengeCreator && !isArtist && !isReplaying && replayIndex === 0 && hasStartedReplay) {
             setIsReplaying(true);
             const total = challengeData.strokes.length;
             
@@ -294,7 +297,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 if (replayTimerRef.current) clearInterval(replayTimerRef.current);
             };
         }
-    }, [challengeData, isChallengeCreator, isDrawer, isSoloArtist, isReplaying, replayIndex]);
+    }, [challengeData, isChallengeCreator, isDrawer, isSoloArtist, isReplaying, replayIndex, hasStartedReplay]);
 
     const skipReplay = () => {
         if (replayTimerRef.current) clearInterval(replayTimerRef.current);
@@ -302,6 +305,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
             setReplayIndex(challengeData.strokes.length);
         }
         setIsReplaying(false);
+        setHasStartedReplay(true);
     };
 
     // Dynamic canvas sizing
@@ -577,7 +581,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         const reversedChatLog = [...chatLog].reverse().slice(0, 10);
 
         return (
-            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100vw', height: '100dvh', overflow: 'hidden', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none' }}>
+            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100vw', height: '100dvh', overflow: 'hidden', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none', overscrollBehavior: 'none' }}>
                 <div style={{ height: '70px', zIndex: 30, display: 'flex', flexDirection: 'column', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', width: '100%' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px' }}>
@@ -1074,7 +1078,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         if (drawingCurrentWord && (roomId === 'solo-challenge' || isSoloArtist)) {
              // Standard Drawing UI for Solo Artist
              return (
-                <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100dvh', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none' }}>
+                <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100dvh', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none', overscrollBehavior: 'none' }}>
                     <div style={{ height: '70px', zIndex: 30, display: 'flex', flexDirection: 'column', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', width: '100%' }}>
                             {drawingCategory && (
@@ -1228,7 +1232,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         }
 
         return (
-            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100dvh', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none' }}>
+            <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100dvh', background: '#f1f5f9', userSelect: 'none', WebkitUserSelect: 'none', touchAction: 'none', overscrollBehavior: 'none' }}>
                 <div style={{ height: '54px', flexShrink: 0, background: 'white', padding: '0 16px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: '13px', fontWeight: 900, color: '#f59e0b' }}>{challengeData?.category}</div>
                     <div style={{ fontSize: '20px', fontWeight: 900, color: '#451a03' }}>
@@ -1237,6 +1241,34 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                 </div>
                 <div style={{ flex: 1, position: 'relative', background: 'white', overflow: 'hidden' }}>
                     <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', touchAction: 'none' }} />
+                    
+                    {/* Play Button Overlay */}
+                    {challengeData && !isChallengeCreator && !isArtist && !hasStartedReplay && (
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(4px)', zIndex: 50 }}>
+                            <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => setHasStartedReplay(true)}
+                                style={{
+                                    width: '120px',
+                                    height: '120px',
+                                    borderRadius: '50%',
+                                    background: 'var(--brand-yellow)',
+                                    border: 'none',
+                                    boxShadow: '0 10px 40px rgba(251, 191, 36, 0.5)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    gap: '8px'
+                                }}
+                            >
+                                <Play size={48} color="#000" fill="#000" style={{ marginRight: '-4px' }} />
+                                <span style={{ fontWeight: 900, fontSize: '14px', color: '#000' }}>شاهد الرسمة</span>
+                            </motion.button>
+                        </div>
+                    )}
                     <AnimatePresence>
                         {soloGuessedCorrectly && (
                             <div style={{ position: 'absolute', inset: 0, background: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(8px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
