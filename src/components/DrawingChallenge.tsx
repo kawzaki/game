@@ -907,8 +907,8 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                         {isDrawer && !isScoring && (
                             <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'center' }}>
                                 <button onClick={handleCreateChallenge} disabled={challengeLoading} title="وضع التحدي" style={{ flex: 1, padding: '10px 20px', borderRadius: '10px', background: '#fff', border: '1px solid #e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', fontWeight: 'bold', fontSize: '14px', gap: '8px' }}>
-                                    {challengeLoading ? <Loader2 size={16} className="animate-spin" /> : (currentRoomId?.startsWith('session_') ? <Check size={16} /> : <LinkIcon size={16} />)}
-                                    {currentRoomId?.startsWith('session_') ? 'ارسل الرسمة لصديقك' : 'تحدى صديق'}
+                                    {currentRoomId?.startsWith('session_') ? <Check size={16} /> : <LinkIcon size={16} />}
+                                    تحدى صديق
                                 </button>
                                 {isSoloInkMode && (
                                     <button onClick={() => finishDrawingRound(roomId)} style={{ padding: '10px 20px', borderRadius: '10px', background: 'var(--brand-yellow)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 'bold', fontSize: '14px', gap: '8px', flex: 1 }}>
@@ -1176,7 +1176,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                 }}
                             >
                                 {challengeLoading ? <Loader2 size={18} className="animate-spin" /> : (currentRoomId?.startsWith('session_') ? <Check size={18} /> : <LinkIcon size={18} />)}
-                                {currentRoomId?.startsWith('session_') ? 'ارسل الرسمة لصديقك' : 'تحدى صديق وارسل الرسمة'}
+                                تحدى صديق
                             </button>
                         </div>
                     </div>
