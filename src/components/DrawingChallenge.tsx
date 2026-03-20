@@ -218,6 +218,31 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
         prevCorrectLen.current = correctGuesses.length;
     }, [drawingDrawerId]);
 
+    // Prevent browser back/forward navigation during active drawing
+    useEffect(() => {
+        if (!roomId || roomId === 'solo-challenge' || gameStatus === 'drawing_scoring') return;
+
+        // Apply overscroll-behavior: none to body to prevent swipe navigation on mobile/trackpads
+        const originalOverscroll = document.body.style.overscrollBehavior;
+        document.body.style.overscrollBehavior = 'none';
+
+        // Confirmation on page leave/refresh
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (gameStatus === 'drawing_active') {
+                e.preventDefault();
+                e.returnValue = ''; // Standard way to show confirmation
+                return '';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            document.body.style.overscrollBehavior = originalOverscroll;
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [roomId, gameStatus]);
+
     // ─── Canvas helpers ──────────────────────────────────────────────
     const getCanvasPos = (e: React.PointerEvent | PointerEvent) => {
         const canvas = canvasRef.current;
@@ -609,7 +634,6 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
     // ─── Active drawing round ─────────────────────────────────────────
     if (gameStatus === 'drawing_active' || gameStatus === 'drawing_scoring') {
         const isScoring = gameStatus === 'drawing_scoring';
-        const maskedDisplay = drawingMaskedWord ? drawingMaskedWord.split('').map(c => c === ' ' ? '\u00A0\u00A0' : c === '-' ? '-' : '_').join(' ') : '';
         const reversedChatLog = [...chatLog].reverse().slice(0, 10);
 
         return (
@@ -632,13 +656,9 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
                                     </div>
                                 ) : (
                                     <div style={{ letterSpacing: isScoring ? '2px' : '4px' }}>
-                                        {isScoring ? (
+                                        {isScoring && (
                                             <div style={{ fontSize: '16px' }}>
                                                 الكلمة: <span style={{ color: '#059669' }}>{drawingCurrentWord}</span>
-                                            </div>
-                                        ) : (
-                                            <div style={{ padding: '4px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', color: '#64748b' }}>
-                                                {maskedDisplay}
                                             </div>
                                         )}
                                     </div>

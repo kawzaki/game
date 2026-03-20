@@ -552,9 +552,18 @@ io.on('connection', (socket) => {
             }
             
             const savedWord = room.drawingCurrentWord;
-            room.drawingCurrentWord = null;
+            room.drawingCurrentWord = null; // Temporarily hide for guessers
             socket.emit('room_data', room);
-            room.drawingCurrentWord = savedWord;
+            room.drawingCurrentWord = savedWord; // Restore for server logic
+
+            // If this is the drawer rejoining, send them their word
+            if (socket.id === room.drawingDrawerId) {
+                socket.emit('drawing_your_word', { 
+                    word: savedWord, 
+                    category: room.drawingCategory, 
+                    scrambledLetters: room.drawingScrambledLetters 
+                });
+            }
         } else {
             socket.emit('room_data', room);
         }
@@ -2029,6 +2038,20 @@ io.on('connection', (socket) => {
                     room.currentPlayerIndex--;
                 }
 
+                // Similarly for drawing challenge
+                if (room.gameType === 'drawing_challenge') {
+                    if (room.drawingDrawerIndex === playerIndex) {
+                        // Current drawer left abruptly (disconnect)
+                        if (room.gameStatus === 'drawing_active') {
+                            console.log(`[Disconnect] Drawer ${room.players[playerIndex].name} disconnected during active round.`);
+                            if (room._drawingInterval) { clearInterval(room._drawingInterval); room._drawingInterval = null; }
+                            // Round will progress after splicing below
+                        }
+                    } else if (room.drawingDrawerIndex > playerIndex) {
+                        room.drawingDrawerIndex--;
+                    }
+                }
+
                 room.players.splice(playerIndex, 1);
 
                 // Update numbers for remaining players if needed
@@ -2037,6 +2060,26 @@ io.on('connection', (socket) => {
                 });
 
                 if (room.players.length > 0) {
+                    // If the drawer left during a drawing round, we need to advance the round now that they're removed
+                    if (room.gameType === 'drawing_challenge' && room.gameStatus === 'drawing_active' && !room.drawingDrawerId) {
+                        // This case happens if drawingDrawerId was the one who left
+                        // Actually, we should check if drawingDrawerId is still in the room
+                    }
+
+                    // Direct check for drawer presence after splice
+                    if (room.gameType === 'drawing_challenge' && room.gameStatus === 'drawing_active') {
+                        const currentDrawerStillHere = room.players.find(p => p.id === room.drawingDrawerId);
+                        if (!currentDrawerStillHere) {
+                            room.currentRound++;
+                            if (room.currentRound > room.roundCount || room.players.length < 2) {
+                                endGame(room, io, roomId);
+                            } else {
+                                startDrawingRound(room, io, roomId);
+                            }
+                            return; // startDrawingRound or endGame will handle the broadcast
+                        }
+                    }
+
                     // Sanitize room object to avoid crashing socket.io-parser on Timeout objects
                     const safeRoom = { ...room };
                     for (const key in safeRoom) {
