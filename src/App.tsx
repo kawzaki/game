@@ -515,35 +515,35 @@ const App: React.FC = () => {
           <span className="join-label">اختر لعبة للتحدي</span>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' }}>
             <button className="btn-primary-battle" onClick={() => finalizeCreateRoom('jeopardy')}>
-              <Layout size={24} />
+              <Layout size={20} />
               تحدي الاسئلة
             </button>
             <button className="btn-primary-battle" style={{ background: 'var(--brand-yellow)', color: '#000' }} onClick={() => finalizeCreateRoom('huroof')}>
-              <Type size={24} />
+              <Type size={20} />
               لعبة الحروف
             </button>
             <button className="btn-primary-battle" style={{ background: '#10b981', color: '#fff' }} onClick={() => finalizeCreateRoom('bin_o_walad')}>
-              <Layout size={24} />
+              <Layout size={20} />
               بنت وولد
             </button>
             <button className="btn-primary-battle" style={{ background: '#8b5cf6', color: '#fff' }} onClick={() => finalizeCreateRoom('word_meaning')}>
-              <BookOpen size={24} />
+              <BookOpen size={20} />
               معاني الكلمات
             </button>
             <button className="btn-primary-battle" style={{ background: '#f59e0b', color: '#fff' }} onClick={() => finalizeCreateRoom('siba')}>
-              <Layout size={24} />
+              <Layout size={20} />
               لعبة الصبة
             </button>
             <button className="btn-primary-battle" style={{ background: '#ec4899', color: '#fff' }} onClick={() => finalizeCreateRoom('pixel_challenge')}>
-              <ImageIcon size={24} />
+              <ImageIcon size={20} />
               تحدي الصور
             </button>
             <button className="btn-primary-battle" style={{ background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)', color: '#fff' }} onClick={() => finalizeCreateRoom('drawing_challenge')}>
-              <Pencil size={24} />
+              <Pencil size={20} />
               تحدي الرسم
             </button>
-            <button className="btn-primary-battle" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff' }} onClick={() => finalizeCreateRoom('proverbs')}>
-              <MessageSquare size={24} />
+            <button className="btn-primary-battle" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', gridColumn: 'auto', minWidth: 0 }} onClick={() => finalizeCreateRoom('proverbs')}>
+              <MessageSquare size={20} />
               أمثال وحكم
             </button>
           </div>
