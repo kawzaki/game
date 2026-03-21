@@ -25,7 +25,16 @@ const HuroofGame: React.FC<HuroofGameProps> = ({ roomId }) => {
     };
 
     if (!huroofGrid) {
-        return <div style={{ textAlign: 'center', padding: '40px' }}>جاري تحميل اللوحة...</div>;
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '40px' }}>
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    style={{ width: '40px', height: '40px', border: '4px solid #f1f5f9', borderTopColor: 'var(--brand-yellow)', borderRadius: '50%' }}
+                />
+                <div style={{ fontSize: '14px', color: '#64748b' }}>جاري تحميل اللوحة...</div>
+            </div>
+        );
     }
 
     return (

@@ -625,9 +625,9 @@ io.on('connection', (socket) => {
                 const shuffled = [...pixelChallengePool].sort(() => Math.random() - 0.5);
                 // Select 15 questions (10 main + 5 buffer for tie-breakers)
                 selectedQuestions = shuffled.slice(0, questionsPerCategory + 5);
-            } else if (gameType === 'drawing_challenge') {
+            } else if (requestedGameType === 'drawing_challenge') {
                 selectedQuestions = [...drawingWordsPool].sort(() => Math.random() - 0.5);
-            } else if (gameType === 'proverbs') {
+            } else if (requestedGameType === 'proverbs') {
                 selectedQuestions = [...proverbsPool].sort(() => Math.random() - 0.5).slice(0, questionsPerCategory);
             }
 
@@ -804,6 +804,20 @@ io.on('connection', (socket) => {
                     } else {
                         clearInterval(countdownInterval);
                         startDrawingRound(room, io, roomId);
+                    }
+                }, 1000);
+            } else if (room.gameType === 'proverbs') {
+                room.gameStatus = 'countdown';
+                room.timer = 3;
+                room.currentRound = 1;
+
+                const countdownInterval = setInterval(() => {
+                    if (room.timer > 0) {
+                        room.timer--;
+                        io.to(roomId).emit('room_data', room);
+                    } else {
+                        clearInterval(countdownInterval);
+                        startProverbsRound(room, io, roomId);
                     }
                 }, 1000);
             } else {

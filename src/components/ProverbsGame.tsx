@@ -215,6 +215,19 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
         );
     }
 
+    if (gameStatus === 'proverbs_active' && !activeQuestion) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    className="w-16 h-16 border-4 border-slate-200 border-t-amber-500 rounded-full"
+                />
+                <div className="text-xl font-bold text-slate-500 animate-pulse">جاري تحميل المحتوى...</div>
+            </div>
+        );
+    }
+
     return null;
 };
 
