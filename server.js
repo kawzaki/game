@@ -27,27 +27,21 @@ try {
 } catch (e) {
     console.error("Error loading drawingWords.json:", e.message);
 }
-let proverbsPool = [];
-try {
-    proverbsPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/proverbs.json'), 'utf8'));
-} catch (e) {
-    console.error("Error loading proverbs.json:", e.message);
-}
 
 const ARABIC_LETTERS = [
-    'Ø£', 'Ø¨', 'Øª', 'Ø«', 'Ø¬',
-    'Ø­', 'Ø®', 'Ø¯', 'Ø°', 'Ø±',
-    'Ø²', 'Ø³', 'Ø´', 'Øµ', 'Ø¶',
-    'Ø·', 'Ø¸', 'Ø¹', 'Øº', 'Ù',
-    'Ù‚', 'Ùƒ', 'Ù„', 'Ù…', 'Ù†',
-    'Ù‡', 'Ùˆ', 'ÙŠ', 'Ø©'
+    'أ', 'ب', 'ت', 'ث', 'ج',
+    'ح', 'خ', 'د', 'ذ', 'ر',
+    'ز', 'س', 'ش', 'ص', 'ض',
+    'ط', 'ظ', 'ع', 'غ', 'ف',
+    'ق', 'ك', 'ل', 'م', 'ن',
+    'ه', 'و', 'ي', 'ة'
 ];
 
 function generateScrambledLetters(word) {
     if (!word) return [];
     
     // Normalize and extract unique letters from the word
-    const normalizeForBank = (s) => s.replace(/[Ø£Ø¥Ø¢]/g, 'Ø§').replace(/Ø©/g, 'Ù‡');
+    const normalizeForBank = (s) => s.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه');
     
     // Use the actual letters as they appear in the word, but also include normalized ones to be safe
     const letters = word.split('').filter(char => char !== ' ' && char !== '-');
@@ -67,8 +61,8 @@ function generateScrambledLetters(word) {
 
 function selectJeopardyQuestions(questionsPerCategory) {
     const selectedQuestions = [];
-    // Filter out the "Ø§Ù„Ø­Ø±ÙˆÙ" category specifically used for Huroof game
-    const jeopardyPool = questionPool.filter(q => q.category !== 'Ø§Ù„Ø­Ø±ÙˆÙ');
+    // Filter out the "الحروف" category specifically used for Huroof game
+    const jeopardyPool = questionPool.filter(q => q.category !== 'الحروف');
     const shuffledPool = [...jeopardyPool].sort(() => Math.random() - 0.5);
     const categoryCounts = {};
 
@@ -80,6 +74,15 @@ function selectJeopardyQuestions(questionsPerCategory) {
         }
     });
     return selectedQuestions;
+}
+
+let proverbsPool = [];
+try {
+    const proverbsData = fs.readFileSync('./src/data/proverbs.json', 'utf8');
+    proverbsPool = JSON.parse(proverbsData);
+    console.log('Proverbs pool loaded:', proverbsPool.length);
+} catch (err) {
+    console.error('Error loading proverbs pool:', err);
 }
 
 const app = express();
@@ -340,11 +343,11 @@ function startQuestionTimer(room, io, roomId) {
                 if (room.attempts.length >= room.players.length) {
                     room.feedback = {
                         type: 'all_wrong',
-                        message: `Ø§Ù†ØªÙ‡Ù‰ Ø§Ù„ÙˆÙ‚Øª! Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø¹Ù„Ù‰ Ø§Ù„Ø³Ø¤Ø§Ù„.`,
+                        message: `انتهى الوقت! لم يتم الإجابة على السؤال.`,
                         answer: room.correctAnswer
                     };
                     if (room.gameType === 'huroof' && room.huroofHistory && room.huroofHistory.length > 0) {
-                        room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "Ù„Ø§ Ø£Ø­Ø¯";
+                        room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "لا أحد";
                     }
                     clearInterval(room._questionInterval);
                 } else {
@@ -355,11 +358,11 @@ function startQuestionTimer(room, io, roomId) {
                 // Overall question timeout
                 room.feedback = {
                     type: 'all_wrong',
-                    message: `Ø§Ù†ØªÙ‡Ù‰ Ø§Ù„ÙˆÙ‚Øª! Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø¹Ù„Ù‰ Ø§Ù„Ø³Ø¤Ø§Ù„.`,
+                    message: `انتهى الوقت! لم يتم الإجابة على السؤال.`,
                     answer: room.correctAnswer
                 };
                 if (room.gameType === 'huroof' && room.huroofHistory && room.huroofHistory.length > 0) {
-                    room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "Ù„Ø§ Ø£Ø­Ø¯";
+                    room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "لا أحد";
                 }
                 io.to(roomId).emit('room_data', room);
                 clearInterval(room._questionInterval);
@@ -372,20 +375,20 @@ function startQuestionTimer(room, io, roomId) {
 function normalizeArabic(text) {
     if (!text) return "";
     return text.trim()
-        .replace(/[Ø£Ø¥Ø¢]/g, 'Ø§')
-        .replace(/Ø©/g, 'Ù‡')
-        .replace(/Ù‰/g, 'ÙŠ')
+        .replace(/[أإآ]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/ى/g, 'ي')
         .replace(/[\u064B-\u0652]/g, "") // Remove harakat
         .toLowerCase();
 }
 
 const CATEGORIES_BIN_O_WALAD = [
-    { key: 'girl', label: 'Ø¨Ù†Øª' },
-    { key: 'boy', label: 'ÙˆÙ„Ø¯' },
-    { key: 'thing', label: 'Ø¬Ù…Ø§Ø¯' },
-    { key: 'food', label: 'Ø£ÙƒÙ„' },
-    { key: 'animal', label: 'Ø­ÙŠÙˆØ§Ù†' },
-    { key: 'location', label: 'Ø¨Ù„Ø§Ø¯' }
+    { key: 'girl', label: 'بنت' },
+    { key: 'boy', label: 'ولد' },
+    { key: 'thing', label: 'جماد' },
+    { key: 'food', label: 'أكل' },
+    { key: 'animal', label: 'حيوان' },
+    { key: 'location', label: 'بلاد' }
 ];
 
 function endGame(room, io, roomId, forfeitingPlayerId = null, winningTeam = null) {
@@ -398,7 +401,7 @@ function endGame(room, io, roomId, forfeitingPlayerId = null, winningTeam = null
     if (winningTeam) {
         room.gameStatus = 'game_over';
         room.winner = {
-            name: winningTeam === 'red' ? 'Ø§Ù„ÙØ±ÙŠÙ‚ Ø§Ù„Ø£Ø­Ù…Ø±' : 'Ø§Ù„ÙØ±ÙŠÙ‚ Ø§Ù„Ø£Ø²Ø±Ù‚',
+            name: winningTeam === 'red' ? 'الفريق الأحمر' : 'الفريق الأزرق',
             score: 0,
             isForfeit: false,
             winningTeam: winningTeam
@@ -476,7 +479,7 @@ io.on('connection', (socket) => {
                     const options = [w.meaning, ...wrongMeanings].sort(() => Math.random() - 0.5);
                     return {
                         id: `wm-${Date.now()}-${Math.random()}`,
-                        category: "Ù…Ø¹Ø§Ù†ÙŠ Ø§Ù„ÙƒÙ„Ù…Ø§Øª",
+                        category: "معاني الكلمات",
                         value: 100,
                         question: w.word,
                         answer: w.meaning,
@@ -491,11 +494,8 @@ io.on('connection', (socket) => {
             } else if (requestedGameType === 'drawing_challenge') {
                 selectedQuestions = [...drawingWordsPool].sort(() => Math.random() - 0.5);
             } else if (requestedGameType === 'proverbs') {
-                const shuffledProverbs = [...proverbsPool].sort(() => Math.random() - 0.5);
-                selectedQuestions = shuffledProverbs.slice(0, questionsPerCategory);
-            } else if (requestedGameType === 'proverbs') {
-                const shuffledProverbs = [...proverbsPool].sort(() => Math.random() - 0.5);
-                selectedQuestions = shuffledProverbs.slice(0, questionsPerCategory);
+                const gamePool = [...proverbsPool];
+                selectedQuestions = _.sampleSize(gamePool, questionsPerCategory);
             }
 
             rooms.set(roomId, {
@@ -614,7 +614,7 @@ io.on('connection', (socket) => {
                     const options = [w.meaning, ...wrongMeanings].sort(() => Math.random() - 0.5);
                     return {
                         id: `wm-${Date.now()}-${Math.random()}`,
-                        category: "Ù…Ø¹Ø§Ù†ÙŠ Ø§Ù„ÙƒÙ„Ù…Ø§Øª",
+                        category: "معاني الكلمات",
                         value: 100,
                         question: w.word,
                         answer: w.meaning,
@@ -626,14 +626,11 @@ io.on('connection', (socket) => {
                 const shuffled = [...pixelChallengePool].sort(() => Math.random() - 0.5);
                 // Select 15 questions (10 main + 5 buffer for tie-breakers)
                 selectedQuestions = shuffled.slice(0, questionsPerCategory + 5);
-            } else if (requestedGameType === 'drawing_challenge') {
+            } else if (gameType === 'drawing_challenge') {
                 selectedQuestions = [...drawingWordsPool].sort(() => Math.random() - 0.5);
-            } else if (requestedGameType === 'proverbs') {
-                const shuffledProverbs = [...proverbsPool].sort(() => Math.random() - 0.5);
-                selectedQuestions = shuffledProverbs.slice(0, questionsPerCategory);
-            } else if (requestedGameType === 'proverbs') {
-                const shuffledProverbs = [...proverbsPool].sort(() => Math.random() - 0.5);
-                selectedQuestions = shuffledProverbs.slice(0, questionsPerCategory);
+            } else if (gameType === 'proverbs') {
+                const gamePool = [...proverbsPool];
+                selectedQuestions = _.sampleSize(gamePool, questionsPerCategory);
             }
 
             rooms.set(roomId, {
@@ -653,7 +650,7 @@ io.on('connection', (socket) => {
                 winner: null,
                 correctAnswer: null,
                 buzzedPlayerId: null,
-                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge' || requestedGameType === 'drawing_challenge' || requestedGameType === 'proverbs') ? questionsPerCategory : 0,
+                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge' || requestedGameType === 'drawing_challenge') ? questionsPerCategory : 0,
                 currentRound: 0,
                 usedLetters: [],
                 currentLetter: null,
@@ -697,7 +694,7 @@ io.on('connection', (socket) => {
             const questionsPerCategory = Number(rawQCount);
             console.log(`[Update Settings] Room: ${roomId}, New count: ${questionsPerCategory}`);
             room.questionsPerCategory = questionsPerCategory;
-            if (room.gameType === 'bin_o_walad' || room.gameType === 'pixel_challenge' || room.gameType === 'word_meaning' || room.gameType === 'drawing_challenge' || room.gameType === 'proverbs') {
+            if (room.gameType === 'bin_o_walad' || room.gameType === 'pixel_challenge' || room.gameType === 'word_meaning' || room.gameType === 'drawing_challenge') {
                 room.roundCount = questionsPerCategory;
 
                 // For Pixel Challenge, re-select questions based on new count
@@ -735,7 +732,7 @@ io.on('connection', (socket) => {
                     id: id,
                     gameType: room.gameType,
                     playerCount: room.players.length,
-                    creatorName: room.players[0]?.name || 'Ù„Ø§Ø¹Ø¨ ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ'
+                    creatorName: room.players[0]?.name || 'لاعب غير معروف'
                 });
             }
         }
@@ -809,20 +806,6 @@ io.on('connection', (socket) => {
                     } else {
                         clearInterval(countdownInterval);
                         startDrawingRound(room, io, roomId);
-                    }
-                }, 1000);
-            } else if (room.gameType === 'proverbs') {
-                room.gameStatus = 'countdown';
-                room.timer = 3;
-                room.currentRound = 1;
-
-                const countdownInterval = setInterval(() => {
-                    if (room.timer > 0) {
-                        room.timer--;
-                        io.to(roomId).emit('room_data', room);
-                    } else {
-                        clearInterval(countdownInterval);
-                        startProverbsRound(room, io, roomId);
                     }
                 }, 1000);
             } else {
@@ -999,7 +982,7 @@ io.on('connection', (socket) => {
 
         room.feedback = {
             type: 'info',
-            message: `Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø§Ù„ØµØ­ÙŠØ­Ø© Ù‡ÙŠ: ${q.answer}`,
+            message: `الإجابة الصحيحة هي: ${q.answer}`,
             answer: q.answer
         };
 
@@ -1102,7 +1085,7 @@ io.on('connection', (socket) => {
         room.activeQuestion.answer = q.answer;
         room.feedback = {
             type: 'info',
-            message: `Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø§Ù„ØµØ­ÙŠØ­Ø© Ù‡ÙŠ: ${q.answer}`,
+            message: `الإجابة الصحيحة هي: ${q.answer}`,
             answer: q.answer
         };
 
@@ -1154,44 +1137,29 @@ io.on('connection', (socket) => {
         }
     });
 
-
     function startProverbsRound(room, io, roomId) {
         if (room.currentRound > room.roundCount) {
-            endGame(room, io, roomId);
+            room.gameStatus = 'game_over';
+            const sorted = [...room.players].sort((a, b) => b.score - a.score);
+            room.winner = { name: sorted[0].name, score: sorted[0].score };
+            io.to(roomId).emit('room_data', room);
             return;
         }
 
-        const q = room.questions[room.currentRound - 1];
-        
-        let options = q.options;
-        if (!options || options.length === 0) {
-            const allAnswers = proverbsPool.map(p => p.answer);
-            const wrongAnswers = allAnswers.filter(a => a !== q.answer).sort(() => Math.random() - 0.5).slice(0, 3);
-            options = [q.answer, ...wrongAnswers].sort(() => Math.random() - 0.5);
-        }
-
-        room.activeQuestion = { ...q, options };
-        delete room.activeQuestion.answer;
-        room.correctAnswer = q.answer;
-
         room.gameStatus = 'proverbs_active';
-        room.timer = q.type === 'context' ? 20 : 15;
+        room.timer = 20;
+        room.activeQuestion = { ...room.questions[room.currentRound - 1] };
         room.roundSubmissions = {};
-        room.wordMeaningFeedback = {}; 
-        room.feedback = null;
-
         io.to(roomId).emit('room_data', room);
 
-        const roundInterval = setInterval(() => {
-            if (room.timer > 0 && room.gameStatus === 'proverbs_active') {
-                room.timer--;
-                io.to(roomId).emit('room_data', room);
-            } else {
-                clearInterval(roundInterval);
-                if (room.gameStatus === 'proverbs_active') {
-                    scoreProverbsRound(room, io, roomId);
-                }
+        if (room.proverbsInterval) clearInterval(room.proverbsInterval);
+        room.proverbsInterval = setInterval(() => {
+            room.timer--;
+            if (room.timer <= 0) {
+                clearInterval(room.proverbsInterval);
+                scoreProverbsRound(room, io, roomId);
             }
+            io.to(roomId).emit('timer_update', { timer: room.timer, roomId });
         }, 1000);
     }
 
@@ -1201,21 +1169,22 @@ io.on('connection', (socket) => {
 
         room.players.forEach(p => {
             const submission = room.roundSubmissions[p.id];
-            if (submission && isCorrectAnswer(submission.answer, q.answer)) {
+            if (submission && submission.answer === q.answer) {
                 const speedBonus = submission.timeLeft * 5;
                 const totalPoints = 50 + speedBonus;
                 p.score += totalPoints;
 
                 if (!room.wordMeaningFeedback) room.wordMeaningFeedback = {};
-                if (room.wordMeaningFeedback[p.id]) {
-                    room.wordMeaningFeedback[p.id].pointsEarned = totalPoints;
-                }
+                room.wordMeaningFeedback[p.id] = { answer: submission.answer, isCorrect: true, pointsEarned: totalPoints };
+            } else if (submission) {
+                if (!room.wordMeaningFeedback) room.wordMeaningFeedback = {};
+                room.wordMeaningFeedback[p.id] = { answer: submission.answer, isCorrect: false };
             }
         });
 
         room.feedback = {
             type: 'info',
-            message: Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø§Ù„ØµØ­ÙŠØ­Ø© Ù‡ÙŠ: \,
+            message: 'الإجابة الصحيحة هي: ',
             answer: q.answer
         };
 
@@ -1232,19 +1201,17 @@ io.on('connection', (socket) => {
     socket.on('submit_proverbs_answer', ({ roomId, answer }) => {
         const room = rooms.get(roomId);
         if (room && room.gameStatus === 'proverbs_active') {
-            const q = room.questions[room.currentRound - 1];
             room.roundSubmissions[socket.id] = { answer, timeLeft: room.timer };
-
-            if (!room.wordMeaningFeedback) room.wordMeaningFeedback = {};
-            room.wordMeaningFeedback[socket.id] = { answer, isCorrect: isCorrectAnswer(answer, q.answer) };
-
             io.to(roomId).emit('room_data', room);
 
             if (Object.keys(room.roundSubmissions).length === room.players.length) {
+                if (room.proverbsInterval) clearInterval(room.proverbsInterval);
                 room.timer = 0;
+                scoreProverbsRound(room, io, roomId);
             }
         }
     });
+
     socket.on('pick_category', ({ roomId, category }) => {
         const room = rooms.get(roomId);
         if (room) {
@@ -1260,12 +1227,12 @@ io.on('connection', (socket) => {
 
                 if (isLuck && player) {
                     const rewards = [
-                        { msg: "ØªØ¨Ø±ÙŠÙƒØ§ØªÙ†Ø§! Ø±Ø¨Ø­Øª Ø§Ù„Ø®Ù„ÙŠØ© ÙÙˆØ±Ø§Ù‹ Ù…Ø¹ 200 Ø¹Ù…Ù„Ø©!", multiplier: 2, claim: true },
-                        { msg: "Ø£ÙˆÙ‡ Ù„Ø§! Ø®Ø³Ø±Øª 100 Ø¹Ù…Ù„Ø© ÙˆÙ„Ù… ØªØ­ØµÙ„ Ø¹Ù„Ù‰ Ø§Ù„Ø®Ù„ÙŠØ©!", multiplier: -1, claim: false },
-                        { msg: "Ø­Ø¸ Ø³Ø¹ÙŠØ¯! Ø±Ø¨Ø­Øª Ø§Ù„Ø®Ù„ÙŠØ© ÙÙˆØ±Ø§Ù‹ Ù…Ø¹ 100 Ø¹Ù…Ù„Ø©!", multiplier: 1, claim: true },
-                        { msg: "ÙŠØ§ Ù„Ù„Ù‡ÙˆÙ„! ØªÙ… Ø®ØµÙ… Ù†ØµÙ Ø±ØµÙŠØ¯Ùƒ Ø§Ù„Ø­Ø§Ù„ÙŠ!", effect: 'halve', claim: false },
-                        { msg: "ÙŠØ§ Ù„Ùƒ Ù…Ù† Ù…Ø­Ø¸ÙˆØ¸! Ø±Ø¨Ø­Øª Ø§Ù„Ø®Ù„ÙŠØ© ÙˆØªÙ… Ù…Ø¶Ø§Ø¹ÙØ© Ø±ØµÙŠØ¯Ùƒ Ø§Ù„Ø­Ø§Ù„ÙŠ!", effect: 'double', claim: true },
-                        { msg: "Ù„Ø§ Ø±Ø¨Ø­ ÙˆÙ„Ø§ Ø®Ø³Ø§Ø±Ø© Ù‡Ø°Ù‡ Ø§Ù„Ù…Ø±Ø©ØŒ ÙˆØ§Ù„Ø®Ù„ÙŠØ© Ù„Ù… ØªÙÙ…Ù„Ùƒ.", multiplier: 0, claim: false }
+                        { msg: "تبريكاتنا! ربحت الخلية فوراً مع 200 عملة!", multiplier: 2, claim: true },
+                        { msg: "أوه لا! خسرت 100 عملة ولم تحصل على الخلية!", multiplier: -1, claim: false },
+                        { msg: "حظ سعيد! ربحت الخلية فوراً مع 100 عملة!", multiplier: 1, claim: true },
+                        { msg: "يا للهول! تم خصم نصف رصيدك الحالي!", effect: 'halve', claim: false },
+                        { msg: "يا لك من محظوظ! ربحت الخلية وتم مضاعفة رصيدك الحالي!", effect: 'double', claim: true },
+                        { msg: "لا ربح ولا خسارة هذه المرة، والخلية لم تُملك.", multiplier: 0, claim: false }
                     ];
                     const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
 
@@ -1289,18 +1256,18 @@ io.on('connection', (socket) => {
                         pickedBy: player.name,
                         question: randomReward.msg,
                         correctAnswer: "-",
-                        answeredBy: "Ø­Ø¸"
+                        answeredBy: "حظ"
                     });
 
                     room.feedback = {
                         type: 'luck',
-                        message: `Ø­Ø¸: ${randomReward.msg}`,
+                        message: `حظ: ${randomReward.msg}`,
                         reward: randomReward
                     };
 
                     room.activeQuestion = {
                         id: `luck-${Date.now()}`,
-                        category: "Ø­Ø¸",
+                        category: "حظ",
                         question: randomReward.msg,
                         value: 100,
                         isAnswered: true
@@ -1390,12 +1357,12 @@ io.on('connection', (socket) => {
                 const isLuck = question.type === 'luck' || Math.random() < 0.1;
                 if (isLuck) {
                     const rewards = [
-                        { msg: "ØªØ¨Ø±ÙŠÙƒØ§ØªÙ†Ø§! Ø±Ø¨Ø­Øª Ø¶Ø¹Ù Ø§Ù„Ù‚ÙŠÙ…Ø©!", multiplier: 2 },
-                        { msg: "Ø£ÙˆÙ‡ Ù„Ø§! Ø®Ø³Ø±Øª Ø§Ù„Ù‚ÙŠÙ…Ø©!", multiplier: -1 },
-                        { msg: "Ø­Ø¸ Ø³Ø¹ÙŠØ¯! Ø±Ø¨Ø­Øª Ø§Ù„Ù‚ÙŠÙ…Ø© ÙƒØ§Ù…Ù„Ø©!", multiplier: 1 },
-                        { msg: "ÙŠØ§ Ù„Ù„Ù‡ÙˆÙ„! ØªÙ… Ø®ØµÙ… Ù†ØµÙ Ø±ØµÙŠØ¯Ùƒ Ø§Ù„Ø­Ø§Ù„ÙŠ!", effect: 'halve' },
-                        { msg: "ÙŠØ§ Ù„Ùƒ Ù…Ù† Ù…Ø­Ø¸ÙˆØ¸! ØªÙ… Ù…Ø¶Ø§Ø¹ÙØ© Ø±ØµÙŠØ¯Ùƒ Ø§Ù„Ø­Ø§Ù„ÙŠ!", effect: 'double' },
-                        { msg: "Ù„Ø§ Ø±Ø¨Ø­ ÙˆÙ„Ø§ Ø®Ø³Ø§Ø±Ø© Ù‡Ø°Ù‡ Ø§Ù„Ù…Ø±Ø©.", multiplier: 0 }
+                        { msg: "تبريكاتنا! ربحت ضعف القيمة!", multiplier: 2 },
+                        { msg: "أوه لا! خسرت القيمة!", multiplier: -1 },
+                        { msg: "حظ سعيد! ربحت القيمة كاملة!", multiplier: 1 },
+                        { msg: "يا للهول! تم خصم نصف رصيدك الحالي!", effect: 'halve' },
+                        { msg: "يا لك من محظوظ! تم مضاعفة رصيدك الحالي!", effect: 'double' },
+                        { msg: "لا ربح ولا خسارة هذه المرة.", multiplier: 0 }
                     ];
                     const randomReward = rewards[Math.floor(Math.random() * rewards.length)];
                     const player = room.players.find(p => p.id === socket.id);
@@ -1415,7 +1382,7 @@ io.on('connection', (socket) => {
                     );
                     room.feedback = {
                         type: 'luck',
-                        message: `Ø­Ø¸: ${randomReward.msg}`,
+                        message: `حظ: ${randomReward.msg}`,
                         reward: randomReward
                     };
                     const safeQuestion = { ...question };
@@ -1468,7 +1435,7 @@ io.on('connection', (socket) => {
             if (isCorrect) {
                 if (room._questionInterval) clearInterval(room._questionInterval);
                 if (player) player.score += room.activeQuestion.value;
-                room.feedback = { type: 'correct', message: `Ø¥Ø¬Ø§Ø¨Ø© ØµØ­ÙŠØ­Ø©! ${player?.name} Ø­ØµÙ„ Ø¹Ù„Ù‰ ${room.activeQuestion.value} Ø¹Ù…Ù„Ø©.`, answer: room.correctAnswer };
+                room.feedback = { type: 'correct', message: `إجابة صحيحة! ${player?.name} حصل على ${room.activeQuestion.value} عملة.`, answer: room.correctAnswer };
 
                 if (room.gameType === 'jeopardy') {
                     room.questions = room.questions.map(q =>
@@ -1500,11 +1467,11 @@ io.on('connection', (socket) => {
                     if (room._questionInterval) clearInterval(room._questionInterval);
                     room.feedback = {
                         type: 'all_wrong',
-                        message: `Ø¹Ø°Ø±Ø§Ù‹ØŒ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø§Øª Ø§Ù†ØªÙ‡Øª ÙˆØ§Ù„Ø¥Ø¬Ø§Ø¨Ø§Øª Ø®Ø§Ø·Ø¦Ø©.`,
+                        message: `عذراً، المحاولات انتهت والإجابات خاطئة.`,
                         answer: room.correctAnswer
                     };
                     if (room.gameType === 'huroof' && room.huroofHistory && room.huroofHistory.length > 0) {
-                        room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "Ù„Ø§ Ø£Ø­Ø¯";
+                        room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "لا أحد";
                     }
                     if (room.gameType === 'jeopardy') {
                         room.questions = room.questions.map(q =>
@@ -1512,7 +1479,7 @@ io.on('connection', (socket) => {
                         );
                     }
                 } else {
-                    room.feedback = { type: 'wrong', message: `Ø®Ø·Ø£! ${player?.name} ÙÙ‚Ø¯ Ù†Ù‚Ø§Ø·Ø§Ù‹. Ø¨Ø¥Ù…ÙƒØ§Ù† Ø§Ù„Ø¢Ø®Ø±ÙŠÙ† Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ø§Ù„Ø¢Ù†!` };
+                    room.feedback = { type: 'wrong', message: `خطأ! ${player?.name} فقد نقاطاً. بإمكان الآخرين المحاولة الآن!` };
                     room.timer = 5; // Return to pool for others
                     startQuestionTimer(room, io, roomId); // Restart timer for others to buzz
                 }
@@ -1540,7 +1507,7 @@ io.on('connection', (socket) => {
             if (isCorrect) {
                 if (room._questionInterval) clearInterval(room._questionInterval);
                 if (player) player.score += room.activeQuestion.value;
-                room.feedback = { type: 'correct', message: `Ø¥Ø¬Ø§Ø¨Ø© ØµØ­ÙŠØ­Ø©! ${player?.name} Ø­ØµÙ„ Ø¹Ù„Ù‰ ${room.activeQuestion.value} Ø¹Ù…Ù„Ø©.`, answer: room.correctAnswer };
+                room.feedback = { type: 'correct', message: `إجابة صحيحة! ${player?.name} حصل على ${room.activeQuestion.value} عملة.`, answer: room.correctAnswer };
 
                 if (room.gameType === 'jeopardy') {
                     room.questions = room.questions.map(q =>
@@ -1562,11 +1529,11 @@ io.on('connection', (socket) => {
                 // Timeout or wrong answer from client
                 room.feedback = {
                     type: 'all_wrong',
-                    message: `Ø§Ù†ØªÙ‡Ù‰ Ø§Ù„ÙˆÙ‚Øª! Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¥Ø¬Ø§Ø¨Ø© Ø¹Ù„Ù‰ Ø§Ù„Ø³Ø¤Ø§Ù„.`,
+                    message: `انتهى الوقت! لم يتم الإجابة على السؤال.`,
                     answer: room.correctAnswer
                 };
                 if (room.gameType === 'huroof' && room.huroofHistory && room.huroofHistory.length > 0) {
-                    room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "Ù„Ø§ Ø£Ø­Ø¯";
+                    room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "لا أحد";
                 }
                 if (room.gameType === 'jeopardy') {
                     room.questions = room.questions.map(q =>
@@ -1633,7 +1600,7 @@ io.on('connection', (socket) => {
             // 3+ players: remove this player, game continues
             const leavingPlayer = room.players[playerIndex];
             room.players.splice(playerIndex, 1);
-            console.log(`[Forfeit] ${leavingPlayer.name} left room ${roomId} â€” game continues with ${room.players.length} players`);
+            console.log(`[Forfeit] ${leavingPlayer.name} left room ${roomId} — game continues with ${room.players.length} players`);
 
             // If drawing challenge and the drawer left, start the next round immediately
             if (room.gameType === 'drawing_challenge' && room.gameStatus === 'drawing_active' && leavingPlayer.id === room.drawingDrawerId) {
@@ -1665,8 +1632,8 @@ io.on('connection', (socket) => {
         if (!drawer) { endGame(room, io, roomId); return; }
 
         const wordEntry = room.questions[(room.currentRound - 1) % room.questions.length];
-        const word = wordEntry ? wordEntry.word : 'ÙƒÙ„Ù…Ø©';
-        const category = wordEntry ? (wordEntry.category || 'ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ') : 'ØªØ­Øª Ø§Ù„Ø±Ø³Ù…...';
+        const word = wordEntry ? wordEntry.word : 'كلمة';
+        const category = wordEntry ? (wordEntry.category || 'غير معروف') : 'تحت الرسم...';
         
         console.log(`[Drawing Log] Selecting word: ${word}, Category: ${category} for room ${roomId}`);
 
@@ -1813,18 +1780,18 @@ io.on('connection', (socket) => {
             if (!s) return '';
             return s.trim()
                 .replace(/\s+/g, ' ')
-                .replace(/[Ø£Ø¥Ø¢]/g, 'Ø§')
-                .replace(/Ø©/g, 'Ù‡')
-                .replace(/Ù‰/g, 'ÙŠ')
-                .replace(/[Ù€\u064B-\u0652]/g, '')
-                .replace(/\uFEFB|\uFEFC|\uFEF9|\uFEFA/g, 'Ù„Ø§') // Normalize Lam-Alif ligatures
+                .replace(/[أإآ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[ـ\u064B-\u0652]/g, '')
+                .replace(/\uFEFB|\uFEFC|\uFEF9|\uFEFA/g, 'لا') // Normalize Lam-Alif ligatures
                 .toLowerCase();
         };
 
         const nGuess = normalizeArabic(guess);
         const nWord = normalizeArabic(room.drawingCurrentWord);
         
-        // Match if exact, or if guess is a significant part of the word (e.g. "Ø§ÙŠÙÙ„" in "Ø¨Ø±Ø¬ Ø§ÙŠÙÙ„")
+        // Match if exact, or if guess is a significant part of the word (e.g. "ايفل" in "برج ايفل")
         const isCorrect = nGuess === nWord;
 
         if (isCorrect) {
@@ -1975,7 +1942,7 @@ io.on('connection', (socket) => {
         try {
             console.log(`[Challenge] Creating challenge for word: ${word}, stroke count: ${strokes?.length || 0}`);
             if (!strokes || strokes.length === 0) {
-                return socket.emit('challenge_error', 'ÙŠØ¬Ø¨ Ø¹Ù„ÙŠÙƒ Ø§Ù„Ø±Ø³Ù… Ø£ÙˆÙ„Ø§Ù‹');
+                return socket.emit('challenge_error', 'يجب عليك الرسم أولاً');
             }
             const id = generateChallengeId();
             const scrambledLetters = generateScrambledLetters(word);
@@ -1995,7 +1962,7 @@ io.on('connection', (socket) => {
             console.log(`[Challenge] Created challenge ${id} successfully`);
         } catch (err) {
             console.error('[Challenge] Error creating challenge:', err);
-            socket.emit('challenge_error', 'Ø­Ø¯Ø« Ø®Ø·Ø£ ÙÙŠ Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„ØªØ­Ø¯ÙŠ');
+            socket.emit('challenge_error', 'حدث خطأ في إنشاء التحدي');
         }
     });
 
@@ -2026,7 +1993,7 @@ io.on('connection', (socket) => {
 
         // Add player if not already in
         if (!room.players.find(p => p.id === socket.id)) {
-            const player = { id: socket.id, name: playerName || 'Ù„Ø§Ø¹Ø¨', score: 0 };
+            const player = { id: socket.id, name: playerName || 'لاعب', score: 0 };
             room.players.push(player);
         }
 
@@ -2048,7 +2015,7 @@ io.on('connection', (socket) => {
                 if (creatorSocket) {
                     creatorSocket.emit('challenge_solved_notification', {
                         challengeId,
-                        solverName: solverName || 'ØµØ¯ÙŠÙ‚',
+                        solverName: solverName || 'صديق',
                         word: challenge.word
                     });
                     console.log(`[Challenge] Notified creator ${challenge.creatorId} that challenge ${challengeId} was solved`);
@@ -2061,7 +2028,7 @@ io.on('connection', (socket) => {
         console.log(`[Session] Sending challenge ${challengeId} to room ${roomId}`);
         socket.to(roomId).emit('session_challenge_notification', {
             challengeId,
-            playerName: playerName || 'ØµØ¯ÙŠÙ‚'
+            playerName: playerName || 'صديق'
         });
     });
 
@@ -2110,7 +2077,7 @@ io.on('connection', (socket) => {
         if (challenge) {
             socket.emit('challenge_data', challenge);
         } else {
-            socket.emit('challenge_error', 'Ø§Ù„ØªØ­Ø¯ÙŠ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯ Ø£Ùˆ Ø§Ù†ØªÙ‡Øª ØµÙ„Ø§Ø­ÙŠØªÙ‡');
+            socket.emit('challenge_error', 'التحدي غير موجود أو انتهت صلاحيته');
         }
     });
 
@@ -2222,4 +2189,3 @@ const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
-
