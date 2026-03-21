@@ -542,7 +542,7 @@ const App: React.FC = () => {
               <Pencil size={24} />
               تحدي الرسم
             </button>
-            <button className="btn-primary-battle" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', gridColumn: 'span 2' }} onClick={() => finalizeCreateRoom('proverbs')}>
+            <button className="btn-primary-battle" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff' }} onClick={() => finalizeCreateRoom('proverbs')}>
               <MessageSquare size={24} />
               أمثال وحكم
             </button>
@@ -614,6 +614,7 @@ const App: React.FC = () => {
                  gameType === 'siba' ? 'غرفة لعبة الصبة' : 
                  gameType === 'pixel_challenge' ? 'غرفة تحدي الصور' : 
                  gameType === 'drawing_challenge' ? 'غرفة تحدي الرسم' : 
+                 gameType === 'proverbs' ? 'غرفة أمثال وحكم' :
                  'غرفة بنت وولد'}
               </h2>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', margin: '12px 0' }}>

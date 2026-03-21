@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useGameStore } from '../store/useGameStore';
-import { Users, Layout, Type, BookOpen, Pencil, Image as ImageIcon, Zap, Trophy, Play } from 'lucide-react';
+import { Users, Layout, Type, BookOpen, Pencil, Image as ImageIcon, Zap, Trophy, Play, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Competitions: React.FC = () => {
@@ -19,6 +19,7 @@ const Competitions: React.FC = () => {
             case 'siba': return <Layout size={20} />;
             case 'pixel_challenge': return <ImageIcon size={20} />;
             case 'drawing_challenge': return <Pencil size={20} />;
+            case 'proverbs': return <MessageSquare size={20} />;
             default: return <Trophy size={20} />;
         }
     };
@@ -32,6 +33,7 @@ const Competitions: React.FC = () => {
             case 'siba': return 'لعبة الصبة';
             case 'pixel_challenge': return 'تحدي الصور';
             case 'drawing_challenge': return 'تحدي الرسم';
+            case 'proverbs': return 'أمثال وحكم';
             default: return 'لعبة مجهولة';
         }
     };

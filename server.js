@@ -494,8 +494,7 @@ io.on('connection', (socket) => {
             } else if (requestedGameType === 'drawing_challenge') {
                 selectedQuestions = [...drawingWordsPool].sort(() => Math.random() - 0.5);
             } else if (requestedGameType === 'proverbs') {
-                const gamePool = [...proverbsPool];
-                selectedQuestions = _.sampleSize(gamePool, questionsPerCategory);
+                selectedQuestions = [...proverbsPool].sort(() => Math.random() - 0.5).slice(0, questionsPerCategory);
             }
 
             rooms.set(roomId, {
@@ -629,8 +628,7 @@ io.on('connection', (socket) => {
             } else if (gameType === 'drawing_challenge') {
                 selectedQuestions = [...drawingWordsPool].sort(() => Math.random() - 0.5);
             } else if (gameType === 'proverbs') {
-                const gamePool = [...proverbsPool];
-                selectedQuestions = _.sampleSize(gamePool, questionsPerCategory);
+                selectedQuestions = [...proverbsPool].sort(() => Math.random() - 0.5).slice(0, questionsPerCategory);
             }
 
             rooms.set(roomId, {
