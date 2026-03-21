@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Increment this whenever a significant UI update is pushed to force PWA refresh
-const SERVER_VERSION = '1.1.0'; 
+const SERVER_VERSION = '1.1.1'; 
 
 // Pre-load questions for all rooms
 let questionPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
@@ -89,6 +89,33 @@ try {
     }
 } catch (err) {
     console.error('Error loading proverbs pool:', err);
+}
+
+function prepareProverbs(proverbs, count) {
+    const shuffledPool = [...proverbs].sort(() => Math.random() - 0.5);
+    const selected = shuffledPool.slice(0, count);
+    const allAnswers = proverbs.map(p => p.answer);
+
+    return selected.map(p => {
+        let options = p.options || [];
+        if (options.length === 0) {
+            // Generate decoys from other proverbs' answers
+            const decoys = allAnswers
+                .filter(a => a !== p.answer)
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3);
+            options = [p.answer, ...decoys];
+        } else {
+            // Ensure the answer is present and then shuffle
+            if (!options.includes(p.answer)) options.push(p.answer);
+        }
+        
+        // Final shuffle of options
+        return {
+            ...p,
+            options: [...new Set(options)].sort(() => Math.random() - 0.5)
+        };
+    });
 }
 
 const app = express();
@@ -231,6 +258,39 @@ app.delete('/api/admin/proverbs/:id', requireAuth, (req, res) => {
     proverbsPool = proverbsPool.filter(p => p.id !== id);
     const proverbsPath = path.join(__dirname, 'src/data/proverbs.json');
     fs.writeFileSync(proverbsPath, JSON.stringify(proverbsPool, null, 4), 'utf8');
+    res.json({ success: true });
+});
+
+// --- Word Meaning CRUD ---
+let wordMeaningPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/khaleejiWords.json'), 'utf8'));
+
+app.get('/api/admin/word-meaning', requireAuth, (req, res) => {
+    res.json(wordMeaningPool);
+});
+
+app.post('/api/admin/word-meaning', requireAuth, (req, res) => {
+    const newWord = { ...req.body, id: `wm-${Date.now()}` };
+    wordMeaningPool.push(newWord);
+    fs.writeFileSync(path.join(__dirname, 'src/data/khaleejiWords.json'), JSON.stringify(wordMeaningPool, null, 4), 'utf8');
+    res.json(newWord);
+});
+
+app.put('/api/admin/word-meaning/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const index = wordMeaningPool.findIndex(w => w.id === id);
+    if (index !== -1) {
+        wordMeaningPool[index] = { ...wordMeaningPool[index], ...req.body };
+        fs.writeFileSync(path.join(__dirname, 'src/data/khaleejiWords.json'), JSON.stringify(wordMeaningPool, null, 4), 'utf8');
+        res.json(wordMeaningPool[index]);
+    } else {
+        res.status(404).json({ error: 'Word not found' });
+    }
+});
+
+app.delete('/api/admin/word-meaning/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    wordMeaningPool = wordMeaningPool.filter(w => w.id !== id);
+    fs.writeFileSync(path.join(__dirname, 'src/data/khaleejiWords.json'), JSON.stringify(wordMeaningPool, null, 4), 'utf8');
     res.json({ success: true });
 });
 // -----------------------
@@ -567,7 +627,7 @@ io.on('connection', (socket) => {
             } else if (requestedGameType === 'drawing_challenge') {
                 selectedQuestions = [...drawingWordsPool].sort(() => Math.random() - 0.5);
             } else if (requestedGameType === 'proverbs') {
-                selectedQuestions = [...proverbsPool].sort(() => Math.random() - 0.5).slice(0, questionsPerCategory);
+                selectedQuestions = prepareProverbs(proverbsPool, questionsPerCategory);
             }
 
             rooms.set(roomId, {
@@ -701,7 +761,7 @@ io.on('connection', (socket) => {
             } else if (requestedGameType === 'drawing_challenge') {
                 selectedQuestions = [...drawingWordsPool].sort(() => Math.random() - 0.5);
             } else if (requestedGameType === 'proverbs') {
-                selectedQuestions = [...proverbsPool].sort(() => Math.random() - 0.5).slice(0, questionsPerCategory);
+                selectedQuestions = prepareProverbs(proverbsPool, questionsPerCategory);
             }
 
             rooms.set(roomId, {
@@ -721,7 +781,7 @@ io.on('connection', (socket) => {
                 winner: null,
                 correctAnswer: null,
                 buzzedPlayerId: null,
-                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge' || requestedGameType === 'drawing_challenge') ? questionsPerCategory : 0,
+                roundCount: (requestedGameType === 'bin_o_walad' || requestedGameType === 'word_meaning' || requestedGameType === 'pixel_challenge' || requestedGameType === 'drawing_challenge' || requestedGameType === 'proverbs') ? questionsPerCategory : 0,
                 currentRound: 0,
                 usedLetters: [],
                 currentLetter: null,
@@ -765,13 +825,15 @@ io.on('connection', (socket) => {
             const questionsPerCategory = Number(rawQCount);
             console.log(`[Update Settings] Room: ${roomId}, New count: ${questionsPerCategory}`);
             room.questionsPerCategory = questionsPerCategory;
-            if (room.gameType === 'bin_o_walad' || room.gameType === 'pixel_challenge' || room.gameType === 'word_meaning' || room.gameType === 'drawing_challenge') {
+            if (room.gameType === 'bin_o_walad' || room.gameType === 'pixel_challenge' || room.gameType === 'word_meaning' || room.gameType === 'drawing_challenge' || room.gameType === 'proverbs') {
                 room.roundCount = questionsPerCategory;
 
-                // For Pixel Challenge, re-select questions based on new count
+                // Re-select questions based on new count for dynamic games
                 if (room.gameType === 'pixel_challenge') {
                     const shuffled = [...pixelChallengePool].sort(() => Math.random() - 0.5);
                     room.questions = shuffled.slice(0, questionsPerCategory + 5);
+                } else if (room.gameType === 'proverbs') {
+                    room.questions = prepareProverbs(proverbsPool, questionsPerCategory);
                 }
             } else if (room.gameType === 'jeopardy') {
                 room.questionsPerCategory = questionsPerCategory;
@@ -1246,29 +1308,41 @@ io.on('connection', (socket) => {
         delete room.activeQuestion.answer; // Security: don't send answer to client
         room.correctAnswer = q.answer;
         room.roundSubmissions = {};
+        room.wordMeaningFeedback = {}; // Clear previous round feedback
         
         console.log(`[Proverbs] Starting round ${room.currentRound} for room ${roomId}`);
         io.to(roomId).emit('room_data', room);
 
-        if (room.proverbsInterval) clearInterval(room.proverbsInterval);
-        room.proverbsInterval = setInterval(() => {
+        if (room._proverbsInterval) clearInterval(room._proverbsInterval);
+        const proverbsInterval = setInterval(() => {
             if (room.timer > 0 && room.gameStatus === 'proverbs_active') {
                 room.timer--;
                 // Minimal update for timer if needed, but room_data is safer for sync
                 io.to(roomId).emit('timer_update', { timer: room.timer, roomId });
             } else {
-                clearInterval(room.proverbsInterval);
+                clearInterval(proverbsInterval);
                 if (room.gameStatus === 'proverbs_active') {
                     scoreProverbsRound(room, io, roomId);
                 }
             }
         }, 1000);
+
+        Object.defineProperty(room, '_proverbsInterval', {
+            value: proverbsInterval,
+            enumerable: false,
+            writable: true,
+            configurable: true
+        });
     }
 
     function scoreProverbsRound(room, io, roomId) {
         if (room.gameStatus === 'proverbs_scoring') return; // Avoid double scoring
-        
         room.gameStatus = 'proverbs_scoring';
+        
+        if (room._proverbsInterval) {
+            clearInterval(room._proverbsInterval);
+            room._proverbsInterval = null;
+        }
         const q = room.questions[room.currentRound - 1];
         if (!q) {
             console.error(`[Proverbs] Missing question in scoring!`);
@@ -1279,7 +1353,7 @@ io.on('connection', (socket) => {
 
         room.players.forEach(p => {
             const submission = room.roundSubmissions[p.id];
-            if (submission && isCorrectAnswer(submission.answer, q.answer)) {
+            if (submission && submission.answer === q.answer) {
                 const speedBonus = submission.timeLeft * 5;
                 const totalPoints = 50 + speedBonus;
                 p.score += totalPoints;
@@ -1312,11 +1386,19 @@ io.on('connection', (socket) => {
     socket.on('submit_proverbs_answer', ({ roomId, answer }) => {
         const room = rooms.get(roomId);
         if (room && room.gameStatus === 'proverbs_active') {
+            const q = room.questions[room.currentRound - 1];
             room.roundSubmissions[socket.id] = { answer, timeLeft: room.timer };
+            
+            if (!room.wordMeaningFeedback) room.wordMeaningFeedback = {};
+            room.wordMeaningFeedback[socket.id] = { answer, isCorrect: answer === q.answer };
+
             io.to(roomId).emit('room_data', room);
 
             if (Object.keys(room.roundSubmissions).length === room.players.length) {
-                if (room.proverbsInterval) clearInterval(room.proverbsInterval);
+                if (room._proverbsInterval) {
+                    clearInterval(room._proverbsInterval);
+                    room._proverbsInterval = null;
+                }
                 room.timer = 0;
                 scoreProverbsRound(room, io, roomId);
             }

@@ -16,7 +16,12 @@
             "من جد وجد ومن زرع حصد",
             "الوقت كالسيف إن لم تقطعه قطعك"
         ],
-        "imageUrl": "/assets/proverbs/bird_in_hand.png"
+        "imageUrl": "/assets/proverbs/bird_in_hand.png",
+        "category": "تحدي الأمثال",
+        "value": 0,
+        "series": "",
+        "word": "",
+        "meaning": ""
     },
     {
         "id": "prv-3",
@@ -33,7 +38,12 @@
             "من حفر حفرة لأخيه وقع فيها",
             "الجار قبل الدار",
             "الصبر مفتاح الفرج"
-        ]
+        ],
+        "category": "",
+        "value": 0,
+        "imageUrl": "",
+        "word": "",
+        "meaning": ""
     },
     {
         "id": "prv-4",

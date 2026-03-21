@@ -56,16 +56,29 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
 
     if (gameStatus === 'countdown') {
         return (
-            <div className="flex flex-col items-center justify-center h-[60vh]">
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
                 <motion.div
                     key={timer}
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1.5, opacity: 1 }}
-                    className="text-[120px] font-black text-amber-500"
+                    style={{ fontSize: '120px', fontWeight: 900, color: '#f59e0b' }}
                 >
                     {timer}
                 </motion.div>
-                <div className="text-2xl font-bold mt-8 text-slate-700">أمثال وحكم... استعد!</div>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: '32px', color: '#334155' }}>أمثال وحكم... استعد!</div>
+            </div>
+        );
+    }
+
+    if (gameStatus === 'proverbs_active' && !activeQuestion) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '16px' }}>
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    style={{ width: '64px', height: '64px', border: '4px solid #e2e8f0', borderTop: '4px solid #f59e0b', borderRadius: '50%' }}
+                />
+                <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#64748b' }}>جاري تحميل المحتوى...</div>
             </div>
         );
     }
@@ -75,14 +88,14 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
         const qType = activeQuestion?.type || 'completion';
 
         return (
-            <div className="proverbs-container max-w-2xl mx-auto p-4 rtl">
-                <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center gap-3 bg-white/80 backdrop-blur px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
-                        <Timer size={24} className={timer <= 5 ? 'text-red-500 animate-pulse' : 'text-slate-500'} />
-                        <span className={`text-3xl font-black ${timer <= 5 ? 'text-red-500' : 'text-slate-700'}`}>{timer}s</span>
+            <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px', direction: 'rtl' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(4px)', padding: '8px 16px', borderRadius: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
+                        <Timer size={24} color={timer <= 5 ? '#ef4444' : '#64748b'} className={timer <= 5 ? 'animate-pulse' : ''} />
+                        <span style={{ fontSize: '30px', fontWeight: 900, color: timer <= 5 ? '#ef4444' : '#334155' }}>{timer}s</span>
                     </div>
-                    <div className="flex items-center gap-3 bg-amber-50 px-4 py-2 rounded-2xl border border-amber-100">
-                        <span className="text-lg font-bold text-amber-700">الجولة {currentRound} / {roundCount}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fffbeb', padding: '8px 16px', borderRadius: '16px', border: '1px solid #fef3c7' }}>
+                        <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#b45309' }}>الجولة {currentRound} / {roundCount}</span>
                     </div>
                 </div>
 
@@ -90,39 +103,39 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                     <motion.div 
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        className="bg-white rounded-[32px] p-8 shadow-xl border border-slate-100 mb-8 relative overflow-hidden"
+                        style={{ background: '#fff', borderRadius: '32px', padding: '32px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9', marginBottom: '32px', position: 'relative', overflow: 'hidden' }}
                     >
-                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <div style={{ position: 'absolute', top: 0, right: 0, padding: '16px', opacity: 0.1 }}>
                             {getCategoryIcon(qType)}
                         </div>
                         
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-bold uppercase tracking-wider">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                            <span style={{ padding: '4px 12px', background: '#f1f5f9', color: '#475569', borderRadius: '9999px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                 {getCategoryLabel(qType)}
                             </span>
                         </div>
 
                         {qType === 'illustration' && activeQuestion.imageUrl && (
-                            <div className="mb-6 rounded-2xl overflow-hidden border-4 border-slate-50 shadow-inner">
+                            <div style={{ marginBottom: '24px', borderRadius: '16px', overflow: 'hidden', border: '4px solid #f8fafc', boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.06)' }}>
                                 <motion.img 
                                     initial={{ filter: 'blur(10px)', scale: 1.1 }}
                                     animate={{ filter: 'blur(0px)', scale: 1 }}
                                     src={activeQuestion.imageUrl} 
                                     alt="Proverb Illustration" 
-                                    className="w-full h-auto object-cover max-h-[300px]"
+                                    style={{ width: '100%', height: 'auto', objectFit: 'cover', maxHeight: '300px' }}
                                 />
                             </div>
                         )}
 
                         {qType === 'series' && (activeQuestion as any).series && (
-                            <div className="mb-6 flex justify-center gap-4 py-6 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner">
+                            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center', gap: '16px', padding: '24px 0', background: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.06)' }}>
                                 {(activeQuestion as any).series.map((emoji: string, idx: number) => (
                                     <motion.span 
                                         key={idx}
                                         initial={{ scale: 0, rotate: -20 }}
                                         animate={{ scale: 1, rotate: 0 }}
                                         transition={{ delay: idx * 0.15, type: 'spring' }}
-                                        className="text-6xl"
+                                        style={{ fontSize: '60px' }}
                                     >
                                         {emoji}
                                     </motion.span>
@@ -130,13 +143,13 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                             </div>
                         )}
 
-                        <div className="text-center">
+                        <div style={{ textAlign: 'center' }}>
                             {qType === 'context' && (
-                                <p className="text-lg text-slate-500 mb-4 italic leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <p style={{ fontSize: '18px', color: '#64748b', marginBottom: '16px', fontStyle: 'italic', lineHeight: 1.6, background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
                                     "{activeQuestion.question}"
                                 </p>
                             )}
-                            <h2 className={`font-black text-slate-800 leading-tight ${qType === 'context' ? 'text-2xl' : 'text-3xl lg:text-4xl'}`}>
+                            <h2 style={{ fontWeight: 900, color: '#1e293b', lineHeight: 1.2, fontSize: qType === 'context' ? '24px' : '32px' }}>
                                 {qType === 'context' ? 'ما هو المثل المناسب لهذا الموقف؟' : 
                                  qType === 'illustration' ? 'ما هو المثل الذي تعبر عنه هذه الرسمة؟' : 
                                  activeQuestion.question}
@@ -146,38 +159,76 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                 )}
 
                 {activeQuestion && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
                         <AnimatePresence>
-                            {activeQuestion.options.map((opt: string, idx: number) => {
+                            {(activeQuestion.options || []).map((opt: string, idx: number) => {
                                 const isSelected = submittedAnswer === opt;
                                 const isCorrect = isScoring ? feedback?.answer === opt : (myFeed?.answer === opt && myFeed?.isCorrect);
                                 const isWrong = isScoring ? (isSelected && feedback?.answer !== opt) : (myFeed?.answer === opt && !myFeed?.isCorrect);
 
+                                let bgColor = '#fff';
+                                let borderColor = '#e2e8f0';
+                                let textColor = '#334155';
+                                let shadow = 'none';
+
+                                if (isScoring && isCorrect) {
+                                    bgColor = '#ecfdf5';
+                                    borderColor = '#10b981';
+                                    textColor = '#065f46';
+                                    shadow = '0 10px 15px -3px rgba(16, 185, 129, 0.1)';
+                                } else if (isScoring && isWrong) {
+                                    bgColor = '#fef2f2';
+                                    borderColor = '#ef4444';
+                                    textColor = '#991b1b';
+                                    shadow = '0 10px 15px -3px rgba(239, 68, 68, 0.1)';
+                                } else if (isSelected) {
+                                    bgColor = '#fffbeb';
+                                    borderColor = '#f59e0b';
+                                    textColor = '#92400e';
+                                    shadow = '0 0 0 4px rgba(245, 158, 11, 0.1)';
+                                } else if (isScoring) {
+                                    bgColor = '#f8fafc';
+                                    borderColor = '#e2e8f0';
+                                    textColor = '#94a3b8';
+                                    opacity: 0.6;
+                                }
+
                                 return (
                                     <motion.button
                                         key={idx}
-                                        whileHover={!isScoring && !submittedAnswer ? { scale: 1.02, translateY: -2 } : {}}
-                                        whileTap={!isScoring && !submittedAnswer ? { scale: 0.98 } : {}}
+                                        whileHover={!isScoring && !submittedAnswer ? { scale: 1.01, translateY: -2 } : {}}
+                                        whileTap={!isScoring && !submittedAnswer ? { scale: 0.99 } : {}}
                                         onClick={() => handleSelectOption(opt)}
                                         disabled={!!submittedAnswer || isScoring}
-                                        initial={{ opacity: 0, x: idx % 2 === 0 ? -20 : 20 }}
+                                        initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: idx * 0.1 }}
-                                        className={`
-                                            relative p-6 rounded-2xl text-right transition-all duration-300 border-2 text-lg font-bold flex justify-between items-center group
-                                            ${isScoring && isCorrect ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-emerald-100' : 
-                                              isScoring && isWrong ? 'bg-red-50 border-red-500 text-red-700 shadow-red-100' :
-                                              isSelected ? 'bg-amber-50 border-amber-500 text-amber-700 ring-4 ring-amber-100' :
-                                              isScoring ? 'opacity-40 grayscale-[0.5] border-slate-200 bg-slate-50' :
-                                              'bg-white border-slate-200 hover:border-amber-300 hover:shadow-lg text-slate-700'}
-                                        `}
+                                        style={{
+                                            position: 'relative',
+                                            padding: '20px',
+                                            borderRadius: '16px',
+                                            textAlign: 'right',
+                                            transition: 'all 0.3s ease',
+                                            border: `2px solid ${borderColor}`,
+                                            background: bgColor,
+                                            color: textColor,
+                                            fontSize: '18px',
+                                            fontWeight: 'bold',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            cursor: (isScoring || !!submittedAnswer) ? 'default' : 'pointer',
+                                            boxShadow: shadow,
+                                            width: '100%',
+                                            outline: 'none'
+                                        }}
                                     >
-                                        <span className="leading-snug">{opt}</span>
-                                        <div className="flex-shrink-0 ml-2">
+                                        <span style={{ lineHeight: 1.4 }}>{opt}</span>
+                                        <div style={{ flexShrink: 0, marginRight: '8px' }}>
                                             {((isScoring && isCorrect) || (!isScoring && myFeed && myFeed.answer === opt && isCorrect)) && 
-                                                <div className="bg-emerald-500 rounded-full p-1"><Check size={18} className="text-white" /></div>}
+                                                <div style={{ background: '#10b981', borderRadius: '50%', padding: '4px', display: 'flex' }}><Check size={18} color="white" /></div>}
                                             {((isScoring && isWrong) || (!isScoring && myFeed && myFeed.answer === opt && isWrong)) && 
-                                                <div className="bg-red-500 rounded-full p-1"><X size={18} className="text-white" /></div>}
+                                                <div style={{ background: '#ef4444', borderRadius: '50%', padding: '4px', display: 'flex' }}><X size={18} color="white" /></div>}
                                         </div>
                                     </motion.button>
                                 );
@@ -192,38 +243,31 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.9 }}
-                            className="mt-8 text-center"
+                            style={{ marginTop: '32px', textAlign: 'center' }}
                         >
-                            <div className={`
-                                inline-block px-8 py-4 rounded-full text-xl font-black shadow-lg
-                                ${submittedAnswer === feedback.answer ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}
-                            `}>
+                            <div style={{
+                                display: 'inline-block',
+                                padding: '16px 32px',
+                                borderRadius: '9999px',
+                                fontSize: '20px',
+                                fontWeight: 900,
+                                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                                background: submittedAnswer === feedback.answer ? '#10b981' : '#ef4444',
+                                color: '#fff'
+                            }}>
                                 {submittedAnswer === feedback.answer ? 
                                     `بطل! +${myFeed?.pointsEarned || 50} نقطة` : 
                                     (submittedAnswer ? 'للأسف، إجابة غير دقيقة' : 'انتهى الوقت!')}
                             </div>
                             
                             {submittedAnswer !== feedback.answer && (
-                                <div className="mt-4 text-slate-500 font-bold">
-                                    الإجابة الصحيحة: <span className="text-emerald-600">{feedback.answer}</span>
+                                <div style={{ marginTop: '16px', color: '#64748b', fontWeight: 'bold' }}>
+                                    الإجابة الصحيحة: <span style={{ color: '#059669' }}>{feedback.answer}</span>
                                 </div>
                             )}
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </div>
-        );
-    }
-
-    if (gameStatus === 'proverbs_active' && !activeQuestion) {
-        return (
-            <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                    className="w-16 h-16 border-4 border-slate-200 border-t-amber-500 rounded-full"
-                />
-                <div className="text-xl font-bold text-slate-500 animate-pulse">جاري تحميل المحتوى...</div>
             </div>
         );
     }
