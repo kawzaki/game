@@ -8,6 +8,7 @@ import WordMeaningGame from './components/WordMeaningGame';
 import SibaGame from './components/SibaGame';
 import PixelChallenge from './components/PixelChallenge';
 import DrawingChallenge from './components/DrawingChallenge';
+import ProverbsGame from './components/ProverbsGame';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import Competitions from './components/Competitions';
 import { QRScannerModal } from './components/QRScannerModal';
@@ -30,6 +31,7 @@ import {
   Image as ImageIcon,
   Pencil,
   Camera,
+  MessageSquare,
   X as CloseIcon
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -293,7 +295,7 @@ const App: React.FC = () => {
     }
   }, [gameStatus, timer]);
 
-  const finalizeCreateRoom = (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge' | 'drawing_challenge') => {
+  const finalizeCreateRoom = (type: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge' | 'drawing_challenge' | 'proverbs') => {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     setIsCreator(true);
     createRoom(code, type, qCount);
@@ -305,7 +307,7 @@ const App: React.FC = () => {
 
   const shareInviteLink = async () => {
     const link = generateInviteLink();
-    const gameName = gameType === 'jeopardy' ? 'تحدي الأسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : gameType === 'word_meaning' ? 'معاني الكلمات' : gameType === 'siba' ? 'لعبة الصبة' : gameType === 'pixel_challenge' ? 'تحدي الصور' : gameType === 'drawing_challenge' ? 'تحدي الرسم' : 'بنت وولد';
+    const gameName = gameType === 'jeopardy' ? 'تحدي الأسئلة' : gameType === 'huroof' ? 'لعبة الحروف' : gameType === 'word_meaning' ? 'معاني الكلمات' : gameType === 'siba' ? 'لعبة الصبة' : gameType === 'pixel_challenge' ? 'تحدي الصور' : gameType === 'drawing_challenge' ? 'تحدي الرسم' : gameType === 'proverbs' ? 'أمثال وحكم' : 'بنت وولد';
 
     if (navigator.share) {
       try {
@@ -424,6 +426,7 @@ const App: React.FC = () => {
       case 'siba': return "لعبة الصبة: لعبة تكتيكية لشخصين. تتكون من مرحلة وضع 3 قطع ثم تحريكها. الهدف وضع 3 قطع في خط مستقيم.";
       case 'pixel_challenge': return "تحدي الصور: تظهر صورة مشوشة وتتضح تدريجياً. أسرع بالتعرف عليها لاختيار الإجابة الصحيحة وكسب نقاط أكثر.";
       case 'drawing_challenge': return "تحدي الرسم: في كل جولة، لاعب واحد يرسم كلمة سرية على اللوحة. باقي اللاعبين يحاولون تخمين الكلمة — كلما خمّنت أسرع، زادت نقاطك! الرسّام يربح نقاطاً عن كل لاعب خمّن الكلمة.";
+      case 'proverbs': return "أمثال وحكم: اختبر معرفتك بالأمثال الشعبية والحكم. هناك 3 أنواع: إكمال المثل، تخمين المثل من رسم، أو معرفة الموقف الذي يقال فيه المثل. الفائز هو من يحصل على أعلى نقاط.";
       default: return "";
     }
   };
@@ -538,6 +541,10 @@ const App: React.FC = () => {
             <button className="btn-primary-battle" style={{ background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)', color: '#fff' }} onClick={() => finalizeCreateRoom('drawing_challenge')}>
               <Pencil size={24} />
               تحدي الرسم
+            </button>
+            <button className="btn-primary-battle" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', gridColumn: 'span 2' }} onClick={() => finalizeCreateRoom('proverbs')}>
+              <MessageSquare size={24} />
+              أمثال وحكم
             </button>
           </div>
         </div>
@@ -921,6 +928,8 @@ const App: React.FC = () => {
           <PixelChallenge roomId={roomId || ''} />
         ) : gameType === 'siba' ? (
           <SibaGame />
+        ) : gameType === 'proverbs' ? (
+          <ProverbsGame roomId={roomId || ''} />
         ) : (
           /* HUROOF BOARD */
           <HuroofGame roomId={roomId || ''} />
