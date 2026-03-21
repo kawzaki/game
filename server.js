@@ -78,9 +78,14 @@ function selectJeopardyQuestions(questionsPerCategory) {
 
 let proverbsPool = [];
 try {
-    const proverbsData = fs.readFileSync('./src/data/proverbs.json', 'utf8');
-    proverbsPool = JSON.parse(proverbsData);
-    console.log('Proverbs pool loaded:', proverbsPool.length);
+    const proverbsPath = path.join(__dirname, 'src/data/proverbs.json');
+    if (fs.existsSync(proverbsPath)) {
+        const proverbsData = fs.readFileSync(proverbsPath, 'utf8');
+        proverbsPool = JSON.parse(proverbsData);
+        console.log('Proverbs pool loaded:', proverbsPool.length);
+    } else {
+        console.error('Proverbs file not found at:', proverbsPath);
+    }
 } catch (err) {
     console.error('Error loading proverbs pool:', err);
 }
@@ -1150,38 +1155,63 @@ io.on('connection', (socket) => {
     });
 
     function startProverbsRound(room, io, roomId) {
-        if (room.currentRound > room.roundCount) {
+        if (!room.questions || room.questions.length === 0 || room.currentRound > room.roundCount) {
+            console.log(`[Proverbs] Ending game for room ${roomId} - no questions or all rounds finished`);
             room.gameStatus = 'game_over';
             const sorted = [...room.players].sort((a, b) => b.score - a.score);
-            room.winner = { name: sorted[0].name, score: sorted[0].score };
+            room.winner = { name: sorted[0]?.name || 'Unknown', score: sorted[0]?.score || 0 };
             io.to(roomId).emit('room_data', room);
             return;
         }
 
+        const q = room.questions[room.currentRound - 1];
+        if (!q) {
+            console.error(`[Proverbs] Question at index ${room.currentRound - 1} is missing!`);
+            room.currentRound++;
+            startProverbsRound(room, io, roomId);
+            return;
+        }
+
         room.gameStatus = 'proverbs_active';
-        room.timer = 20;
-        room.activeQuestion = { ...room.questions[room.currentRound - 1] };
+        room.timer = q.type === 'context' ? 20 : 15;
+        room.activeQuestion = { ...q };
+        delete room.activeQuestion.answer; // Security: don't send answer to client
+        room.correctAnswer = q.answer;
         room.roundSubmissions = {};
+        
+        console.log(`[Proverbs] Starting round ${room.currentRound} for room ${roomId}`);
         io.to(roomId).emit('room_data', room);
 
         if (room.proverbsInterval) clearInterval(room.proverbsInterval);
         room.proverbsInterval = setInterval(() => {
-            room.timer--;
-            if (room.timer <= 0) {
+            if (room.timer > 0 && room.gameStatus === 'proverbs_active') {
+                room.timer--;
+                // Minimal update for timer if needed, but room_data is safer for sync
+                io.to(roomId).emit('timer_update', { timer: room.timer, roomId });
+            } else {
                 clearInterval(room.proverbsInterval);
-                scoreProverbsRound(room, io, roomId);
+                if (room.gameStatus === 'proverbs_active') {
+                    scoreProverbsRound(room, io, roomId);
+                }
             }
-            io.to(roomId).emit('timer_update', { timer: room.timer, roomId });
         }, 1000);
     }
 
     function scoreProverbsRound(room, io, roomId) {
+        if (room.gameStatus === 'proverbs_scoring') return; // Avoid double scoring
+        
         room.gameStatus = 'proverbs_scoring';
         const q = room.questions[room.currentRound - 1];
+        if (!q) {
+            console.error(`[Proverbs] Missing question in scoring!`);
+            room.currentRound++;
+            startProverbsRound(room, io, roomId);
+            return;
+        }
 
         room.players.forEach(p => {
             const submission = room.roundSubmissions[p.id];
-            if (submission && submission.answer === q.answer) {
+            if (submission && isCorrectAnswer(submission.answer, q.answer)) {
                 const speedBonus = submission.timeLeft * 5;
                 const totalPoints = 50 + speedBonus;
                 p.score += totalPoints;
@@ -1203,6 +1233,7 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('room_data', room);
 
         setTimeout(() => {
+            if (!rooms.has(roomId)) return; // Room closed in the meantime
             room.currentRound++;
             room.feedback = null;
             room.activeQuestion = null;
