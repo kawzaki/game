@@ -5,6 +5,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import multer from 'multer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -94,6 +95,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Setup multer for image uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadPath = path.join(__dirname, 'public/uploads');
+        if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
+        cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
 app.get('/api/version', (req, res) => {
     res.json({ version: SERVER_VERSION });
 });
@@ -154,6 +170,13 @@ app.get('/api/admin/pixel-challenge', requireAuth, (req, res) => {
     res.json(pixelChallengePool);
 });
 
+app.post('/api/admin/pixel-challenge', requireAuth, (req, res) => {
+    const newPixel = { ...req.body, id: `pc-${Date.now()}` };
+    pixelChallengePool.push(newPixel);
+    fs.writeFileSync(path.join(__dirname, 'src/data/pixelChallenge.json'), JSON.stringify(pixelChallengePool, null, 4), 'utf8');
+    res.json(newPixel);
+});
+
 app.put('/api/admin/pixel-challenge/:id', requireAuth, (req, res) => {
     const { id } = req.params;
     const index = pixelChallengePool.findIndex(q => q.id === id);
@@ -164,6 +187,51 @@ app.put('/api/admin/pixel-challenge/:id', requireAuth, (req, res) => {
     } else {
         res.status(404).json({ error: 'Question not found' });
     }
+});
+
+app.delete('/api/admin/pixel-challenge/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    pixelChallengePool = pixelChallengePool.filter(q => q.id !== id);
+    fs.writeFileSync(path.join(__dirname, 'src/data/pixelChallenge.json'), JSON.stringify(pixelChallengePool, null, 4), 'utf8');
+    res.json({ success: true });
+});
+
+app.post('/api/admin/upload', requireAuth, upload.single('image'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    res.json({ url: `/uploads/${req.file.filename}` });
+});
+
+app.get('/api/admin/proverbs', requireAuth, (req, res) => {
+    res.json(proverbsPool);
+});
+
+app.post('/api/admin/proverbs', requireAuth, (req, res) => {
+    const newProverb = { ...req.body, id: `prv-${Date.now()}` };
+    proverbsPool.push(newProverb);
+    const proverbsPath = path.join(__dirname, 'src/data/proverbs.json');
+    fs.writeFileSync(proverbsPath, JSON.stringify(proverbsPool, null, 4), 'utf8');
+    res.json(newProverb);
+});
+
+app.put('/api/admin/proverbs/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const index = proverbsPool.findIndex(p => p.id === id);
+    if (index !== -1) {
+        proverbsPool[index] = { ...proverbsPool[index], ...req.body };
+        const proverbsPath = path.join(__dirname, 'src/data/proverbs.json');
+        fs.writeFileSync(proverbsPath, JSON.stringify(proverbsPool, null, 4), 'utf8');
+        res.json(proverbsPool[index]);
+    } else {
+        res.status(404).json({ error: 'Proverb not found' });
+    }
+});
+
+app.delete('/api/admin/proverbs/:id', requireAuth, (req, res) => {
+    const { id } = req.params;
+    proverbsPool = proverbsPool.filter(p => p.id !== id);
+    const proverbsPath = path.join(__dirname, 'src/data/proverbs.json');
+    fs.writeFileSync(proverbsPath, JSON.stringify(proverbsPool, null, 4), 'utf8');
+    res.json({ success: true });
 });
 // -----------------------
 

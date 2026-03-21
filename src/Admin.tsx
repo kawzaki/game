@@ -10,9 +10,11 @@ export default function Admin() {
 
     const [questions, setQuestions] = useState<any[]>([]);
     const [pixelQuestions, setPixelQuestions] = useState<any[]>([]);
+    const [proverbs, setProverbs] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeTab, setActiveTab] = useState<'jeopardy' | 'pixel'>('jeopardy');
+    const [activeTab, setActiveTab] = useState<'jeopardy' | 'pixel' | 'proverbs'>('jeopardy');
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingQuestion, setEditingQuestion] = useState<any>(null);
@@ -21,15 +23,38 @@ export default function Admin() {
         value: 100,
         question: '',
         answer: '',
-        options: '' // comma separated
+        options: '', // comma separated
+        type: 'completion', // for proverbs
+        imageUrl: '',
+        series: '' // comma separated emojis
     });
 
     useEffect(() => {
         if (token) {
             fetchQuestions();
             fetchPixelQuestions();
+            fetchProverbs();
         }
     }, [token]);
+
+    const fetchProverbs = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/admin/proverbs', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.status === 401) {
+                handleLogout();
+                return;
+            }
+            const data = await res.json();
+            setProverbs(data);
+        } catch (e) {
+            console.error("Failed to fetch proverbs", e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchPixelQuestions = async () => {
         setLoading(true);
@@ -98,40 +123,82 @@ export default function Admin() {
 
     const handleAddClick = () => {
         setEditingQuestion(null);
-        setFormData({ category: '', value: 100, question: '', answer: '', options: '' });
+        setFormData({
+            category: '',
+            value: 100,
+            question: '',
+            answer: '',
+            options: '',
+            type: activeTab === 'proverbs' ? 'completion' : '',
+            imageUrl: '',
+            series: ''
+        });
         setIsModalOpen(true);
     };
 
     const handleEditClick = (q: any) => {
         setEditingQuestion(q);
         setFormData({
-            category: q.category,
-            value: q.value,
-            question: q.question,
+            category: q.category || '',
+            value: q.value || 0,
+            question: q.question || '',
             answer: q.answer || '',
-            options: q.options ? q.options.join(', ') : ''
+            options: q.options ? q.options.join(', ') : '',
+            type: q.type || '',
+            imageUrl: q.imageUrl || '',
+            series: q.series ? q.series.join(', ') : ''
         });
         setIsModalOpen(true);
     };
 
     const handleDeleteClick = async (id: string, questionText: string) => {
-        if (!confirm(`هل أنت متأكد من حذف السؤال:\n"${questionText}"؟`)) return;
+        if (!confirm(`هل أنت متأكد من حذف العنصر:\n"${questionText}"؟`)) return;
+        const endpoint = activeTab === 'proverbs' ? 'proverbs' : (activeTab === 'pixel' ? 'pixel-challenge' : 'questions');
         try {
-            const res = await fetch(`/api/admin/questions/${id}`, {
+            const res = await fetch(`/api/admin/${endpoint}/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
-                fetchQuestions();
+                if (activeTab === 'proverbs') fetchProverbs();
+                else if (activeTab === 'pixel') fetchPixelQuestions();
+                else fetchQuestions();
             }
         } catch (e) {
             console.error("Failed to delete", e);
         }
     };
 
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const formDataFile = new FormData();
+        formDataFile.append('image', file);
+
+        setIsUploading(true);
+        try {
+            const res = await fetch('/api/admin/upload', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formDataFile
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setFormData(prev => ({ ...prev, imageUrl: data.url }));
+            } else {
+                alert('فشل رفع الصورة');
+            }
+        } catch (e) {
+            alert('خطأ في الاتصال أثناء الرفع');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        const payload = {
+        const payload: any = {
             category: formData.category,
             value: Number(formData.value),
             question: formData.question,
@@ -139,10 +206,16 @@ export default function Admin() {
             options: formData.options ? formData.options.split(',').map(s => s.trim()).filter(Boolean) : []
         };
 
-        const isPixel = editingQuestion?.id?.startsWith('pc-');
-        const url = isPixel
-            ? `/api/admin/pixel-challenge/${editingQuestion.id}`
-            : (editingQuestion ? `/api/admin/questions/${editingQuestion.id}` : '/api/admin/questions');
+        if (activeTab === 'proverbs') {
+            payload.type = formData.type;
+            payload.imageUrl = formData.imageUrl;
+            payload.series = formData.series ? formData.series.split(',').map(s => s.trim()).filter(Boolean) : [];
+        } else if (activeTab === 'pixel') {
+            payload.imageUrl = formData.imageUrl;
+        }
+
+        const endpoint = activeTab === 'proverbs' ? 'proverbs' : (activeTab === 'pixel' ? 'pixel-challenge' : 'questions');
+        const url = editingQuestion ? `/api/admin/${endpoint}/${editingQuestion.id}` : `/api/admin/${endpoint}`;
         const method = editingQuestion ? 'PUT' : 'POST';
 
         try {
@@ -156,7 +229,8 @@ export default function Admin() {
             });
             if (res.ok) {
                 setIsModalOpen(false);
-                if (isPixel) fetchPixelQuestions();
+                if (activeTab === 'proverbs') fetchProverbs();
+                else if (activeTab === 'pixel') fetchPixelQuestions();
                 else fetchQuestions();
             } else if (res.status === 401) {
                 handleLogout();
@@ -236,7 +310,13 @@ export default function Admin() {
                             onClick={() => setActiveTab('pixel')}
                             style={{ padding: '16px 24px', border: 'none', background: activeTab === 'pixel' ? '#fff' : '#f8fafc', borderBottom: activeTab === 'pixel' ? '2px solid #0f172a' : 'none', fontWeight: 900, color: activeTab === 'pixel' ? '#0f172a' : '#64748b', cursor: 'pointer' }}
                         >
-                            تحدي الصور (Pixel Challenge)
+                            تحدي الصور (Pixel)
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('proverbs')}
+                            style={{ padding: '16px 24px', border: 'none', background: activeTab === 'proverbs' ? '#fff' : '#f8fafc', borderBottom: activeTab === 'proverbs' ? '2px solid #0f172a' : 'none', fontWeight: 900, color: activeTab === 'proverbs' ? '#0f172a' : '#64748b', cursor: 'pointer' }}
+                        >
+                            تحدي الأمثال
                         </button>
                     </div>
 
@@ -310,9 +390,14 @@ export default function Admin() {
                                 </table>
                             </div>
                         </>
-                    ) : (
+                    ) : activeTab === 'pixel' ? (
                         <div style={{ padding: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+                            <div style={{ padding: '0 20px 20px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end' }}>
+                                <button onClick={handleAddClick} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: '#10b981', color: '#fff', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+                                    <Plus size={18} /> إضافة تحدي صور جديد
+                                </button>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', marginTop: '20px' }}>
                                 {pixelQuestions.map((q) => (
                                     <div key={q.id} style={{ background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                                         <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
@@ -331,18 +416,51 @@ export default function Admin() {
                                         <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                                             <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 900, color: '#0f172a' }}>{q.question}</h4>
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '16px' }}>
-                                                {q.options.map((opt: string, i: number) => (
+                                                {q.options?.map((opt: string, i: number) => (
                                                     <span key={i} style={{ background: opt === q.answer ? '#dcfce7' : '#fff', color: opt === q.answer ? '#166534' : '#64748b', fontSize: '11px', padding: '2px 8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
                                                         {opt}
                                                     </span>
                                                 ))}
                                             </div>
-                                            <button
-                                                onClick={() => handleEditClick(q)}
-                                                style={{ marginTop: 'auto', width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', color: '#0f172a', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                                            >
-                                                <Edit2 size={14} /> تعديل البيانات
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button onClick={() => handleEditClick(q)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', color: '#0f172a', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                                                    <Edit2 size={12} /> تعديل
+                                                </button>
+                                                <button onClick={() => handleDeleteClick(q.id, q.question)} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#fee2e2', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div style={{ padding: '20px' }}>
+                            <div style={{ padding: '0 20px 20px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end' }}>
+                                <button onClick={handleAddClick} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', background: '#10b981', color: '#fff', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+                                    <Plus size={18} /> إضافة مثل جديد
+                                </button>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', marginTop: '20px' }}>
+                                {proverbs.map((p) => (
+                                    <div key={p.id} style={{ background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                                        {p.type === 'illustration' && p.imageUrl && (
+                                            <div style={{ width: '100%', aspectRatio: '16/9' }}>
+                                                <img src={p.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            </div>
+                                        )}
+                                        <div style={{ padding: '16px', flex: 1 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                <span style={{ fontSize: '10px', background: '#ecfdf5', color: '#059669', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
+                                                    {p.type === 'completion' ? 'إكمال' : p.type === 'illustration' ? 'صورة' : p.type === 'context' ? 'متى يقال' : 'سلسلة'}
+                                                </span>
+                                                <span style={{ fontSize: '10px', color: '#94a3b8' }}>{p.category}</span>
+                                            </div>
+                                            <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 900, color: '#0f172a' }}>{p.question}</h4>
+                                            <div style={{ color: '#10b981', fontWeight: 'bold', fontSize: '13px', marginBottom: '12px' }}>الإجابة: {p.answer}</div>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button onClick={() => handleEditClick(p)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', color: '#0f172a', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>تعديل</button>
+                                                <button onClick={() => handleDeleteClick(p.id, p.question)} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#fee2e2', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -380,8 +498,47 @@ export default function Admin() {
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 'bold' }}>الإجابة الصحيحة</label>
-                                    <input type="text" value={formData.answer} onChange={e => setFormData({ ...formData, answer: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
+                                    <input type="text" value={formData.answer} onChange={e => setFormData({ ...formData, answer: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} required />
                                 </div>
+
+                                {activeTab === 'proverbs' && (
+                                    <>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 'bold' }}>نوع التحدي</label>
+                                            <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}>
+                                                <option value="completion">إكمال المثل</option>
+                                                <option value="illustration">تخمين المثل من الصورة</option>
+                                                <option value="context">متى يقال هذا المثل؟</option>
+                                                <option value="series">سلسلة الرموز</option>
+                                            </select>
+                                        </div>
+                                        {formData.type === 'series' && (
+                                            <div>
+                                                <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 'bold' }}>سلسلة الرموز (مفصولة بفاصلة)</label>
+                                                <input type="text" value={formData.series} onChange={e => setFormData({ ...formData, series: e.target.value })} placeholder="🍎, 🍌, 🍒" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                {(activeTab === 'pixel' || (activeTab === 'proverbs' && formData.type === 'illustration')) && (
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 'bold' }}>الصورة</label>
+                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                                            <input type="text" value={formData.imageUrl} onChange={e => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="رابط الصورة مباشر..." style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
+                                            <label style={{ padding: '10px 16px', borderRadius: '8px', background: '#0f172a', color: '#fff', fontSize: '13px', fontWeight: 'bold', cursor: isUploading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Plus size={16} /> {isUploading ? 'جاري الرفع...' : 'رفع'}
+                                                <input type="file" onChange={handleFileUpload} accept="image/*" style={{ display: 'none' }} disabled={isUploading} />
+                                            </label>
+                                        </div>
+                                        {formData.imageUrl && (
+                                            <div style={{ width: '100%', aspectRatio: '16/9', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                                <img src={formData.imageUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#f8fafc' }} />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: 'bold' }}>الخيارات (اختياري - مفصولة بفاصلة)</label>
                                     <input type="text" value={formData.options} onChange={e => setFormData({ ...formData, options: e.target.value })} placeholder="خيار 1، خيار 2، خيار 3..." style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }} />
