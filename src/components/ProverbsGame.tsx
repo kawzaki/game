@@ -151,16 +151,8 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                         )}
 
                         <div style={{ textAlign: 'center' }}>
-                            {qType === 'context' && (
-                                <p style={{ fontSize: isMobile ? '16px' : '18px', color: '#64748b', marginBottom: isMobile ? '12px' : '16px', fontStyle: 'italic', lineHeight: 1.6, background: '#f8fafc', padding: isMobile ? '12px' : '16px', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
-                                    {activeQuestion.question}
-                                </p>
-                            )}
                             <h2 style={{ fontWeight: 900, color: '#1e293b', lineHeight: 1.2, fontSize: isMobile ? '22px' : (qType === 'context' ? '28px' : '32px'), marginBottom: isMobile ? '16px' : '0' }}>
-                                {(activeQuestion as any).proverb || 
-                                 (qType === 'context' ? 'ما هو المثل المناسب لهذا الموقف؟' : 
-                                  qType === 'illustration' ? 'ما هو المثل الذي تعبر عنه هذه الرسمة؟' : 
-                                  activeQuestion.question)}
+                                {qType === 'completion' ? activeQuestion.question : (activeQuestion as any).proverb}
                             </h2>
                         </div>
                     </motion.div>

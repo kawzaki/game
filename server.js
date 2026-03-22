@@ -100,10 +100,7 @@ function prepareProverbs(proverbs, count) {
         let options = p.options || [];
         if (options.length === 0) {
             // Generate decoys from other proverbs' answers
-            const decoys = allAnswers
-                .filter(a => a !== p.answer)
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 3);
+                .slice(0, 2);
             options = [p.answer, ...decoys];
         } else {
             // Ensure the answer is present and then shuffle
@@ -113,7 +110,7 @@ function prepareProverbs(proverbs, count) {
         // Final shuffle of options
         return {
             ...p,
-            options: [...new Set(options)].sort(() => Math.random() - 0.5)
+            options: [...new Set(options)].sort(() => Math.random() - 0.5).slice(0, 3)
         };
     });
 }
