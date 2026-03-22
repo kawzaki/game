@@ -99,7 +99,9 @@ function prepareProverbs(proverbs, count) {
     return selected.map(p => {
         let options = p.options || [];
         if (options.length === 0) {
-            // Generate decoys from other proverbs' answers
+            const decoys = allAnswers
+                .filter(a => a !== p.answer)
+                .sort(() => Math.random() - 0.5)
                 .slice(0, 2);
             options = [p.answer, ...decoys];
         } else {
