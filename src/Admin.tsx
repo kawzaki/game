@@ -149,7 +149,7 @@ export default function Admin() {
         setFormData({
             category: '',
             value: 100,
-            question: '',
+            question: activeTab === 'proverbs' ? 'أكمل المثل التالي:' : '',
             answer: '',
             options: '',
             type: activeTab === 'proverbs' ? 'completion' : '',
@@ -553,7 +553,22 @@ export default function Admin() {
                                             <>
                                                 <div>
                                                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 900, color: '#475569' }}>نوع التحدي</label>
-                                                    <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', background: '#fff' }}>
+                                                    <select 
+                                                        value={formData.type} 
+                                                        onChange={e => {
+                                                            const newType = e.target.value;
+                                                            let newQ = formData.question;
+                                                            if (newType === 'illustration' || newType === 'series') {
+                                                                newQ = 'خمّـن من الصورة';
+                                                            } else if (newType === 'completion' && (newQ === 'خمّـن من الصورة' || !newQ)) {
+                                                                newQ = 'أكمل المثل التالي:';
+                                                            } else if (newType === 'context' && (newQ === 'خمّـن من الصورة' || newQ === 'أكمل المثل التالي:' || !newQ)) {
+                                                                newQ = 'متى يقال هذا المثل؟';
+                                                            }
+                                                            setFormData({ ...formData, type: newType, question: newQ });
+                                                        }} 
+                                                        style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', background: '#fff' }}
+                                                    >
                                                         <option value="completion">إكمال المثل</option>
                                                         <option value="illustration">تخمين المثل من الصورة</option>
                                                         <option value="context">متى يقال هذا المثل؟</option>

@@ -142,5 +142,185 @@
             "تعلم مهارات جديدة من الآخرين",
             "السؤال عن أخبار الأقارب دائماً"
         ]
+    },
+    {
+        "category": "",
+        "value": 100,
+        "question": "ما طار طير وارتفع ",
+        "answer": "إلا كما طار وقع",
+        "options": [
+            "إلا كما طار وقع، إلا الطيور على اشكالها تقع، إلا ما يعر فالصقر يشويه"
+        ],
+        "type": "completion",
+        "imageUrl": "",
+        "series": "",
+        "word": "",
+        "meaning": "",
+        "id": "prv-1774122233425"
+    },
+    {
+        "category": "",
+        "value": 100,
+        "question": "خمن من الصورة",
+        "answer": "تجري الرياح بما لا تشتهي السفن",
+        "options": [
+            "تجري الرياح بما لا تشتهي السفن، وش لك بالبحر وأهواله ورزق الله على السيف، الموية تكذب الغطاس"
+        ],
+        "type": "illustration",
+        "imageUrl": "/uploads/1774159704164-470927897.png",
+        "series": "",
+        "word": "",
+        "meaning": "",
+        "id": "prv-1774159777934"
+    },
+    {
+        "category": "",
+        "value": 100,
+        "question": "خمن المثل",
+        "answer": "الصديق عند الضيق",
+        "options": [
+            "الصديق عند الضيق، خلي عدوك اقرب من صديقك، لا تحزن"
+        ],
+        "type": "illustration",
+        "imageUrl": "/uploads/1774159807706-133582637.png",
+        "series": "",
+        "word": "",
+        "meaning": "",
+        "id": "prv-1774159863060"
+    },
+    {
+        "category": "",
+        "value": 100,
+        "question": "خمن المثل من الصورة",
+        "answer": "كل فتاة بأبيها معجبة",
+        "options": [
+            "كل فتاة بأبيها معجبة، الولد سر أبيه، ليس الفتى من قال كان أبي"
+        ],
+        "type": "illustration",
+        "imageUrl": "/uploads/1774159882804-799221228.png",
+        "series": "",
+        "word": "",
+        "meaning": "",
+        "id": "prv-1774159947246"
+    },
+    {
+        "category": "",
+        "value": 100,
+        "question": "خمن من الصورة",
+        "answer": "العجلة من الشيطان",
+        "options": [
+            "العجلة من الشيطان، السرعة تؤدي للموت، الدراجة شر"
+        ],
+        "type": "illustration",
+        "imageUrl": "/uploads/1774159974097-251393757.png",
+        "series": "",
+        "word": "",
+        "meaning": "",
+        "id": "prv-1774160036568"
+    },
+    {
+        "category": "",
+        "value": 100,
+        "question": "خمن من الصورة",
+        "answer": "أطلبوا العلم ولو في الصين",
+        "options": [
+            "أطلبوا العلم ولو في الصين، الصين بلد الحضارات، لا تبيع كتابك على صيني"
+        ],
+        "type": "illustration",
+        "imageUrl": "/uploads/1774160054012-813546105.png",
+        "series": "",
+        "word": "",
+        "meaning": "",
+        "id": "prv-1774160092288"
+    },
+    {
+        "category": "",
+        "value": 100,
+        "question": "خمن من الصورة",
+        "answer": "العلم نور",
+        "options": [
+            "العلم نور، العلم في الكتب، النور في الكتب"
+        ],
+        "type": "illustration",
+        "imageUrl": "/uploads/1774160112836-769129793.png",
+        "series": "",
+        "word": "",
+        "meaning": "",
+        "id": "prv-1774160141677"
+    },
+    {
+        "category": "",
+        "value": 100,
+        "question": "خمن من الصورة",
+        "answer": "حبل الكذب قصير",
+        "options": [
+            "حبل الكذب قصير، صيد الكذاب في ثيابه، انشر الغسيل"
+        ],
+        "type": "illustration",
+        "imageUrl": "/uploads/1774160153397-915685892.png",
+        "series": "",
+        "word": "",
+        "meaning": "",
+        "id": "prv-1774160195475"
+    },
+    {
+        "category": "",
+        "value": 100,
+        "question": "خمن من الصورة",
+        "answer": "هذا الشبل من هذا الأسد",
+        "options": [
+            "هذا الشبل من هذا الأسد، الولد سر أبيه، الأسد ملك الغابة"
+        ],
+        "type": "illustration",
+        "imageUrl": "/uploads/1774160205574-357684428.png",
+        "series": "",
+        "word": "",
+        "meaning": "",
+        "id": "prv-1774160240306"
+    },
+    {
+        "category": "",
+        "value": 100,
+        "question": "خمن من الصورة",
+        "answer": "دع الكلاب تنبح والقافلة تسير",
+        "options": [
+            "دع الكلاب تنبح والقافلة تسير، الكلاب تحمي الجمال، الجمل قافلة الصحراء"
+        ],
+        "type": "illustration",
+        "imageUrl": "/uploads/1774160252633-249365873.png",
+        "series": "",
+        "word": "",
+        "meaning": "",
+        "id": "prv-1774160327126"
+    },
+    {
+        "category": "",
+        "value": 100,
+        "question": "خمن من الصورة",
+        "answer": "النوم سلطان",
+        "options": [
+            "النوم سلطان، الأميرة النائمة، الملك نايم"
+        ],
+        "type": "illustration",
+        "imageUrl": "/uploads/1774160337839-798355181.png",
+        "series": "",
+        "word": "",
+        "meaning": "",
+        "id": "prv-1774160365033"
+    },
+    {
+        "category": "",
+        "value": 100,
+        "question": "إذا طاح الجمل",
+        "answer": "كثرة سكاكينه",
+        "options": [
+            "كثرة سكاكينه، تكاثرت عليه الضباع، طاح حظه"
+        ],
+        "type": "completion",
+        "imageUrl": "",
+        "series": "",
+        "word": "",
+        "meaning": "",
+        "id": "prv-1774160449137"
     }
 ]

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGameStore } from '../store/useGameStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Check, X, BookOpen, Image as ImageIcon, MessageSquare, Zap } from 'lucide-react';
@@ -23,6 +23,13 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
 
     const myFeed = myId ? wordMeaningFeedback?.[myId] : null;
     const submittedAnswer = myFeed?.answer || null;
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 640);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const handleSelectOption = (opt: string) => {
         if (submittedAnswer || gameStatus !== 'proverbs_active') return;
@@ -88,8 +95,8 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
         const qType = activeQuestion?.type || 'completion';
 
         return (
-            <div style={{ maxWidth: '700px', margin: '0 auto', padding: '16px', direction: 'rtl' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div style={{ maxWidth: '700px', margin: '0 auto', padding: isMobile ? '8px' : '16px', direction: 'rtl' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? '16px' : '24px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(4px)', padding: '8px 16px', borderRadius: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
                         <Timer size={24} color={timer <= 5 ? '#ef4444' : '#64748b'} className={timer <= 5 ? 'animate-pulse' : ''} />
                         <span style={{ fontSize: '30px', fontWeight: 900, color: timer <= 5 ? '#ef4444' : '#334155' }}>{timer}s</span>
@@ -103,7 +110,7 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                     <motion.div 
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        style={{ background: '#fff', borderRadius: '32px', padding: '32px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9', marginBottom: '32px', position: 'relative', overflow: 'hidden' }}
+                        style={{ background: '#fff', borderRadius: isMobile ? '20px' : '32px', padding: isMobile ? '24px' : '32px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9', marginBottom: isMobile ? '24px' : '32px', position: 'relative', overflow: 'hidden' }}
                     >
                         <div style={{ position: 'absolute', top: 0, right: 0, padding: '16px', opacity: 0.1 }}>
                             {getCategoryIcon(qType)}
@@ -128,14 +135,14 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                         )}
 
                         {qType === 'series' && (activeQuestion as any).series && (
-                            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center', gap: '16px', padding: '24px 0', background: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.06)' }}>
+                            <div style={{ marginBottom: isMobile ? '16px' : '24px', display: 'flex', justifyContent: 'center', gap: isMobile ? '8px' : '16px', padding: isMobile ? '16px 0' : '24px 0', background: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
                                 {(activeQuestion as any).series.map((emoji: string, idx: number) => (
                                     <motion.span 
                                         key={idx}
                                         initial={{ scale: 0, rotate: -20 }}
                                         animate={{ scale: 1, rotate: 0 }}
                                         transition={{ delay: idx * 0.15, type: 'spring' }}
-                                        style={{ fontSize: '60px' }}
+                                        style={{ fontSize: isMobile ? '40px' : '60px' }}
                                     >
                                         {emoji}
                                     </motion.span>
@@ -145,14 +152,15 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
 
                         <div style={{ textAlign: 'center' }}>
                             {qType === 'context' && (
-                                <p style={{ fontSize: '18px', color: '#64748b', marginBottom: '16px', fontStyle: 'italic', lineHeight: 1.6, background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
-                                    "{activeQuestion.question}"
+                                <p style={{ fontSize: isMobile ? '16px' : '18px', color: '#64748b', marginBottom: isMobile ? '12px' : '16px', fontStyle: 'italic', lineHeight: 1.6, background: '#f8fafc', padding: isMobile ? '12px' : '16px', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
+                                    {activeQuestion.question}
                                 </p>
                             )}
-                            <h2 style={{ fontWeight: 900, color: '#1e293b', lineHeight: 1.2, fontSize: qType === 'context' ? '24px' : '32px' }}>
-                                {qType === 'context' ? 'ما هو المثل المناسب لهذا الموقف؟' : 
-                                 qType === 'illustration' ? 'ما هو المثل الذي تعبر عنه هذه الرسمة؟' : 
-                                 activeQuestion.question}
+                            <h2 style={{ fontWeight: 900, color: '#1e293b', lineHeight: 1.2, fontSize: isMobile ? '22px' : (qType === 'context' ? '28px' : '32px'), marginBottom: isMobile ? '16px' : '0' }}>
+                                {(activeQuestion as any).proverb || 
+                                 (qType === 'context' ? 'ما هو المثل المناسب لهذا الموقف؟' : 
+                                  qType === 'illustration' ? 'ما هو المثل الذي تعبر عنه هذه الرسمة؟' : 
+                                  activeQuestion.question)}
                             </h2>
                         </div>
                     </motion.div>
@@ -190,7 +198,6 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                                     bgColor = '#f8fafc';
                                     borderColor = '#e2e8f0';
                                     textColor = '#94a3b8';
-                                    opacity: 0.6;
                                 }
 
                                 return (
@@ -205,14 +212,14 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                                         transition={{ delay: idx * 0.1 }}
                                         style={{
                                             position: 'relative',
-                                            padding: '20px',
+                                            padding: isMobile ? '12px 16px' : '20px',
                                             borderRadius: '16px',
                                             textAlign: 'right',
                                             transition: 'all 0.3s ease',
                                             border: `2px solid ${borderColor}`,
                                             background: bgColor,
                                             color: textColor,
-                                            fontSize: '18px',
+                                            fontSize: isMobile ? '15px' : '18px',
                                             fontWeight: 'bold',
                                             display: 'flex',
                                             justifyContent: 'space-between',
@@ -243,13 +250,13 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.9 }}
-                            style={{ marginTop: '32px', textAlign: 'center' }}
+                            style={{ marginTop: isMobile ? '16px' : '32px', textAlign: 'center' }}
                         >
                             <div style={{
                                 display: 'inline-block',
-                                padding: '16px 32px',
+                                padding: isMobile ? '12px 24px' : '16px 32px',
                                 borderRadius: '9999px',
-                                fontSize: '20px',
+                                fontSize: isMobile ? '16px' : '20px',
                                 fontWeight: 900,
                                 boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
                                 background: submittedAnswer === feedback.answer ? '#10b981' : '#ef4444',
