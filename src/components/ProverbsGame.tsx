@@ -107,7 +107,7 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                 </div>
 
                 {activeQuestion && (
-                    <motion.div 
+                    <motion.div
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         style={{ background: '#fff', borderRadius: isMobile ? '20px' : '32px', padding: isMobile ? '24px' : '32px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9', marginBottom: isMobile ? '24px' : '32px', position: 'relative', overflow: 'hidden' }}
@@ -115,7 +115,7 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                         <div style={{ position: 'absolute', top: 0, right: 0, padding: '16px', opacity: 0.1 }}>
                             {getCategoryIcon(qType)}
                         </div>
-                        
+
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                             <span style={{ padding: '4px 12px', background: '#f1f5f9', color: '#475569', borderRadius: '9999px', fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                 {getCategoryLabel(qType)}
@@ -124,11 +124,11 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
 
                         {qType === 'illustration' && activeQuestion.imageUrl && (
                             <div style={{ marginBottom: '24px', borderRadius: '16px', overflow: 'hidden', border: '4px solid #f8fafc', boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.06)' }}>
-                                <motion.img 
+                                <motion.img
                                     initial={{ filter: 'blur(10px)', scale: 1.1 }}
                                     animate={{ filter: 'blur(0px)', scale: 1 }}
-                                    src={activeQuestion.imageUrl} 
-                                    alt="Proverb Illustration" 
+                                    src={activeQuestion.imageUrl}
+                                    alt="Proverb Illustration"
                                     style={{ width: '100%', height: 'auto', objectFit: 'cover', maxHeight: '300px' }}
                                 />
                             </div>
@@ -137,7 +137,7 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                         {qType === 'series' && (activeQuestion as any).series && (
                             <div style={{ marginBottom: isMobile ? '16px' : '24px', display: 'flex', justifyContent: 'center', gap: isMobile ? '8px' : '16px', padding: isMobile ? '16px 0' : '24px 0', background: '#f8fafc', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
                                 {(activeQuestion as any).series.map((emoji: string, idx: number) => (
-                                    <motion.span 
+                                    <motion.span
                                         key={idx}
                                         initial={{ scale: 0, rotate: -20 }}
                                         animate={{ scale: 1, rotate: 0 }}
@@ -232,9 +232,9 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                                     >
                                         <span style={{ lineHeight: 1.4 }}>{opt}</span>
                                         <div style={{ flexShrink: 0, marginRight: '8px' }}>
-                                            {((isScoring && isCorrect) || (!isScoring && myFeed && myFeed.answer === opt && isCorrect)) && 
+                                            {((isScoring && isCorrect) || (!isScoring && myFeed && myFeed.answer === opt && isCorrect)) &&
                                                 <div style={{ background: '#10b981', borderRadius: '50%', padding: '4px', display: 'flex' }}><Check size={18} color="white" /></div>}
-                                            {((isScoring && isWrong) || (!isScoring && myFeed && myFeed.answer === opt && isWrong)) && 
+                                            {((isScoring && isWrong) || (!isScoring && myFeed && myFeed.answer === opt && isWrong)) &&
                                                 <div style={{ background: '#ef4444', borderRadius: '50%', padding: '4px', display: 'flex' }}><X size={18} color="white" /></div>}
                                         </div>
                                     </motion.button>
@@ -262,11 +262,11 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
                                 background: submittedAnswer === feedback.answer ? '#10b981' : '#ef4444',
                                 color: '#fff'
                             }}>
-                                {submittedAnswer === feedback.answer ? 
-                                    `بطل! +${myFeed?.pointsEarned || 50} نقطة` : 
+                                {submittedAnswer === feedback.answer ?
+                                    `بطل! +${myFeed?.pointsEarned || 50} نقطة` :
                                     (submittedAnswer ? 'للأسف، إجابة غير دقيقة' : 'انتهى الوقت!')}
                             </div>
-                            
+
                             {submittedAnswer !== feedback.answer && (
                                 <div style={{ marginTop: '16px', color: '#64748b', fontWeight: 'bold' }}>
                                     الإجابة الصحيحة: <span style={{ color: '#059669' }}>{feedback.answer}</span>
