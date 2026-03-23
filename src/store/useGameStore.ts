@@ -239,6 +239,13 @@ export const useGameStore = create<GameState>((set) => {
         }, 6000);
     });
 
+    socket.on('notification', (data: { message: string, type: 'success' | 'info' | 'error' }) => {
+        set({ notification: { message: data.message, type: data.type } });
+        setTimeout(() => {
+            set({ notification: null });
+        }, 5000);
+    });
+
     // Handle reconnections
     socket.on('connect', () => {
         const state = useGameStore.getState();

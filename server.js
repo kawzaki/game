@@ -1553,15 +1553,17 @@ io.on('connection', (socket) => {
 
     socket.on('pick_value', ({ roomId, value }) => {
         const room = rooms.get(roomId);
-        if (room) {
+        if (room && room.gameStatus === 'selecting_value') {
+            const numericValue = Number(value);
             const activePlayer = room.players[room.currentPlayerIndex];
             if (activePlayer && activePlayer.id !== socket.id) return;
 
-            const question = room.questions.find(q =>
-                q.category === room.selectedCategory &&
-                q.value === value &&
-                !q.isAnswered
-            );
+            const question = room.questions.find(q => {
+                const qCat = (q.category || "").trim();
+                const rCat = (room.selectedCategory || "").trim();
+                const qVal = Number(q.value);
+                return qCat === rCat && qVal === numericValue && !q.isAnswered;
+            });
 
             if (question) {
                 const isLuck = question.type === 'luck' || Math.random() < 0.1;
@@ -1623,8 +1625,9 @@ io.on('connection', (socket) => {
                 }
             } else {
                 // Question not found or already answered
-                console.warn(`[Pick Value] Question not found for Category: ${room.selectedCategory}, Value: ${value} in room ${roomId}`);
-                socket.emit('notification', { type: 'error', message: 'عذراً، هذا السؤال غير متوفر حالياً.' });
+                const available = (room.questions || []).filter(q => !q.isAnswered).slice(0, 5).map(q => `${q.category}:${q.value}`).join(', ');
+                console.warn(`[Pick Value] Question not found for Category: "${room.selectedCategory}", Value: ${value} in room ${roomId}. Available examples: ${available}`);
+                socket.emit('notification', { type: 'error', message: `عذراً، هذا السؤال غير متوفر حالياً. المتاح: ${available}` });
             }
         }
     });
