@@ -68,12 +68,26 @@ function selectJeopardyQuestions(questionsPerCategory) {
     const categoryCounts = {};
 
     shuffledPool.forEach(q => {
-        if (!categoryCounts[q.category]) categoryCounts[q.category] = 0;
-        if (categoryCounts[q.category] < questionsPerCategory) {
+        if (!categoryCounts[q.category]) categoryCounts[q.category] = { total: 0, values: new Set() };
+        
+        // Priority 1: Ensure we have at least one question for each value (100-600)
+        if (!categoryCounts[q.category].values.has(q.value) && categoryCounts[q.category].total < questionsPerCategory) {
             selectedQuestions.push(q);
-            categoryCounts[q.category]++;
+            categoryCounts[q.category].total++;
+            categoryCounts[q.category].values.add(q.value);
         }
     });
+
+    // Priority 2: Fill remaining slots for each category up to questionsPerCategory
+    shuffledPool.forEach(q => {
+        if (!selectedQuestions.find(sq => sq.id === q.id)) {
+            if (categoryCounts[q.category].total < questionsPerCategory) {
+                selectedQuestions.push(q);
+                categoryCounts[q.category].total++;
+            }
+        }
+    });
+
     return selectedQuestions;
 }
 
@@ -959,6 +973,7 @@ io.on('connection', (socket) => {
                 }, 1000);
             } else {
                 room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
+                room.currentPlayerIndex = 0; // Reset turn to first player
             }
             io.to(roomId).emit('room_data', room);
         }
@@ -1606,6 +1621,10 @@ io.on('connection', (socket) => {
                     startQuestionTimer(room, io, roomId);
                     io.to(roomId).emit('room_data', room);
                 }
+            } else {
+                // Question not found or already answered
+                console.warn(`[Pick Value] Question not found for Category: ${room.selectedCategory}, Value: ${value} in room ${roomId}`);
+                socket.emit('notification', { type: 'error', message: 'عذراً، هذا السؤال غير متوفر حالياً.' });
             }
         }
     });
@@ -1784,9 +1803,11 @@ io.on('connection', (socket) => {
         const room = rooms.get(roomId);
         if (!room || room.gameStatus === 'game_over') return;
 
-        // Only players who actually joined this room may forfeit (blocks late joiners with old links)
+        // Only players who actually joined this room may forfeit, OR the room creator
         const playerIndex = room.players.findIndex(p => p.id === socket.id);
-        if (playerIndex === -1) return;
+        const isCreator = room.creatorSocketId === socket.id;
+        
+        if (playerIndex === -1 && !isCreator) return;
 
         if (room.players.length <= 2) {
             // 2 players: forfeiting player loses, other wins
