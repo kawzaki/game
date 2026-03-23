@@ -460,64 +460,78 @@ function checkHuroofWinner(grid, team) {
     return false;
 }
 
+function setHiddenProperty(obj, key, value) {
+    Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: false,
+        writable: true,
+        configurable: true
+    });
+}
+
 // Helper for smart answer checking
 function isCorrectAnswer(input, correct) {
     if (!input || !correct) return false;
     return normalizeArabic(input) === normalizeArabic(correct);
 }
 
+function handleQuestionTimeout(room, io, roomId) {
+    // Timer expired
+    if (room.buzzedPlayerId) {
+        // Buzzed player timed out
+        const player = room.players.find(p => p.id === room.buzzedPlayerId);
+        if (player) player.score -= (room.activeQuestion?.value || 0);
+        
+        if (!room.attempts) room.attempts = [];
+        room.attempts.push(room.buzzedPlayerId);
+        room.buzzedPlayerId = null;
+        
+        if (room.attempts.length >= room.players.length) {
+            room.feedback = {
+                type: 'all_wrong',
+                message: `انتهى الوقت! لم يتم الإجابة على السؤال.`,
+                answer: room.correctAnswer
+            };
+            if (room.gameType === 'huroof' && room.huroofHistory && room.huroofHistory.length > 0) {
+                room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "لا أحد";
+            }
+            // No clearInterval here, it's already cleared in startQuestionTimer
+        } else {
+            room.timer = 5; // Give others a small window to buzz
+            startQuestionTimer(room, io, roomId); // Restart timer for others
+        }
+        io.to(roomId).emit('room_data', room);
+    } else {
+        // Overall question timeout
+        room.feedback = {
+            type: 'all_wrong',
+            message: `انتهى الوقت! لم يتم الإجابة على السؤال.`,
+            answer: room.correctAnswer
+        };
+        if (room.gameType === 'huroof' && room.huroofHistory && room.huroofHistory.length > 0) {
+            room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "لا أحد";
+        }
+        io.to(roomId).emit('room_data', room);
+        // No clearInterval here, it's already cleared in startQuestionTimer
+    }
+}
+
 function startQuestionTimer(room, io, roomId) {
     if (room._questionInterval) clearInterval(room._questionInterval);
     
-    room._questionInterval = setInterval(() => {
-        if (room.gameStatus !== 'question') {
-            clearInterval(room._questionInterval);
-            return;
-        }
-
+    const questionInterval = setInterval(() => {
         if (room.timer > 0) {
             room.timer--;
             io.to(roomId).emit('room_data', room);
         } else {
-            // Timer expired
-            if (room.buzzedPlayerId) {
-                // Buzzed player timed out
-                const player = room.players.find(p => p.id === room.buzzedPlayerId);
-                if (player) player.score -= (room.activeQuestion?.value || 0);
-                
-                if (!room.attempts) room.attempts = [];
-                room.attempts.push(room.buzzedPlayerId);
-                room.buzzedPlayerId = null;
-                
-                if (room.attempts.length >= room.players.length) {
-                    room.feedback = {
-                        type: 'all_wrong',
-                        message: `انتهى الوقت! لم يتم الإجابة على السؤال.`,
-                        answer: room.correctAnswer
-                    };
-                    if (room.gameType === 'huroof' && room.huroofHistory && room.huroofHistory.length > 0) {
-                        room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "لا أحد";
-                    }
-                    clearInterval(room._questionInterval);
-                } else {
-                    room.timer = 5; // Give others a small window to buzz
-                }
-                io.to(roomId).emit('room_data', room);
-            } else {
-                // Overall question timeout
-                room.feedback = {
-                    type: 'all_wrong',
-                    message: `انتهى الوقت! لم يتم الإجابة على السؤال.`,
-                    answer: room.correctAnswer
-                };
-                if (room.gameType === 'huroof' && room.huroofHistory && room.huroofHistory.length > 0) {
-                    room.huroofHistory[room.huroofHistory.length - 1].answeredBy = "لا أحد";
-                }
-                io.to(roomId).emit('room_data', room);
-                clearInterval(room._questionInterval);
+            clearInterval(questionInterval);
+            if (room.gameStatus === 'question') {
+                handleQuestionTimeout(room, io, roomId);
             }
         }
     }, 1000);
+
+    setHiddenProperty(room, '_questionInterval', questionInterval);
 }
 
 // Helper for Arabic normalization
@@ -682,8 +696,8 @@ io.on('connection', (socket) => {
                 drawingCategory: null,
                 drawingGuesses: {},
                 drawingStrokes: [],
-                drawingScrambledLetters: [],
-                drawingMaskedWord: null
+                drawingScrambledLetters: null, // Initialize as null
+                drawingMaskedWord: null // Initialize as null
             });
         }
 
@@ -814,7 +828,9 @@ io.on('connection', (socket) => {
                 drawingCurrentWord: null,
                 drawingCategory: null,
                 drawingGuesses: {},
-                drawingStrokes: []
+                drawingStrokes: [],
+                drawingScrambledLetters: null, // Initialize as null
+                drawingMaskedWord: null // Initialize as null
             });
 
             // Note: We don't join the socket to the room yet, 
@@ -906,6 +922,7 @@ io.on('connection', (socket) => {
                         startBinOWaladRound(room, io, roomId);
                     }
                 }, 1000);
+                setHiddenProperty(room, '_countdownInterval', countdownInterval);
             } else if (room.gameType === 'word_meaning') {
                 room.gameStatus = 'countdown';
                 room.timer = 3;
@@ -920,6 +937,7 @@ io.on('connection', (socket) => {
                         startWordMeaningRound(room, io, roomId);
                     }
                 }, 1000);
+                setHiddenProperty(room, '_countdownInterval', countdownInterval);
             } else if (room.gameType === 'pixel_challenge') {
                 room.gameStatus = 'countdown';
                 room.timer = 3;
@@ -934,6 +952,7 @@ io.on('connection', (socket) => {
                         startPixelChallengeRound(room, io, roomId);
                     }
                 }, 1000);
+                setHiddenProperty(room, '_countdownInterval', countdownInterval);
             } else if (room.gameType === 'siba') {
                 room.gameStatus = 'siba_active';
                 room.sibaPhase = 'placement';
@@ -957,6 +976,7 @@ io.on('connection', (socket) => {
                         startDrawingRound(room, io, roomId);
                     }
                 }, 1000);
+                setHiddenProperty(room, '_countdownInterval', countdownInterval);
             } else if (room.gameType === 'proverbs') {
                 room.gameStatus = 'countdown';
                 room.timer = 3;
@@ -971,6 +991,7 @@ io.on('connection', (socket) => {
                         startProverbsRound(room, io, roomId);
                     }
                 }, 1000);
+                setHiddenProperty(room, '_countdownInterval', countdownInterval);
             } else {
                 room.gameStatus = room.gameType === 'jeopardy' ? 'selecting_category' : 'selecting_letter';
                 room.currentPlayerIndex = 0; // Reset turn to first player
@@ -996,6 +1017,7 @@ io.on('connection', (socket) => {
 
         io.to(roomId).emit('room_data', room);
 
+        if (room._roundInterval) clearInterval(room._roundInterval);
         const roundInterval = setInterval(() => {
             if (room.timer > 0 && room.gameStatus === 'round_active') {
                 room.timer--;
@@ -1008,6 +1030,7 @@ io.on('connection', (socket) => {
                 }
             }
         }, 1000);
+        setHiddenProperty(room, '_roundInterval', roundInterval);
     }
 
     function scoreBinOWaladRound(room, io, roomId) {
@@ -1112,6 +1135,7 @@ io.on('connection', (socket) => {
 
         io.to(roomId).emit('room_data', room);
 
+        if (room._roundInterval) clearInterval(room._roundInterval);
         const roundInterval = setInterval(() => {
             if (room.timer > 0 && room.gameStatus === 'word_meaning_active') {
                 room.timer--;
@@ -1123,6 +1147,7 @@ io.on('connection', (socket) => {
                 }
             }
         }, 1000);
+        setHiddenProperty(room, '_roundInterval', roundInterval);
     }
 
     function scoreWordMeaningRound(room, io, roomId) {
@@ -1215,6 +1240,7 @@ io.on('connection', (socket) => {
 
         // Wait 1.5s before starting the timer to allow for image loading and transitions
         setTimeout(() => {
+            if (room._roundInterval) clearInterval(room._roundInterval);
             const roundInterval = setInterval(() => {
                 if (room.timer > 0 && room.gameStatus === 'pixel_active') {
                     room.timer--;
@@ -1226,6 +1252,7 @@ io.on('connection', (socket) => {
                     }
                 }
             }, 1000);
+            setHiddenProperty(room, '_roundInterval', roundInterval);
         }, 1500);
     }
 
@@ -1332,10 +1359,14 @@ io.on('connection', (socket) => {
 
         if (room._proverbsInterval) clearInterval(room._proverbsInterval);
         const proverbsInterval = setInterval(() => {
-            if (room.timer > 0 && room.gameStatus === 'proverbs_active') {
+            if (room.gameStatus !== 'proverbs_active') {
+                clearInterval(proverbsInterval);
+                return;
+            }
+
+            if (room.timer > 0) {
                 room.timer--;
-                // Minimal update for timer if needed, but room_data is safer for sync
-                io.to(roomId).emit('timer_update', { timer: room.timer, roomId });
+                io.to(roomId).emit('room_data', room);
             } else {
                 clearInterval(proverbsInterval);
                 if (room.gameStatus === 'proverbs_active') {
@@ -1344,12 +1375,7 @@ io.on('connection', (socket) => {
             }
         }, 1000);
 
-        Object.defineProperty(room, '_proverbsInterval', {
-            value: proverbsInterval,
-            enumerable: false,
-            writable: true,
-            configurable: true
-        });
+        setHiddenProperty(room, '_proverbsInterval', proverbsInterval);
     }
 
     function scoreProverbsRound(room, io, roomId) {
@@ -1558,7 +1584,7 @@ io.on('connection', (socket) => {
             const activePlayer = room.players[room.currentPlayerIndex];
             if (activePlayer && activePlayer.id !== socket.id) return;
 
-            const question = room.questions.find(q => {
+            const question = (room.questions || []).find(q => {
                 const qCat = (q.category || "").trim();
                 const rCat = (room.selectedCategory || "").trim();
                 const qVal = Number(q.value);
