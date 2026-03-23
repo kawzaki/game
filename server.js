@@ -97,22 +97,25 @@ function prepareProverbs(proverbs, count) {
     const allAnswers = proverbs.map(p => p.answer);
 
     return selected.map(p => {
-        let options = p.options || [];
-        if (options.length === 0) {
-            const decoys = allAnswers
-                .filter(a => a !== p.answer)
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 2);
-            options = [p.answer, ...decoys];
-        } else {
-            // Ensure the answer is present and then shuffle
-            if (!options.includes(p.answer)) options.push(p.answer);
+        let optionsPool = p.options || [];
+        if (optionsPool.length === 0) {
+            optionsPool = allAnswers;
         }
+
+        // Ensure we have the answer
+        const currentAnswer = p.answer;
+        const otherOptions = optionsPool
+            .filter(o => o !== currentAnswer)
+            .sort(() => Math.random() - 0.5);
         
-        // Final shuffle of options
+        // Take up to 2 decoys
+        const finalDecoys = otherOptions.slice(0, 2);
+        const finalOptions = [currentAnswer, ...finalDecoys]
+            .sort(() => Math.random() - 0.5);
+
         return {
             ...p,
-            options: [...new Set(options)].sort(() => Math.random() - 0.5).slice(0, 3)
+            options: finalOptions
         };
     });
 }
