@@ -152,7 +152,12 @@ const ProverbsGame: React.FC<ProverbsGameProps> = ({ roomId }) => {
 
                         <div style={{ textAlign: 'center' }}>
                             <h2 style={{ fontWeight: 900, color: '#1e293b', lineHeight: 1.2, fontSize: isMobile ? '22px' : (qType === 'context' ? '28px' : '32px'), marginBottom: isMobile ? '16px' : '0' }}>
-                                {qType === 'completion' ? activeQuestion.question : (activeQuestion as any).proverb}
+                                {(() => {
+                                    const heroText = (activeQuestion as any).proverb || activeQuestion.question || '';
+                                    const isInstruction = heroText.includes('خمن') || heroText.includes('المثل') || heroText.includes('الرسم') || heroText.includes('الرموز');
+                                    const shouldHide = (qType === 'illustration' || qType === 'series' || qType === 'context') && isInstruction;
+                                    return shouldHide ? '' : heroText;
+                                })()}
                             </h2>
                         </div>
                     </motion.div>
