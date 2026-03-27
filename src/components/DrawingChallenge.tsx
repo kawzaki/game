@@ -559,7 +559,7 @@ const DrawingChallenge: React.FC<DrawingChallengeProps> = ({ roomId }) => {
             
             const isFilled = (effectiveMaskedWord || '').split('').every((c, i) => (c === ' ' || c === '-') || newGuess[i]);
             if (isFilled) {
-                if (currentRoomId === 'solo-challenge' && challengeData) {
+                if ((currentRoomId === 'solo-challenge' || roomId === 'solo-challenge') && challengeData) {
                     if (isFuzzyMatch(updatedGuess, challengeData.word)) {
                         setSoloGuessedCorrectly(true);
                         soloChallengeSolved(challengeData.id, playerName || 'صديق');

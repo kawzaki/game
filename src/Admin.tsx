@@ -16,6 +16,9 @@ export default function Admin() {
     const [isUploading, setIsUploading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState<'jeopardy' | 'pixel' | 'proverbs' | 'word_meaning'>('jeopardy');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingQuestion, setEditingQuestion] = useState<any>(null);
@@ -40,6 +43,11 @@ export default function Admin() {
             fetchWordMeanings();
         }
     }, [token]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, searchTerm, pageSize]);
+
 
     const fetchWordMeanings = async () => {
         setLoading(true);
@@ -285,7 +293,80 @@ export default function Admin() {
     };
 
 
+    const getFilteredData = () => {
+        switch (activeTab) {
+            case 'jeopardy':
+                return questions.filter(q => q.question?.includes(searchTerm) || q.category?.includes(searchTerm));
+            case 'pixel':
+                return pixelQuestions.filter(q => q.question?.includes(searchTerm) || q.answer?.includes(searchTerm));
+            case 'proverbs':
+                return proverbs.filter(p => p.question?.includes(searchTerm) || p.answer?.includes(searchTerm));
+            case 'word_meaning':
+                return wordMeanings.filter(w => w.word?.includes(searchTerm) || w.meaning?.includes(searchTerm));
+            default:
+                return [];
+        }
+    };
+
+    const filteredData = getFilteredData();
+    const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
+    const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    const PaginationControls = () => {
+        if (filteredData.length <= pageSize) return null;
+        
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '24px', padding: '12px', borderTop: '1px solid #f1f5f9' }}>
+                <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: currentPage === 1 ? '#f8fafc' : '#fff', color: currentPage === 1 ? '#cbd5e1' : '#0f172a', fontWeight: 'bold', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                >
+                    السابق
+                </button>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    {[...Array(totalPages)].map((_, i) => {
+                        const page = i + 1;
+                        if (totalPages > 7) {
+                            if (page !== 1 && page !== totalPages && Math.abs(page - currentPage) > 2) {
+                                if (page === 2 && currentPage > 4) return <span key="start-ellipsis" style={{ alignSelf: 'center' }}>...</span>;
+                                if (page === totalPages - 1 && currentPage < totalPages - 3) return <span key="end-ellipsis" style={{ alignSelf: 'center' }}>...</span>;
+                                if (page > 2 && page < totalPages - 1) return null;
+                            }
+                        }
+                        return (
+                            <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                style={{
+                                    width: '36px',
+                                    height: '36px',
+                                    borderRadius: '8px',
+                                    border: 'none',
+                                    background: currentPage === page ? '#0f172a' : '#f1f5f9',
+                                    color: currentPage === page ? '#fff' : '#64748b',
+                                    fontWeight: 900,
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {page}
+                            </button>
+                        );
+                    })}
+                </div>
+                <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: currentPage === totalPages ? '#f8fafc' : '#fff', color: currentPage === totalPages ? '#cbd5e1' : '#0f172a', fontWeight: 'bold', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                >
+                    التالي
+                </button>
+            </div>
+        );
+    };
+
     if (!token) {
+
         return (
             <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '20px' }}>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ background: '#fff', padding: '40px', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)', width: '100%', maxWidth: '400px', textAlign: 'center' }}>
@@ -364,16 +445,32 @@ export default function Admin() {
 
                     <div style={{ padding: '24px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
-                             <div style={{ position: 'relative', flex: '1', minWidth: '300px' }}>
-                                <Search size={20} color="#94a3b8" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }} />
-                                <input
-                                    type="text"
-                                    placeholder="بحث في البيانات المتاحة..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', background: '#f8fafc', focus: 'border-color: #0f172a', textAlign: 'right' } as any}
-                                />
+                            <div style={{ display: 'flex', gap: '12px', flex: '1', minWidth: '300px' }}>
+                                <div style={{ position: 'relative', flex: '1' }}>
+                                    <Search size={20} color="#94a3b8" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)' }} />
+                                    <input
+                                        type="text"
+                                        placeholder="بحث في البيانات المتاحة..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        style={{ width: '100%', padding: '12px 48px 12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', background: '#f8fafc', textAlign: 'right' } as any}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 'bold', whiteSpace: 'nowrap' }}>حجم الصفحة:</span>
+                                    <select
+                                        value={pageSize}
+                                        onChange={(e) => setPageSize(Number(e.target.value))}
+                                        style={{ padding: '10px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none', background: '#f8fafc', fontWeight: 'bold', cursor: 'pointer' }}
+                                    >
+                                        <option value={10}>10</option>
+                                        <option value={25}>25</option>
+                                        <option value={50}>50</option>
+                                        <option value={100}>100</option>
+                                    </select>
+                                </div>
                             </div>
+
                             <button 
                                 onClick={handleAddClick} 
                                 style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', borderRadius: '12px', background: '#10b981', color: '#fff', fontWeight: 900, border: 'none', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.4)' }}
@@ -402,7 +499,7 @@ export default function Admin() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {questions.filter(q => q.question?.includes(searchTerm) || q.category?.includes(searchTerm)).map((q) => (
+                                        {paginatedData.map((q) => (
                                             <tr key={q.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                                 <td style={{ padding: '16px' }}><span style={{ background: '#eff6ff', color: '#1d4ed8', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>{q.category}</span></td>
                                                 <td style={{ padding: '16px', fontWeight: 'bold' }}>{q.value}</td>
@@ -418,44 +515,51 @@ export default function Admin() {
                                         ))}
                                     </tbody>
                                 </table>
+                                <PaginationControls />
                             </div>
                         ) : activeTab === 'pixel' ? (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
-                                {pixelQuestions.filter(q => q.question?.includes(searchTerm) || q.answer?.includes(searchTerm)).map((q) => (
-                                    <div key={q.id} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                                        <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
-                                            <img src={q.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                                            <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: '#10b981', color: '#fff', padding: '4px 12px', borderRadius: '8px', fontWeight: 900, fontSize: '12px' }}>{q.answer}</div>
-                                        </div>
-                                        <div style={{ padding: '16px' }}>
-                                            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 900 }}>{q.question}</h4>
-                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                <button onClick={() => handleEditClick(q)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>تعديل</button>
-                                                <button onClick={() => handleDeleteClick(q.id, q.question)} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#fee2e2', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                            <div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
+                                    {paginatedData.map((q) => (
+                                        <div key={q.id} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                                            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                                                <img src={q.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                                                <div style={{ position: 'absolute', bottom: '12px', right: '12px', background: '#10b981', color: '#fff', padding: '4px 12px', borderRadius: '8px', fontWeight: 900, fontSize: '12px' }}>{q.answer}</div>
+                                            </div>
+                                            <div style={{ padding: '16px' }}>
+                                                <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 900 }}>{q.question}</h4>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button onClick={() => handleEditClick(q)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>تعديل</button>
+                                                    <button onClick={() => handleDeleteClick(q.id, q.question)} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#fee2e2', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
+                                <PaginationControls />
                             </div>
                         ) : activeTab === 'proverbs' ? (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
-                                {proverbs.filter(p => p.question?.includes(searchTerm) || p.answer?.includes(searchTerm)).map((p) => (
-                                    <div key={p.id} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                                        {p.imageUrl && <img src={p.imageUrl} style={{ width: '100%', height: '160px', objectFit: 'cover' }} alt="" />}
-                                        <div style={{ padding: '16px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                                <span style={{ fontSize: '11px', background: '#ecfdf5', color: '#059669', padding: '2px 8px', borderRadius: '6px', fontWeight: 'bold' }}>{p.type}</span>
-                                                <span style={{ fontSize: '11px', color: '#94a3b8' }}>{p.category}</span>
-                                            </div>
-                                            <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 900 }}>{p.question}</h4>
-                                            <div style={{ color: '#10b981', fontWeight: 'bold', fontSize: '13px', marginBottom: '16px' }}>{p.answer}</div>
-                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                <button onClick={() => handleEditClick(p)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>تعديل</button>
-                                                <button onClick={() => handleDeleteClick(p.id, p.question)} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#fee2e2', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                            <div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+                                    {paginatedData.map((p) => (
+                                        <div key={p.id} style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                                            {p.imageUrl && <img src={p.imageUrl} style={{ width: '100%', height: '160px', objectFit: 'cover' }} alt="" />}
+                                            <div style={{ padding: '16px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                    <span style={{ fontSize: '11px', background: '#ecfdf5', color: '#059669', padding: '2px 8px', borderRadius: '6px', fontWeight: 'bold' }}>{p.type}</span>
+                                                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>{p.category}</span>
+                                                </div>
+                                                <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 900 }}>{p.question}</h4>
+                                                <div style={{ color: '#10b981', fontWeight: 'bold', fontSize: '13px', marginBottom: '16px' }}>{p.answer}</div>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button onClick={() => handleEditClick(p)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>تعديل</button>
+                                                    <button onClick={() => handleDeleteClick(p.id, p.question)} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: '#fee2e2', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
+                                <PaginationControls />
                             </div>
                         ) : (
                             <div style={{ overflowX: 'auto' }}>
@@ -468,7 +572,7 @@ export default function Admin() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {wordMeanings.filter(w => w.word?.includes(searchTerm) || w.meaning?.includes(searchTerm)).map((w) => (
+                                        {paginatedData.map((w) => (
                                             <tr key={w.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                                 <td style={{ padding: '16px', fontWeight: 900, fontSize: '18px' }}>{w.word}</td>
                                                 <td style={{ padding: '16px', color: '#475569' }}>{w.meaning}</td>
@@ -482,6 +586,7 @@ export default function Admin() {
                                         ))}
                                     </tbody>
                                 </table>
+                                <PaginationControls />
                             </div>
                         )}
                     </div>
