@@ -36,7 +36,7 @@ interface GameState {
     isConnected: boolean;
     feedback: { type: 'correct' | 'wrong' | 'all_wrong' | 'luck'; message: string; answer?: string; reward?: any } | null;
     wordMeaningFeedback?: Record<string, { answer: string; isCorrect: boolean; pointsEarned?: number }>;
-    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'selecting_letter' | 'question' | 'game_over' | 'countdown' | 'round_active' | 'round_scoring' | 'word_meaning_active' | 'word_meaning_scoring' | 'siba_active' | 'pixel_active' | 'pixel_scoring' | 'drawing_active' | 'drawing_scoring' | 'proverbs_active' | 'proverbs_scoring';
+    gameStatus: 'lobby' | 'selecting_category' | 'selecting_value' | 'selecting_letter' | 'question' | 'game_over' | 'countdown' | 'round_active' | 'round_review' | 'round_scoring' | 'word_meaning_active' | 'word_meaning_scoring' | 'siba_active' | 'pixel_active' | 'pixel_scoring' | 'drawing_active' | 'drawing_scoring' | 'proverbs_active' | 'proverbs_scoring';
     timer: number;
     winner: { name: string; score: number; isForfeit?: boolean; winningTeam?: 'red' | 'blue' } | null;
     playerName: string | null;
@@ -46,6 +46,9 @@ interface GameState {
     currentRound: number;
     roundCount: number;
     roundResults: any[];
+    binOWaladFinisher?: string | null;
+    binOWaladReview?: Record<string, Record<string, { word: string; status: 'valid' | 'rejected' }>> | null;
+    binOWaladConfirmedPlayers?: string[];
     roomDataLoading: boolean;
     hasJoined: boolean;
     huroofHistory: any[];
@@ -89,7 +92,10 @@ interface GameState {
     tickTimer: () => void;
     resetTimer: (seconds: number) => void;
     resetRoom: () => void;
-    submitRoundBinOWalad: (roomId: string, inputs: Record<string, string>) => void;
+    submitRoundBinOWalad: (roomId: string, inputs: Record<string, string>, isFinal?: boolean) => void;
+    voteWordBinOWalad: (roomId: string, targetPlayerName: string, categoryKey: string, status: 'valid' | 'rejected') => void;
+    confirmBinOWaladReview: (roomId: string) => void;
+    forceScoreBinOWalad: (roomId: string) => void;
     getRoomStatus: (roomId: string) => void;
     createRoom: (roomId: string, gameType: 'jeopardy' | 'huroof' | 'bin_o_walad' | 'word_meaning' | 'siba' | 'pixel_challenge' | 'drawing_challenge' | 'proverbs', qCount: number) => void;
     submitWordMeaningAnswer: (roomId: string, answer: string) => void;
@@ -152,6 +158,9 @@ export const useGameStore = create<GameState>((set) => {
             drawingCategory: data.drawingCategory ?? null,
             drawingStrokes: data.drawingStrokes ?? [],
             drawingScrambledLetters: data.drawingScrambledLetters ?? [],
+            binOWaladFinisher: data.binOWaladFinisher ?? null,
+            binOWaladReview: data.binOWaladReview ?? null,
+            binOWaladConfirmedPlayers: data.binOWaladConfirmedPlayers ?? [],
             myId: socket.id || null,
             isConnected: true,
             roomDataLoading: false,
@@ -341,9 +350,13 @@ export const useGameStore = create<GameState>((set) => {
             drawingGuesses: {}, drawingCategory: null, drawingStrokes: [], drawingLiveStrokes: [],
             drawingScrambledLetters: [],
             drawingCorrectGuesses: [], drawingWrongGuesses: [],
+            binOWaladFinisher: null, binOWaladReview: null, binOWaladConfirmedPlayers: [],
             notification: null
         }),
-        submitRoundBinOWalad: (roomId, inputs) => socket.emit('submit_round_bin_o_walad', { roomId, inputs }),
+        submitRoundBinOWalad: (roomId, inputs, isFinal = true) => socket.emit('submit_round_bin_o_walad', { roomId, inputs, isFinal }),
+        voteWordBinOWalad: (roomId, targetPlayerName, categoryKey, status) => socket.emit('vote_word_bin_o_walad', { roomId, targetPlayerName, categoryKey, status }),
+        confirmBinOWaladReview: (roomId) => socket.emit('confirm_bin_o_walad_review', { roomId }),
+        forceScoreBinOWalad: (roomId) => socket.emit('force_score_bin_o_walad', { roomId }),
         getRoomStatus: (roomId) => {
             set({ roomDataLoading: true });
             socket.emit('get_room_status', roomId);

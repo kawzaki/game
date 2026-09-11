@@ -554,6 +554,20 @@ const CATEGORIES_BIN_O_WALAD = [
     { key: 'location', label: 'بلاد' }
 ];
 
+function isValidBinOWaladWord(word, letter) {
+    if (!word || typeof word !== 'string') return false;
+    const trimmed = word.trim();
+    if (trimmed.length < 2) return false;
+    const normWord = normalizeArabic(trimmed);
+    const normLetter = normalizeArabic(letter || "");
+    return normWord.startsWith(normLetter);
+}
+
+function isAllCategoriesValid(inputs, letter) {
+    if (!inputs) return false;
+    return CATEGORIES_BIN_O_WALAD.every(cat => isValidBinOWaladWord(inputs[cat.key], letter));
+}
+
 function endGame(room, io, roomId, forfeitingPlayerId = null, winningTeam = null) {
     const players = room.players;
     if (players.length === 0) return;
@@ -684,6 +698,9 @@ io.on('connection', (socket) => {
                 currentLetter: null,
                 roundSubmissions: {}, // roomId -> { roundIndex -> { playerName -> { girl, boy, thing, food, animal, location } } }
                 roundResults: [],
+                binOWaladFinisher: null,
+                binOWaladReview: null,
+                binOWaladConfirmedPlayers: [],
                 creatorSocketId: socket.id,
                 huroofHistory: [],
                 sibaBoard: Array(9).fill(null),
@@ -817,6 +834,9 @@ io.on('connection', (socket) => {
                 currentLetter: null,
                 roundSubmissions: {},
                 roundResults: [],
+                binOWaladFinisher: null,
+                binOWaladReview: null,
+                binOWaladConfirmedPlayers: [],
                 creatorSocketId: socket.id,
                 huroofHistory: [],
                 sibaBoard: Array(9).fill(null),
@@ -1014,6 +1034,9 @@ io.on('connection', (socket) => {
         room.gameStatus = 'round_active';
         room.timer = 60;
         room.roundSubmissions[room.currentRound] = {};
+        room.binOWaladFinisher = null;
+        room.binOWaladReview = null;
+        room.binOWaladConfirmedPlayers = [];
 
         io.to(roomId).emit('room_data', room);
 
@@ -1025,58 +1048,111 @@ io.on('connection', (socket) => {
             } else {
                 clearInterval(roundInterval);
                 if (room.gameStatus === 'round_active') {
-                    // Brief grace period for other clients to send partial inputs
-                    setTimeout(() => scoreBinOWaladRound(room, io, roomId), 1200);
+                    startBinOWaladReview(room, io, roomId);
                 }
             }
         }, 1000);
         setHiddenProperty(room, '_roundInterval', roundInterval);
     }
 
+    function startBinOWaladReview(room, io, roomId) {
+        if (room._roundInterval) clearInterval(room._roundInterval);
+        room.gameStatus = 'round_review';
+        room.timer = 25; // 25 seconds review window
+        room.binOWaladConfirmedPlayers = [];
+
+        const submissions = room.roundSubmissions[room.currentRound] || {};
+        room.binOWaladReview = {};
+
+        room.players.forEach(p => {
+            room.binOWaladReview[p.name] = {};
+            const pSub = submissions[p.name] || {};
+            CATEGORIES_BIN_O_WALAD.forEach(cat => {
+                const rawWord = (pSub[cat.key] || "").trim();
+                const isValid = isValidBinOWaladWord(rawWord, room.currentLetter);
+                room.binOWaladReview[p.name][cat.key] = {
+                    word: rawWord,
+                    status: isValid ? 'valid' : 'rejected'
+                };
+            });
+        });
+
+        io.to(roomId).emit('room_data', room);
+
+        const reviewInterval = setInterval(() => {
+            if (room.timer > 0 && room.gameStatus === 'round_review') {
+                room.timer--;
+                io.to(roomId).emit('room_data', room);
+            } else {
+                clearInterval(reviewInterval);
+                if (room.gameStatus === 'round_review') {
+                    scoreBinOWaladRound(room, io, roomId);
+                }
+            }
+        }, 1000);
+        setHiddenProperty(room, '_roundInterval', reviewInterval);
+    }
+
     function scoreBinOWaladRound(room, io, roomId) {
+        if (room._roundInterval) clearInterval(room._roundInterval);
         room.gameStatus = 'round_scoring';
         const currentRound = room.currentRound;
         const submissions = room.roundSubmissions[currentRound] || {};
+        const review = room.binOWaladReview || {};
         const players = room.players;
         const letter = room.currentLetter;
 
         const roundTotalScores = {}; // playerId -> score this round
+        const categoryResults = {}; // { [catKey]: { [playerName]: { word, status, score } } }
 
         CATEGORIES_BIN_O_WALAD.forEach(cat => {
             const catKey = cat.key;
-            const answers = {}; // normalized -> count
+            const validAnswers = {}; // normalized -> count of players with this accepted answer
 
+            // Step 1: Count frequency of accepted words
             players.forEach(p => {
-                const sub = submissions[p.name];
-                const rawAnswer = sub ? sub[catKey] : "";
-                const normalized = normalizeArabic(rawAnswer);
+                const revItem = review[p.name]?.[catKey];
+                const rawAnswer = revItem ? revItem.word : (submissions[p.name]?.[catKey] || "");
+                const isAccepted = revItem ? revItem.status === 'valid' : isValidBinOWaladWord(rawAnswer, letter);
 
-                // Basic validation: must start with the correct letter and be at least 2 characters long
-                if (normalized && rawAnswer.trim().startsWith(letter) && rawAnswer.trim().length > 1) {
-                    answers[normalized] = (answers[normalized] || 0) + 1;
-                } else {
-                    // Invalid or empty
+                if (isAccepted && isValidBinOWaladWord(rawAnswer, letter)) {
+                    const normalized = normalizeArabic(rawAnswer);
+                    validAnswers[normalized] = (validAnswers[normalized] || 0) + 1;
                 }
             });
 
-            players.forEach(p => {
-                const sub = submissions[p.name];
-                const rawAnswer = sub ? sub[catKey] : "";
-                const normalized = normalizeArabic(rawAnswer);
-                let score = 0;
+            // Step 2: Assign scores: 10 if unique, 5 if duplicate, 0 if rejected
+            if (!categoryResults[catKey]) categoryResults[catKey] = {};
 
-                if (normalized && rawAnswer.trim().startsWith(letter) && rawAnswer.trim().length > 1) {
-                    if (answers[normalized] === 1) {
+            players.forEach(p => {
+                const revItem = review[p.name]?.[catKey];
+                const rawAnswer = revItem ? revItem.word : (submissions[p.name]?.[catKey] || "");
+                const isAccepted = revItem ? revItem.status === 'valid' : isValidBinOWaladWord(rawAnswer, letter);
+                let score = 0;
+                let status = 'rejected';
+
+                if (isAccepted && isValidBinOWaladWord(rawAnswer, letter)) {
+                    const normalized = normalizeArabic(rawAnswer);
+                    if (validAnswers[normalized] === 1) {
                         score = 10;
+                        status = 'unique';
                     } else {
                         score = 5;
+                        status = 'duplicate';
                     }
                 } else {
                     score = 0;
+                    status = 'rejected';
                 }
 
                 p.score += score;
                 roundTotalScores[p.id] = (roundTotalScores[p.id] || 0) + score;
+
+                categoryResults[catKey][p.name] = {
+                    word: rawAnswer,
+                    status: status,
+                    score: score
+                };
             });
         });
 
@@ -1084,7 +1160,8 @@ io.on('connection', (socket) => {
             round: currentRound,
             letter: letter,
             scores: roundTotalScores,
-            submissions: submissions
+            submissions: submissions,
+            categoryResults: categoryResults
         });
 
         io.to(roomId).emit('room_data', room);
@@ -1100,17 +1177,65 @@ io.on('connection', (socket) => {
         }, 7000);
     }
 
-    socket.on('submit_round_bin_o_walad', ({ roomId, inputs }) => {
+    socket.on('submit_round_bin_o_walad', ({ roomId, inputs, isFinal }) => {
         const room = rooms.get(roomId);
         if (room && room.gameStatus === 'round_active') {
             const player = room.players.find(p => p.id === socket.id);
             if (player) {
+                if (!room.roundSubmissions[room.currentRound]) {
+                    room.roundSubmissions[room.currentRound] = {};
+                }
                 room.roundSubmissions[room.currentRound][player.name] = inputs;
 
-                // Immediate Finish: As soon as one player hits "Finished", set timer to 0
-                room.timer = 0;
+                // Validate if this is a legitimate full finish:
+                // All 6 categories must have words starting with currentLetter and length >= 2
+                const isComplete = isAllCategoriesValid(inputs, room.currentLetter);
+
+                if (isComplete && isFinal) {
+                    if (!room.binOWaladFinisher) {
+                        room.binOWaladFinisher = player.name;
+                        // Give a 7-second grace timer so other players can rush-finish
+                        if (room.timer > 7) {
+                            room.timer = 7;
+                        }
+                    }
+                }
             }
             io.to(roomId).emit('room_data', room);
+        }
+    });
+
+    socket.on('vote_word_bin_o_walad', ({ roomId, targetPlayerName, categoryKey, status }) => {
+        const room = rooms.get(roomId);
+        if (room && room.gameStatus === 'round_review') {
+            if (room.binOWaladReview && room.binOWaladReview[targetPlayerName] && room.binOWaladReview[targetPlayerName][categoryKey]) {
+                room.binOWaladReview[targetPlayerName][categoryKey].status = status;
+                io.to(roomId).emit('room_data', room);
+            }
+        }
+    });
+
+    socket.on('confirm_bin_o_walad_review', ({ roomId }) => {
+        const room = rooms.get(roomId);
+        if (room && room.gameStatus === 'round_review') {
+            if (!room.binOWaladConfirmedPlayers.includes(socket.id)) {
+                room.binOWaladConfirmedPlayers.push(socket.id);
+            }
+            const allConfirmed = room.players.every(p => room.binOWaladConfirmedPlayers.includes(p.id));
+            if (allConfirmed) {
+                if (room._roundInterval) clearInterval(room._roundInterval);
+                scoreBinOWaladRound(room, io, roomId);
+            } else {
+                io.to(roomId).emit('room_data', room);
+            }
+        }
+    });
+
+    socket.on('force_score_bin_o_walad', ({ roomId }) => {
+        const room = rooms.get(roomId);
+        if (room && room.gameStatus === 'round_review') {
+            if (room._roundInterval) clearInterval(room._roundInterval);
+            scoreBinOWaladRound(room, io, roomId);
         }
     });
 
