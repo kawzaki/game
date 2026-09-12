@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
-const CHECK_INTERVAL = 1000 * 30; // Check every 30 seconds
+// Check interval: once every 7 days (in ms) if the app remains open indefinitely
+const SEVEN_DAYS_MS = 1000 * 60 * 60 * 24 * 7;
 
 export const forceClearCacheAndReload = async () => {
     try {
@@ -38,7 +39,6 @@ export const VersionChecker = () => {
                 const serverVersion = data.version;
                 const serverCommit = data.commit;
 
-                // Check if current client git hash differs from server commit
                 // @ts-ignore
                 const currentGitHash = typeof __GIT_HASH__ !== 'undefined' ? __GIT_HASH__ : null;
                 const cachedVersion = localStorage.getItem('app_version');
@@ -63,8 +63,11 @@ export const VersionChecker = () => {
             }
         };
 
+        // 1. Run once on app open / startup
         checkVersion();
-        const interval = setInterval(checkVersion, CHECK_INTERVAL);
+
+        // 2. Set interval to check once every 7 days
+        const interval = setInterval(checkVersion, SEVEN_DAYS_MS);
 
         return () => clearInterval(interval);
     }, []);
