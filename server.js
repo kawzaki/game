@@ -427,28 +427,29 @@ function checkHuroofWinner(grid, team) {
         const row = Math.floor(current / size);
         const col = current % size;
 
-        // Hexagonal Neighbors (Staggered Row / Pointy Top logic)
-        // Odd rows shifted right
+        // Hexagonal Neighbors (Staggered Row / Pointy Top logic in RTL)
+        // In RTL, col 0 is at the physical right and col 4 is at the physical left.
+        // The .staggered class applies translateX(+20px), shifting odd rows towards the physical right (lower col index).
         let neighbors = [];
         const isOddRow = row % 2 === 1;
 
         if (isOddRow) {
             neighbors = [
-                { r: row, c: col - 1 }, // Left
-                { r: row, c: col + 1 }, // Right
-                { r: row - 1, c: col }, // Top-Left
-                { r: row - 1, c: col + 1 }, // Top-Right
-                { r: row + 1, c: col }, // Bottom-Left
-                { r: row + 1, c: col + 1 } // Bottom-Right
+                { r: row, c: col - 1 },     // Col - 1
+                { r: row, c: col + 1 },     // Col + 1
+                { r: row - 1, c: col },     // Top
+                { r: row - 1, c: col - 1 }, // Top (shifted towards lower col)
+                { r: row + 1, c: col },     // Bottom
+                { r: row + 1, c: col - 1 }  // Bottom (shifted towards lower col)
             ];
         } else {
             neighbors = [
-                { r: row, c: col - 1 }, // Left
-                { r: row, c: col + 1 }, // Right
-                { r: row - 1, c: col - 1 }, // Top-Left
-                { r: row - 1, c: col }, // Top-Right
-                { r: row + 1, c: col - 1 }, // Bottom-Left
-                { r: row + 1, c: col } // Bottom-Right
+                { r: row, c: col - 1 },     // Col - 1
+                { r: row, c: col + 1 },     // Col + 1
+                { r: row - 1, c: col },     // Top
+                { r: row - 1, c: col + 1 }, // Top (adjacent odd row has element at col + 1)
+                { r: row + 1, c: col },     // Bottom
+                { r: row + 1, c: col + 1 }  // Bottom (adjacent odd row has element at col + 1)
             ];
         }
 
