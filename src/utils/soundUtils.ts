@@ -6,7 +6,8 @@ export const SOUNDS = {
   timeout: 'https://assets.mixkit.co/active_storage/sfx/2658/2658-preview.mp3',
   game_over_win: 'https://www.myinstants.com/media/sounds/award-winners-fanfare_SXgBSYC.mp3',
   game_over_lose: 'https://www.myinstants.com/media/sounds/wah-wah-sound-effect.mp3',
-  ding: 'https://www.myinstants.com/media/sounds/ding-sound-effect.mp3'
+  ding: 'https://www.myinstants.com/media/sounds/ding-sound-effect.mp3',
+  pop: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'
 };
 
 export type SoundType = keyof typeof SOUNDS;
