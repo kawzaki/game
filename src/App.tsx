@@ -590,6 +590,25 @@ const App: React.FC = () => {
           </div>
         </div>
 
+        <div style={{ textAlign: 'center', marginTop: '20px', marginBottom: '80px', display: 'flex', justifyContent: 'center' }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(4px)',
+            padding: '6px 14px',
+            borderRadius: '20px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+            fontSize: '12px',
+            color: '#64748b'
+          }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
+            <span>النسخة: <strong style={{ color: '#0f172a', fontFamily: 'monospace', letterSpacing: '0.5px' }}>{__GIT_HASH__}</strong></span>
+          </div>
+        </div>
+
         {showScanner && (
           <QRScannerModal
             onClose={() => setShowScanner(false)}
@@ -795,8 +814,8 @@ const App: React.FC = () => {
                 العودة لتغيير نوع اللعبة
               </button>
 
-              <div style={{ fontSize: '10px', color: '#64748b', textAlign: 'center', marginTop: '24px', opacity: 0.5 }}>
-                v1.0.1-{__GIT_HASH__}
+              <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', marginTop: '24px', opacity: 0.7, fontFamily: 'monospace' }}>
+                النسخة: {__GIT_HASH__}
               </div>
             </div>
           </div>

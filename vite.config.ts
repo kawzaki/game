@@ -3,7 +3,12 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { execSync } from 'child_process'
 
-const gitHash = execSync('git rev-parse --short HEAD').toString().trim()
+let gitHash = 'dev'
+try {
+  gitHash = execSync('git rev-parse --short HEAD').toString().trim()
+} catch (e) {
+  gitHash = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'latest'
+}
 
 // https://vite.dev/config/
 export default defineConfig({

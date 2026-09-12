@@ -6,12 +6,18 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import multer from 'multer';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Increment this whenever a significant UI update is pushed to force PWA refresh
-const SERVER_VERSION = '1.1.1'; 
+const SERVER_VERSION = '1.1.2'; 
+
+let serverGitCommit = 'unknown';
+try {
+    serverGitCommit = execSync('git rev-parse --short HEAD').toString().trim();
+} catch (e) {} 
 
 // Pre-load questions for all rooms
 let questionPool = JSON.parse(fs.readFileSync(path.join(__dirname, 'src/data/mockQuestions.json'), 'utf8'));
@@ -154,7 +160,7 @@ const upload = multer({ storage: storage });
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 app.get('/api/version', (req, res) => {
-    res.json({ version: SERVER_VERSION });
+    res.json({ version: SERVER_VERSION, commit: serverGitCommit });
 });
 
 // --- Admin API Routes ---
