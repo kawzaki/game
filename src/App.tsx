@@ -12,7 +12,7 @@ import ProverbsGame from './components/ProverbsGame';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import Competitions from './components/Competitions';
 import { QRScannerModal } from './components/QRScannerModal';
-import { VersionChecker } from './components/VersionChecker';
+import { VersionChecker, forceClearCacheAndReload } from './components/VersionChecker';
 import confetti from 'canvas-confetti';
 import {
   Timer as TimerIcon,
@@ -32,6 +32,7 @@ import {
   Pencil,
   Camera,
   MessageSquare,
+  RotateCcw,
   X as CloseIcon
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -591,22 +592,29 @@ const App: React.FC = () => {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '20px', marginBottom: '80px', display: 'flex', justifyContent: 'center' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(4px)',
-            padding: '6px 14px',
-            borderRadius: '20px',
-            border: '1px solid #e2e8f0',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-            fontSize: '12px',
-            color: '#64748b'
-          }}>
+          <button
+            onClick={() => forceClearCacheAndReload()}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(4px)',
+              padding: '8px 16px',
+              borderRadius: '20px',
+              border: '1px solid #cbd5e1',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+              fontSize: '12px',
+              color: '#475569',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            title="انقر لتحديث التطبيق فوراً ومسح الكاش"
+          >
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
             <span>النسخة: <strong style={{ color: '#0f172a', fontFamily: 'monospace', letterSpacing: '0.5px' }}>{__GIT_HASH__}</strong></span>
-          </div>
+            <RotateCcw size={13} style={{ color: '#3b82f6', marginRight: '4px' }} />
+          </button>
         </div>
 
         {showScanner && (
