@@ -1652,32 +1652,45 @@ io.on('connection', (socket) => {
                         return;
                     }
                 } else {
-                    // In Huroof, category is the letter. Pick a question starting with that letter or random if not found.
+                    // In Huroof, category is the letter. Prefer dedicated الحروف questions for this letter and avoid repeats in the same room.
                     const validPool = questionPool.filter(q => q.answer && q.options);
-                    const matchingQuestions = validPool.filter(q =>
-                        (q.question && q.question.trim().startsWith(category)) ||
-                        (q.answer && q.answer.trim().startsWith(category))
+                    const huroofMatches = validPool.filter(q =>
+                        q.category === 'الحروف' && (
+                            (q.question && (q.question.trim().startsWith(category + ':') || q.question.trim().startsWith(category + 'ـ:'))) ||
+                            (q.answer && q.answer.trim().startsWith(category))
+                        )
                     );
-                    const pool = matchingQuestions.length > 0 ? matchingQuestions : validPool;
+                    const fallbackMatches = validPool.filter(q =>
+                        q.answer && q.answer.trim().startsWith(category)
+                    );
+                    const matchingQuestions = huroofMatches.length > 0 ? huroofMatches : (fallbackMatches.length > 0 ? fallbackMatches : validPool);
+
+                    const askedQuestions = new Set((room.huroofHistory || []).map(h => h.question));
+                    const unaskedPool = matchingQuestions.filter(q => !askedQuestions.has(q.question));
+                    const pool = unaskedPool.length > 0 ? unaskedPool : matchingQuestions;
                     const question = pool[Math.floor(Math.random() * pool.length)];
 
                     // Ensure all options start with the same letter for Huroof mode
                     let huroofOptions = [];
                     const correctAnswer = question.answer || "";
 
-                    // Get other answers from the pool that start with the same letter
-                    const sameLetterAnswers = [...new Set(questionPool
-                        .filter(q => q.answer && q.answer.trim().startsWith(category) && q.answer.trim() !== correctAnswer.trim())
-                        .map(q => q.answer.trim())
-                    )];
-
-                    if (sameLetterAnswers.length >= 3) {
-                        // Pick 3 random wrong answers starting with the same letter
-                        const shuffledWrong = sameLetterAnswers.sort(() => 0.5 - Math.random());
-                        huroofOptions = [correctAnswer, ...shuffledWrong.slice(0, 3)];
-                    } else {
-                        // Fallback: Use original options but try to filter them or keep as is
+                    if (question.category === 'الحروف' && Array.isArray(question.options) && question.options.length === 4) {
                         huroofOptions = [...question.options];
+                    } else {
+                        // Get other answers from the pool that start with the same letter
+                        const sameLetterAnswers = [...new Set(questionPool
+                            .filter(q => q.answer && q.answer.trim().startsWith(category) && q.answer.trim() !== correctAnswer.trim())
+                            .map(q => q.answer.trim())
+                        )];
+
+                        if (sameLetterAnswers.length >= 3) {
+                            // Pick 3 random wrong answers starting with the same letter
+                            const shuffledWrong = sameLetterAnswers.sort(() => 0.5 - Math.random());
+                            huroofOptions = [correctAnswer, ...shuffledWrong.slice(0, 3)];
+                        } else {
+                            // Fallback: Use original options
+                            huroofOptions = [...question.options];
+                        }
                     }
 
                     const shuffledOptions = huroofOptions.sort(() => 0.5 - Math.random());
